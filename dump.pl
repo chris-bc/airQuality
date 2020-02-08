@@ -26,7 +26,13 @@ my $url = HTTP::Tiny->new->get($source);
 my $json = JSON->new;
 my $data = $json->decode($url->{'content'});
 
-#print Dumper($data);
+# Get a list of all keys
+my @keys = ();
+foreach my $rec (@{$data}) {
+	push @keys, keys %{$rec};
+}
+my %uniqueKeys = may {$_, 1} @keys;
+@keys = sort keys %uniqueKeys;
 
 # Set up DB
 $dbh->do('PRAGMA foreign_keys = ON');
@@ -34,9 +40,8 @@ $dbh->do('PRAGMA foreign_keys');
 
 # Creat table if not exists
 if ($newDB) {
-	print "Create table";
-} else {
-	print "DB already exists, skipping table creation";
+	# Create table
+	
 }
 
 foreach my $rec ( @{$data} ) {
