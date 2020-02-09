@@ -14,8 +14,15 @@ my $dsn = "DBI:SQLite:$dbFile";
 my %attr = (PrintError=>0, RaiseError=>1, AutoCommit=>1, FetchHashKeyName=>'NAME_lc');
 
 my $cgi = CGI->new();
-my $selectColumns = ($cgi->param('cols')//"UnitNumber,locationdescription,lastsensingdate,pm1,pm10,pm25,Longitude,Latitude");
-my $sortColumns = ($cgi->param('sort')//"UnitNumber,lastsensingdate DESC");
+my $selectColumns = "UnitNumber,locationdescription,lastsensingdate,pm1,pm10,pm25,Longitude,Latitude";
+if ($cgi->param('cols') && length $cgi->param('cols') > 0) {
+  $selectColumns = $cgi->param('cols');
+}
+
+my $sortColumns = "UnitNumber,lastsensingdate DESC";
+if ($cgi->param('sort') && length $cgi->param('sort') > 0) {
+  $sortColumns = $cgi->param('sort');
+}
 
 my @columnsToShow = split ',', $selectColumns;
 my @sortColumns = split ',', $sortColumns;
@@ -62,7 +69,6 @@ print "</table></p>";
 
 print<<EOF;
 <script src="addRemove.js"></script>
-<!--<form method="get">-->
 <h3>Columns to show</h3>
 
 <div style="width:50%;">
@@ -97,9 +103,12 @@ print<<EOF;
     </select>
   </div>
 </div>
-
+</p><p>
 <h3>Sort columns</h3>
 TODO
+<form method="post">
+<input type="hidden" name="cols" id="cols"/>
+<input type="hidden" name="sort" id="sort"/>
 <input type="submit" value="Submit">
 </form>
 
