@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 
-use Data::Dumper;
 use DBI;
 use strict;
 use warnings;
@@ -31,7 +30,7 @@ my @keys = ();
 foreach my $rec (@{$data}) {
 	push @keys, keys %{$rec};
 }
-my %uniqueKeys = may {$_, 1} @keys;
+my %uniqueKeys = map {$_, 1} @keys;
 @keys = sort keys %uniqueKeys;
 
 # Set up DB
@@ -41,10 +40,66 @@ $dbh->do('PRAGMA foreign_keys');
 # Creat table if not exists
 if ($newDB) {
 	# Create table
-	
+	my $ddl = "CREATE TABLE kSensor (
+		BoardDateCreated TEXT,
+		BoardID INTEGER,
+		BoardSerialNumber INTEGER,
+		CoModuleCalibration REAL,
+		CoModuleDateCreated TEXT,
+		CoModuleID INTEGER,
+		CoModuleSerialNumber INTEGER,
+		Latitude REAL,
+		Longitude REAL,
+		PmModuleCalibration REAL,
+		PmModuleDateCreated TEXT,
+		PmModuleID INTEGER,
+		PmModuleSerialNumber TEXT,
+		UnitNumber TEXT,
+		isPublic INTEGER,
+		lastbatteryvoltage REAL,
+		lastdatecreated TEXT,
+		lastsensingdate TEXT,
+		locationdescription TEXT,
+		locationstring TEXT,
+		pm1 INTEGER,
+		pm10 INTEGER,
+		pm25 INTEGER,
+		showonmap INTEGER,
+		PRIMARY KEY(UnitNumber, lastsensingdate)
+	)";
+	$dbh->do($ddl);
+	# TODO: Check success
 }
 
 foreach my $rec ( @{$data} ) {
-	print "key: $_ value: ".($rec->{$_}//"null")."\n" for keys $rec;
+	#print "key: $_ value: ".($rec->{$_}//"null")."\n" for keys $rec;
+	# Check whether the row exists in the DB
+	my $sql = "SELECT * FROM kSensor WHERE UnitNumber=? AND lastsensingdate=?";
+	my $statement = $dbh->prepare($sql);
+	$statement->execute($rec->{"UnitNumber"}, $rec->{"lastsensingdate"});
+	$statement->fetchrow_array();
+	if ($statement->rows == 0) {
+		# Insert new observation
+		# TODO: Be more clever to avoid SQL injection
+		$sql = "INSERT INTO kSensor (";
+		my $first=1;
+		for (@keys) {
+			$sql .= "," unless ($first == 1);
+			$first = 0;
+			$sql .= $_;
+		}
+		$sql .= ") VALUES (";
+		$first = 1;
+		for (@keys) {
+			$sql .= "," unless ($first == 1);
+			$first = 0;
+			$sql .= "'".($rec->{$_}//0)."'";
+		}
+		$sql .= ")";
+		$dbh->do($sql);
+		# TODO: Check success
+	} 
+	$statement->finish;
 }
+$dbh->disconnect;
 
