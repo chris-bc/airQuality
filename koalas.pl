@@ -38,6 +38,11 @@ while (my @data = $statement->fetchrow_array()) {
 @keys = sort @keys;
 $statement->finish;
 
+# Validate columns in parameters are valid
+my %k = map {$_ => 1} @keys;
+exists($k{$_}) or die "Select column $_ is not valid" for @columnsToShow;
+exists($k{(split ' ', $_)[0]}) or die "Sort column ".(split ' ',$_)[0]." is not valid\n" for @sortColumns;
+
 print "<html><head></head><body><h3>Sensor Data</h3><p><table border=1>";
 print "<th>$_</th>" for @columnsToShow;
 
