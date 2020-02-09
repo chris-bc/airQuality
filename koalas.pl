@@ -13,6 +13,13 @@ my $dbTable = "kSensor";
 my $dsn = "DBI:SQLite:$dbFile";
 my %attr = (PrintError=>0, RaiseError=>1, AutoCommit=>1, FetchHashKeyName=>'NAME_lc');
 
+my $cgi = CGI->new();
+my $selectColumns = ($cgi->param('cols')//"UnitNumber,locationdescription,lastsensingdate,pm1,pm10,pm25,Longitude,Latitude");
+my $sortColumns = ($cgi->param('sort')//"UnitNumber,lastsensingdate DESC");
+
+my @columnsToShow = split ',', $selectColumns;
+my @sortColumns = split ',', $sortColumns;
+
 # Does the DB exist?
 (-e $dbFile) or die "Cannot find database $dbFile, Terminating\n\n";
 # Connect
@@ -32,15 +39,15 @@ while (my @data = $statement->fetchrow_array()) {
 $statement->finish;
 
 print "<html><head></head><body><h3>Sensor Data</h3><p><table border=1>";
-print "<th>$_</th>" for @keys;
+print "<th>$_</th>" for @columnsToShow;
 
-$sql = "SELECT * FROM $dbTable ORDER BY UnitNumber, lastsensingdate DESC";
+$sql = "SELECT $selectColumns FROM $dbTable ORDER BY $sortColumns";
 $statement = $dbh->prepare($sql);
 $statement->execute();
 
 while (my $row = $statement->fetchrow_hashref) {
 	print "<tr>";
-	print "<td>".($row->{lc($_)}//"null")."</td>" for @keys;
+	print "<td>".($row->{$_}//"null")."</td>" for @columnsToShow;
 	print "</tr>";
 }
 $statement->finish;
