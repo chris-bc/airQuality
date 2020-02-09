@@ -28,6 +28,10 @@ my @columnsToShow = split ',', $selectColumns;
 my @sortColumns = split ',', $sortColumns;
 my %colsHash = map {$_ => 1} @columnsToShow;
 
+# @sortColumns contains elements that include ASC/DESC spec
+# Get a list of columns that are used for sorting
+my %sortColsHash = map {(split ' ', $_)[0] => 1} @sortColumns;
+
 # Does the DB exist?
 (-e $dbFile) or die "Cannot find database $dbFile, Terminating\n\n";
 # Connect
@@ -69,6 +73,7 @@ print "</table></p>";
 
 print<<EOF;
 <script src="addRemove.js"></script>
+<p>
 <h3>Columns to show</h3>
 
 <div style="width:50%;">
@@ -94,25 +99,49 @@ print<<EOF;
 
 EOF
 
-for (@keys) {
-  print "<option value='$_'>$_</option>\n" if exists($colsHash{$_});
-}
+print "<option value='$_'>$_</option>/n" for @columnsToShow;
 
 print<<EOF;
 
     </select>
   </div>
 </div>
-</p><p>
-<h3>Sort columns</h3>
-TODO
-<form method="post">
-<input type="hidden" name="cols" id="cols"/>
-<input type="hidden" name="sort" id="sort"/>
-<input type="submit" value="Submit">
-</form>
+</p>
+<div style="width:50%;">
+<p><br/><h3>Sort columns</h3></p>
+  <div style="float:left; margin:0; width:40%;">
+    <select id="allSortCols" size="10" style="width:100%;">
 
 EOF
 
-print "</body></html>";
+for (@keys) {
+  print "<option value='$_'>$_</option>\n" unless (exists($sortColsHash{$_}));
+}
+
+print<<EOF;
+    </select>
+  </div>
+  <div style="float:left; margin:0; width:20%; height=100%; text-align:center;">
+    <br/><button onClick="addSort()" style="width:80%;"> &gt; ASC </button><br/><br/>
+    <button onClick="addSortDesc()" style="width:80%;"> &gt; DESC </button><br/><br/>
+    <button onClick="rmSort()" style="width:80%;"> &lt; </button><br/><br/>
+    <button onClick="rmSortAll()" style="width:80%;"> &lt;&lt; </button>
+  </div>
+  <div style="float:left; margin:0; width:40%;">
+    <select name="selSortCols" id="selSortCols" size="10" style="width:100%;">
+
+EOF
+
+print "<option value='$_'>$_</option>\n" for @sortColumns;
+
+print "
+    </select>
+  </div>
+</div>
+<form method='post'>
+<input type='hidden' name='cols' id='cols' value='$selectColumns'/>
+<input type='hidden' name='sort' id='sort' value='$sortColumns'/>
+<input type='submit' value='Submit'>
+</form>
+</body></html>";
 
