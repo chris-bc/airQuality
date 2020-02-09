@@ -1,5 +1,17 @@
 #!/usr/bin/perl
 
+# This script pulls the latest observations from KOALA-based sensors
+# and stores new observations in an SQLite database.
+# This script should be scheduled to run regularly as sensors do not
+# send new observations on a predictable schedule.
+# New observations are identified by treating (UnitNumber, lastsensingdate)
+# as a aunique identifier. This appears to be an appropriate assumption.
+#
+# To schedule this job on any Unix-like system run the following:
+# crontab -e
+# */10 * * * * /path/to/dbupdate.pl
+#
+
 use DBI;
 use strict;
 use warnings;
