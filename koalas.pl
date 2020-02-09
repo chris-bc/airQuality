@@ -138,10 +138,24 @@ print "
     </select>
   </div>
 </div>
+<div style='width:50%;'>
+<p><br/><input type='checkbox' id='limit'/><h3>Limit Results to the following locations and/or units</h3></p>
+<div style='float:left; margin:0; width:50%'>
+  <select id='limitLoc' size='10' style='width:100%;' multiple>
+    <!-- todo options -->
+  </select>
+</div><div style='float:left; margin:0; width:50%;'>
+  <select id='limitUnits' size='10' style='width:100%;' multiple>
+    <!-- todo options -->
+  </select>
+</div>
+</div>
 <form method='post'>
 <input type='hidden' name='cols' id='cols' value='$selectColumns'/>
 <input type='hidden' name='sort' id='sort' value='$sortColumns'/>
-<input type='submit' value='Submit'>
+<input type='hidden' name='locs' id='locs'/>
+<input type='hidden' name='units' id='units'/>
+<input type='submit' value='Update'>
 </form>
 </body></html>";
 
