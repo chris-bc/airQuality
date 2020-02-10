@@ -5,6 +5,7 @@ use DBI;
 use strict;
 use warnings;
 use lib qw(..);
+use Data::Dumper;
 
 print CGI::header();
 
@@ -12,6 +13,9 @@ my $dbFile = "koala.sqlite";
 my $dbTable = "kSensor";
 my $dsn = "DBI:SQLite:$dbFile";
 my %attr = (PrintError=>0, RaiseError=>1, AutoCommit=>1, FetchHashKeyName=>'NAME_lc');
+my $areaCol = "locationstring";
+my $locCol = "locationdescription";
+my $unitCol = "UnitNumber";
 
 my $cgi = CGI->new();
 my $selectColumns = "UnitNumber,locationdescription,lastsensingdate,pm1,pm10,pm25,Longitude,Latitude";
@@ -22,6 +26,22 @@ if ($cgi->param('cols') && length $cgi->param('cols') > 0) {
 my $sortColumns = "UnitNumber,lastsensingdate DESC";
 if ($cgi->param('sort') && length $cgi->param('sort') > 0) {
   $sortColumns = $cgi->param('sort');
+}
+
+my $areas = "";
+my $locations = "";
+my $units = "";
+if ($cgi->param('areas') && length $cgi->param('areas') > 0 && lc($cgi->param('areas')) ne "all") {
+  $areas = $cgi->param('areas');
+  # TODO: validate input
+}
+if ($cgi->param('locs') && length $cgi->param('locs') > 0 && lc($cgi->param('locs')) ne "all") {
+  $locations = $cgi->param('locs');
+  # TODO: validate input
+}
+if ($cgi->param('units') && length $cgi->param('units') > 0 && lc($cgi->param('units')) ne "all") {
+  $units = $cgi->param('units');
+  # TODO: validate input
 }
 
 my @columnsToShow = split ',', $selectColumns;
@@ -50,6 +70,32 @@ while (my @data = $statement->fetchrow_array()) {
 @keys = sort @keys;
 $statement->finish;
 
+# Get a hash of locaions and their units to use later
+my %unitsByLoc;;
+# TODO: Prepare the statement to avoid SQLI. Commented line below errors.
+$sql = "SELECT DISTINCT $areaCol, $locCol,$unitCol from $dbTable ORDER BY $areaCol,$locCol,$unitCol";
+#$statement = $dbh->prepare($sql, $locCol, $unitCol, $locCol, $unitCol);
+$statement = $dbh->prepare($sql);
+$statement->execute();
+
+while (my @row = $statement->fetchrow_array) {
+  $row[0] = "(empty)" if (!$row[0] || length $row[0] == 0);
+  $row[1] = "(empty)" if (!$row[1] || length $row[1] == 0);
+  $row[2] = "(empty)" if (!$row[2] || length $row[2] == 0);
+
+  # Does the unit array exist?
+  my @arr = ();
+  @arr = $unitsByLoc{$row[0]}{$row[1]};
+  if ($arr[0]) {
+    # Why arr[0] rather than arr? Who can say!
+    push(@arr[0], $row[2]);
+  } else {
+    $unitsByLoc{$row[0]}{$row[1]}[0] = $row[2];
+  }
+}
+($statement->rows > 0) or die "Failed to fetch units by location\n\n";
+$statement->finish;
+
 # Validate columns in parameters are valid
 my %k = map {$_ => 1} @keys;
 exists($k{$_}) or die "Select column $_ is not valid" for @columnsToShow;
@@ -58,8 +104,31 @@ exists($k{(split ' ', $_)[0]}) or die "Sort column ".(split ' ',$_)[0]." is not 
 print "<html><head></head><body><h1>Sensor Data</h1><p><table border=1>";
 print "<th>$_</th>" for @columnsToShow;
 
-$sql = "SELECT $selectColumns FROM $dbTable ORDER BY $sortColumns";
-$statement = $dbh->prepare($sql);
+# Build where clause based on locations and units variables
+my $where = "";
+if (length $locations > 0 || length $units > 0) {
+  $where .= "WHERE ";
+  if (length $locations > 0) {
+    $where .= "$locCol in (?)";
+    if (length $units > 0) {
+      $where .= " AND ";
+    }
+  }
+  if (length $units > 0) {
+    $where .= "$unitCol in (?)";
+  }
+}
+
+$sql = "SELECT $selectColumns FROM $dbTable $where ORDER BY $sortColumns";
+if (length $locations > 0 && length $units > 0) {
+  $statement = $dbh->prepare($sql, $locations, $units);
+} elsif (length $locations > 0) {
+  $statement = $dbh->prepare($sql, $locations);
+} elsif (length $units > 0) {
+  $statement = $dbh->prepare($sql, $units);
+} else {
+  $statement = $dbh->prepare($sql);
+}
 $statement->execute();
 
 while (my $row = $statement->fetchrow_hashref) {
@@ -153,9 +222,8 @@ print "
 <form method='post'>
 <input type='hidden' name='cols' id='cols' value='$selectColumns'/>
 <input type='hidden' name='sort' id='sort' value='$sortColumns'/>
-<input type='hidden' name='locs' id='locs'/>
-<input type='hidden' name='units' id='units'/>
-<input type='submit' value='Update'>
+<input type='hidden' name='locs' id='locs' value='$locations'/>
+<input type='hidden' name='units' id='units' value='$units'/>
+<input type='submit'>Submit</input>
 </form>
 </body></html>";
-
