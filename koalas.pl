@@ -175,8 +175,14 @@ print "<th>$_</th>" for @columnsToShow;
 # Build where clause based on locations and units variables
 # TODO: Update for areas
 my $where = "";
-if (length $locations > 0 || length $units > 0) {
+if (length $areas > 0 || length $locations > 0 || length $units > 0) {
   $where .= "WHERE ";
+  if (length $areas > 0) {
+    $where .= "$areaCol in (?)";
+    if (length $locations > 0 || length $units > 0) {
+      $where .= " AND ";
+    }
+  }
   if (length $locations > 0) {
     $where .= "$locCol in (?)";
     if (length $units > 0) {
@@ -189,14 +195,34 @@ if (length $locations > 0 || length $units > 0) {
 }
 
 $sql = "SELECT $selectColumns FROM $dbTable $where ORDER BY $sortColumns";
-if (length $locations > 0 && length $units > 0) {
-  $statement = $dbh->prepare($sql, $locations, $units);
-} elsif (length $locations > 0) {
-  $statement = $dbh->prepare($sql, $locations);
-} elsif (length $units > 0) {
-  $statement = $dbh->prepare($sql, $units);
+if (length $areas > 0) {
+  if (length $locations > 0) {
+    if (length $units > 0) {
+      $statement = $dbh->prepare($sql, $areas, $locations, $units);
+    } else {
+      $statement = $dbh->prepare($sql, $areas, $locations);
+    }
+  } else {
+    if (length $units > 0) {
+      $statement = $dbh->prepare($sql, $areas, $units);
+    } else {
+      $statement = $dbh->prepare($sql, $areas);
+    }
+  }
 } else {
-  $statement = $dbh->prepare($sql);
+  if (length $locations > 0) {
+    if (length $units > 0) {
+      $statement = $dbh->prepare($sql, $locations, $units);
+    } else {
+      $statement = $dbh->prepare($sql, $locations);
+    }
+  } else {
+    if (length $units > 0) {
+      $statement = $dbh->prepare($sql, $units);
+    } else {
+      $statement = $dbh->prepare($sql);
+    }
+  }
 }
 $statement->execute();
 
