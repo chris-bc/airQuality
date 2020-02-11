@@ -132,9 +132,7 @@ my @visibleUnits = ();
 
 if (length $areas > 0) {
   # Area(s) have been specified. Only relevant locations are visible
-  print "\nAreas have been specified. Identifying visible locations\n";
   for (split ',', $areas) {
-    print "\nLocations for area $_: ".Dumper(%unitsByLoc->{$_})."\n";
     push(@visibleLocs, keys %unitsByLoc->{$_});
   }
 } else {
@@ -143,33 +141,22 @@ if (length $areas > 0) {
 # If location(s) specified only their units are visible
 # Otherwise all units in visibleLocs are visible
 if (length $locations > 0) {
-  print "\nLocations have been specified. Identifying visible units\n";
   for (split ',', $locations) {
     # Find the location's areas
-    print "\nInspecting specified location $_\n";
     for my $l (values %unitsByLoc) {
-      print "\nLooking in location hash ".Dumper($l)."\n";
-      # TODO: Verify these are processed OK
       if (exists($l->{$_})) {
-        print "\nMatch! Adding visible units ".Dumper(@$l{$_})."\n";
-        push(@visibleUnits, @$l{$_});
+        push(@visibleUnits, @{$l->{$_}});
       }
     }
   }
 } else {
-  print "\nNo location specified, adding all units in specified areas\n";
   # Add the units for each visibleLoc
   my %hshLocs = map{$_ => 1} @visibleLocs;
   for my $l (values %unitsByLoc) {
-    print "\nChecking whether the following location should be visible ".Dumper($l)."\n";
     # %l is a hash of locations to units
     for (keys $l) {
-      print "Location: $_\n";
-      if (exists($hshLocs{$_})) {
-        my @tmp = $l->{$_};
-        print "Is in visible locations. Adding units: ".Dumper(@tmp)."\nBEFORE\n".Dumper(@visibleUnits)."\n";
-        push(@visibleUnits,@tmp);
-        print "AFTER\n".Dumper(@visibleUnits)."\n";
+      if (exists($hshLocs{"$_"})) {
+        push(@visibleUnits,@{$l->{$_}});
       }
     }
   }
@@ -186,6 +173,7 @@ print "<html><head></head><body><h1>Sensor Data</h1><p><table border=1>";
 print "<th>$_</th>" for @columnsToShow;
 
 # Build where clause based on locations and units variables
+# TODO: Update for areas
 my $where = "";
 if (length $locations > 0 || length $units > 0) {
   $where .= "WHERE ";
