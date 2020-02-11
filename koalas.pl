@@ -176,8 +176,10 @@ print<<EOF;
   </div>
 </div>
 </p>
-<div style="width:50%;">
-<p><br/><h3>Sort columns</h3></p>
+<p>
+<div style="float:left; width:100%;">
+<p><h3>Sort columns</h3></p></div>
+<div style='width:50%;'>
   <div style="float:left; margin:0; width:40%;">
     <select id="allSortCols" size="10" style="width:100%;">
 
@@ -207,23 +209,30 @@ print "
     </select>
   </div>
 </div>
-<div style='width:50%;'>
-<p><br/><input type='checkbox' id='limit'/><h3>Limit Results to the following locations and/or units</h3></p>
-<div style='float:left; margin:0; width:50%'>
-  <select id='limitLoc' size='10' style='width:100%;' multiple>
+<div style='float:left; width:100%;'><h3><input type='checkbox' id='limit'/> Limit Results to the following locations and/or units</h3></div>
+<div style='float:left; margin:0; width:33%;'>
+  <select id='limitArea' size='10' style='width:100%;' multiple onChange=updateLocs()>
+    <option value='all'>All</option>
+  </select>
+</div>
+<div style='float:left; margin:0; width:33%;'>
+  <select id='limitLoc' size='10' style='width:100%;' multiple onChange=updateLocs()>
+    <option value='all'>All</option>
     <!-- todo options -->
   </select>
-</div><div style='float:left; margin:0; width:50%;'>
-  <select id='limitUnits' size='10' style='width:100%;' multiple>
+</div><div style='float:left; margin:0; width:33%;'>
+  <select id='limitUnit' size='10' style='width:100%;' multiple onChange=updateLocs()>
+    <option value='all'>All</option>
     <!-- todo options -->
   </select>
 </div>
-</div>
+<div style='float:left; width:100%;'><p>
 <form method='post'>
 <input type='hidden' name='cols' id='cols' value='$selectColumns'/>
 <input type='hidden' name='sort' id='sort' value='$sortColumns'/>
 <input type='hidden' name='locs' id='locs' value='$locations'/>
 <input type='hidden' name='units' id='units' value='$units'/>
-<input type='submit'>Submit</input>
-</form>
+<input type='submit' value='Update'/>
+</form></p>
+</div>
 </body></html>";
