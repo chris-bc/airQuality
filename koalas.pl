@@ -71,7 +71,11 @@ while (my @data = $statement->fetchrow_array()) {
 $statement->finish;
 
 # Get a hash of locaions and their units to use later
-my %unitsByLoc;;
+my %unitsByLoc;
+my @allLocs;
+my @allUnits;
+my %tmpLocs;
+my %tmpUnits;
 # TODO: Prepare the statement to avoid SQLI. Commented line below errors.
 $sql = "SELECT DISTINCT $areaCol, $locCol,$unitCol from $dbTable ORDER BY $areaCol,$locCol,$unitCol";
 #$statement = $dbh->prepare($sql, $locCol, $unitCol, $locCol, $unitCol);
@@ -82,6 +86,9 @@ while (my @row = $statement->fetchrow_array) {
   $row[0] = "(empty)" if (!$row[0] || length $row[0] == 0);
   $row[1] = "(empty)" if (!$row[1] || length $row[1] == 0);
   $row[2] = "(empty)" if (!$row[2] || length $row[2] == 0);
+
+  $tmpLocs{$row[1]} = 1;
+  $tmpUnits{$row[2]} = 1;
 
   # Does the unit array exist?
   my @arr = ();
@@ -95,6 +102,80 @@ while (my @row = $statement->fetchrow_array) {
 }
 ($statement->rows > 0) or die "Failed to fetch units by location\n\n";
 $statement->finish;
+
+# allAreas is keys unitsByLoc
+@allLocs = sort keys %tmpLocs;
+@allUnits = sort keys %tmpUnits;
+
+# Validate location inputs
+if (length $areas > 0) {
+  for (split ',', $areas) {
+    exists(%unitsByLoc->{$_}) or die "Invalid area '$_' specified\n";
+  }
+}
+
+if (length $locations > 0) {
+  for (split ',', $locations) {
+    exists($tmpLocs{$_}) or die "Invalid location '$_' specified\n";
+  }
+}
+
+if (length $units > 0) {
+  for (split ',', $units) {
+    exists ($tmpUnits{$_}) or die "Invalid unit '$_' specified\n";
+  }
+}
+
+# If location inputs are specified determine which are visible by default
+my @visibleLocs;
+my @visibleUnits = ();
+
+if (length $areas > 0) {
+  # Area(s) have been specified. Only relevant locations are visible
+  print "\nAreas have been specified. Identifying visible locations\n";
+  for (split ',', $areas) {
+    print "\nLocations for area $_: ".Dumper(%unitsByLoc->{$_})."\n";
+    push(@visibleLocs, keys %unitsByLoc->{$_});
+  }
+} else {
+  @visibleLocs = @allLocs;
+}
+# If location(s) specified only their units are visible
+# Otherwise all units in visibleLocs are visible
+if (length $locations > 0) {
+  print "\nLocations have been specified. Identifying visible units\n";
+  for (split ',', $locations) {
+    # Find the location's areas
+    print "\nInspecting specified location $_\n";
+    for my $l (values %unitsByLoc) {
+      print "\nLooking in location hash ".Dumper($l)."\n";
+      # TODO: Verify these are processed OK
+      if (exists($l->{$_})) {
+        print "\nMatch! Adding visible units ".Dumper(@$l{$_})."\n";
+        push(@visibleUnits, @$l{$_});
+      }
+    }
+  }
+} else {
+  print "\nNo location specified, adding all units in specified areas\n";
+  # Add the units for each visibleLoc
+  my %hshLocs = map{$_ => 1} @visibleLocs;
+  for my $l (values %unitsByLoc) {
+    print "\nChecking whether the following location should be visible ".Dumper($l)."\n";
+    # %l is a hash of locations to units
+    for (keys $l) {
+      print "Location: $_\n";
+      if (exists($hshLocs{$_})) {
+        my @tmp = $l->{$_};
+        print "Is in visible locations. Adding units: ".Dumper(@tmp)."\nBEFORE\n".Dumper(@visibleUnits)."\n";
+        push(@visibleUnits,@tmp);
+        print "AFTER\n".Dumper(@visibleUnits)."\n";
+      }
+    }
+  }
+}
+
+print "Visible locations completed.\nAREAS: ".Dumper(keys %unitsByLoc)."\n\nLOCATIONS: ".Dumper(@visibleLocs)."\n\nUNITS: ".Dumper(@visibleUnits)."\n";
 
 # Validate columns in parameters are valid
 my %k = map {$_ => 1} @keys;
