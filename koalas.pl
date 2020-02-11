@@ -130,6 +130,11 @@ if (length $units > 0) {
 my @visibleLocs;
 my @visibleUnits = ();
 
+# DEBUG
+#$areas = "Adelaide,Sydney";
+#$locations = "Adelaide,Katoomba AQMS";
+#$units = "AQB0049,AQB0059,AQB0004,AQB0005";
+
 if (length $areas > 0) {
   # Area(s) have been specified. Only relevant locations are visible
   for (split ',', $areas) {
@@ -162,7 +167,8 @@ if (length $locations > 0) {
   }
 }
 
-print "Visible locations completed.\nAREAS: ".Dumper(keys %unitsByLoc)."\n\nLOCATIONS: ".Dumper(@visibleLocs)."\n\nUNITS: ".Dumper(@visibleUnits)."\n";
+# DEBUG
+#print "Visible locations completed.\nAREAS: ".Dumper(keys %unitsByLoc)."\n\nLOCATIONS: ".Dumper(@visibleLocs)."\n\nUNITS: ".Dumper(@visibleUnits)."\n";
 
 # Validate columns in parameters are valid
 my %k = map {$_ => 1} @keys;
@@ -173,57 +179,38 @@ print "<html><head></head><body><h1>Sensor Data</h1><p><table border=1>";
 print "<th>$_</th>" for @columnsToShow;
 
 # Build where clause based on locations and units variables
-# TODO: Update for areas
 my $where = "";
 if (length $areas > 0 || length $locations > 0 || length $units > 0) {
   $where .= "WHERE ";
   if (length $areas > 0) {
-    $where .= "$areaCol in (?)";
+    my @sqlAreas = split ',', $areas;
+    $_ = "'$_'" for @sqlAreas;
+    $where .= "$areaCol in (".(join ',', @sqlAreas).")";
     if (length $locations > 0 || length $units > 0) {
       $where .= " AND ";
     }
   }
   if (length $locations > 0) {
-    $where .= "$locCol in (?)";
+    print "locations is :$locations:\n";
+    my @sqlLocs = split ',', $locations;
+    $_ = "'$_'" for @sqlLocs;
+    $where .= "$locCol in (".(join ',', @sqlLocs).")";
     if (length $units > 0) {
       $where .= " AND ";
     }
   }
   if (length $units > 0) {
-    $where .= "$unitCol in (?)";
+    print "Units is :$units:\n";
+    my @sqlUnits = split ',', $units;
+    $_ = "'$_'" for @sqlUnits;
+    $where .= "$unitCol in (".(join ',', @sqlUnits).")";
   }
 }
 
+# Can't use parameterised values for specified locations because of the
+# way perl handles arrays and having an undetermined number of parameters
 $sql = "SELECT $selectColumns FROM $dbTable $where ORDER BY $sortColumns";
-if (length $areas > 0) {
-  if (length $locations > 0) {
-    if (length $units > 0) {
-      $statement = $dbh->prepare($sql, $areas, $locations, $units);
-    } else {
-      $statement = $dbh->prepare($sql, $areas, $locations);
-    }
-  } else {
-    if (length $units > 0) {
-      $statement = $dbh->prepare($sql, $areas, $units);
-    } else {
-      $statement = $dbh->prepare($sql, $areas);
-    }
-  }
-} else {
-  if (length $locations > 0) {
-    if (length $units > 0) {
-      $statement = $dbh->prepare($sql, $locations, $units);
-    } else {
-      $statement = $dbh->prepare($sql, $locations);
-    }
-  } else {
-    if (length $units > 0) {
-      $statement = $dbh->prepare($sql, $units);
-    } else {
-      $statement = $dbh->prepare($sql);
-    }
-  }
-}
+$statement = $dbh->prepare($sql);
 $statement->execute();
 
 while (my $row = $statement->fetchrow_hashref) {
@@ -300,7 +287,7 @@ EOF
 
 print "<option value='$_'>$_</option>\n" for @sortColumns;
 
-print "
+print<<EOF;
     </select>
   </div>
 </div>
@@ -323,6 +310,9 @@ print "
 </div>
 <div style='float:left; width:100%;'><p>
 <form method='post'>
+
+EOF
+print "
 <input type='hidden' name='cols' id='cols' value='$selectColumns'/>
 <input type='hidden' name='sort' id='sort' value='$sortColumns'/>
 <input type='hidden' name='locs' id='locs' value='$locations'/>
