@@ -145,23 +145,32 @@ if (length $areas > 0) {
 }
 # If location(s) specified only their units are visible
 # Otherwise all units in visibleLocs are visible
+my %areaSpec = map {$_ => 1} (split ',', $areas);
+
 if (length $locations > 0) {
   for (split ',', $locations) {
     # Find the location's areas
-    for my $l (values %unitsByLoc) {
-      if (exists($l->{$_})) {
-        push(@visibleUnits, @{$l->{$_}});
+    # BUG: need to validate areas against specified areas (if any)
+    for my $a (keys %unitsByLoc) {
+      if ((length $areas == 0) || exists($areaSpec{$a})) {
+        # Either the area is visible or we're looking at all areas.
+        if (exists(%unitsByLoc->{$a}->{$_})) {
+          push(@visibleUnits, @{%unitsByLoc->{$a}->{$_}});
+        }
       }
     }
   }
 } else {
   # Add the units for each visibleLoc
   my %hshLocs = map{$_ => 1} @visibleLocs;
-  for my $l (values %unitsByLoc) {
-    # %l is a hash of locations to units
-    for (keys $l) {
-      if (exists($hshLocs{"$_"})) {
-        push(@visibleUnits,@{$l->{$_}});
+  # Because locations aren't unique to an area check area is selected
+  for my $a (keys %unitsByLoc) {
+    if ((length $areas == 0) || exists($areaSpec{$a})) {
+      # Either the area is visible or we're looking at all areas.
+      for (keys %unitsByLoc->{$a}) {
+        if (exists($hshLocs{"$_"})) {
+          push(@visibleUnits, @{%unitsByLoc->{$a}->{$_}});
+        }
       }
     }
   }
