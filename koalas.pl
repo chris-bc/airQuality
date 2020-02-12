@@ -294,12 +294,33 @@ print<<EOF;
 <div style='float:left; width:100%;'><h3><input type='checkbox' id='limit'/> Limit Results to the following locations and/or units</h3></div>
 <div style='float:left; margin:0; width:33%;'>
   <select id='limitArea' size='10' style='width:100%;' multiple onChange=updateLocs()>
-    <option value='all'>All</option>
+
+EOF
+
+# Two approaches for options that should not be visible:
+# hidden='hidden' will hide the options on Chrome and Firefox
+# disabled='true' will display but disable them on Safari and IE
+
+# Display all areas, selecting any that are specified in $areas
+my @selectedAreas = split ',', $areas;
+print "<option value='all'".((length $areas > 0)?"":" selected").">All</option>\n";
+# Prompts: @visibleLocs @visibleUnits @allLocs @allUnits %unitsByLoc
+for my $iArea (sort keys %unitsByLoc) {
+  my $strOpt = "<option value='$iArea'";
+  # Is this area selected?
+  for (@selectedAreas) {
+    $strOpt .= " selected" if ($iArea eq $_);
+  }
+  $strOpt .= ">$iArea</option>\n";
+  print $strOpt;
+}
+
+print<<EOF;
   </select>
 </div>
 <div style='float:left; margin:0; width:33%;'>
   <select id='limitLoc' size='10' style='width:100%;' multiple onChange=updateLocs()>
-    <option value='all'>All</option>
+    <option value='all' disabled='true' hidden='hidden'>All</option>
     <!-- todo options -->
   </select>
 </div><div style='float:left; margin:0; width:33%;'>
@@ -312,6 +333,7 @@ print<<EOF;
 <form method='post'>
 
 EOF
+
 print "
 <input type='hidden' name='cols' id='cols' value='$selectColumns'/>
 <input type='hidden' name='sort' id='sort' value='$sortColumns'/>
