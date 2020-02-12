@@ -304,7 +304,6 @@ EOF
 # Display all areas, selecting any that are specified in $areas
 my @selectedAreas = split ',', $areas;
 print "<option value='all'".((length $areas > 0)?"":" selected").">All</option>\n";
-# Prompts: @visibleLocs @visibleUnits @allLocs @allUnits %unitsByLoc
 for my $iArea (sort keys %unitsByLoc) {
   my $strOpt = "<option value='$iArea'";
   # Is this area selected?
@@ -320,8 +319,39 @@ print<<EOF;
 </div>
 <div style='float:left; margin:0; width:33%;'>
   <select id='limitLoc' size='10' style='width:100%;' multiple onChange=updateLocs()>
-    <option value='all' disabled='true' hidden='hidden'>All</option>
-    <!-- todo options -->
+
+EOF
+
+# Prompts: @visibleLocs @visibleUnits @allLocs @allUnits %unitsByLoc
+my @selectedLocs = split ',', $locations;
+print "<option value='all'".((length $locations > 0)?"":" selected").">All</option>\n";
+# Loop through @allLocs. For each loc, select if is in @selectedLocs,
+# hide unless in @visibleLocs, custom attribute kArea finding their area from hash
+for my $iLoc (sort @allLocs) {
+  my $strOpt = "<option value ='$iLoc'";
+  my $visible = 0;
+  $visible = (($_ eq $iLoc)?1:$visible) for @visibleLocs;
+  $strOpt .= " hidden='hidden' disabled='true'" if ($visible == 0);
+  for (@selectedLocs) {
+    $strOpt .= " selected" if ($iLoc eq $_);
+  }
+  # Find the area $iLoc is in
+  # This is fun - Some location names are duplicated across multiple areas
+  # DECISION => locArea attribute will need to support multiple values
+  my $locArea = "";
+  for (keys %unitsByLoc) {
+    my $thisVal = %unitsByLoc->{$_};
+    if (exists($thisVal->{$iLoc})) {
+      # Handle multiple matching areas:
+      $locArea .= "," if (length $locArea > 0);
+      $locArea .= $_;
+    }
+  }
+  $strOpt .= " kArea='$locArea'>$iLoc</option>\n";
+  print $strOpt;
+}
+
+print<<EOF;
   </select>
 </div><div style='float:left; margin:0; width:33%;'>
   <select id='limitUnit' size='10' style='width:100%;' multiple onChange=updateLocs()>
