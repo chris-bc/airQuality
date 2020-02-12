@@ -298,7 +298,7 @@ print<<EOF;
     </select>
   </div>
 </div>
-<div style='float:left; width:100%;'><h3><input type='checkbox' id='limit'/> Limit Results to the following locations and/or units</h3></div>
+<div style='float:left; width:100%;'><h3>Limit Results to the following locations and/or units</h3></div>
 <div style='float:left; margin:0; width:33%;'>
   <select id='limitArea' size='10' style='width:100%;' multiple onChange=updateLocs()>
 
