@@ -138,12 +138,62 @@ function areasChanged() {
 	}
 	// Finally update locations based on changes
 	locsChanged();
+	// TODO: Need to do something with units here to cater for locations
+	//			with multiple areas. Currently selecting Sydney not (empty)
+	//		  will show AQB0098 incorrectly.
 }
 
 function locsChanged() {
+	var lSel = document.getElementById("limitLoc");
+	var uSel = document.getElementById("limitUnit");
+	var locParam = document.getElementById("locs");
 
+	locParam.value = "";
+	var selectedLocs = lSel.selectedOptions;
+	for (var i=0; i < selectedLocs.length; i++) {
+		if (locParam.value.length > 0) {
+			locParam.value = locParam.value + ",";
+		}
+		locParam.value = locParam.value + selectedLocs[i].value;
+// BUG: This re-hides all units except for the last location
+		// Skip 'all' units
+		for (var j=1; j < uSel.options.length; j++) {
+			var kLoc = uSel.options[j].getAttribute("kLoc");
+			var hidden = 1;
+			// Show the unit if 'all' selected
+			if (lSel.options[0].selected) {
+				hidden = 0;
+			}
+			if ((kLoc == selectedLocs[i].value) && (hidden == 1)) {
+				hidden = 0;
+			}
+
+			if (hidden == 0) {
+				if (uSel.options[j].hasAttribute("hidden")) {
+					uSel.options[j].removeAttribute("hidden");
+					uSel.options[j].removeAttribute("disabled");
+				}
+			} else {
+				if (!uSel.options[j].hasAttribute("hidden")) {
+					uSel.options[j].setAttribute("hidden", "hidden");
+					uSel.options[j].setAttribute("disabled", "true");
+				}
+			}
+		}
+	}
+	// Finally update units
+	unitsChanged();
 }
 
 function unitsChanged() {
+	var uSel = document.getElementById("limitUnit");
+	var uParam = document.getElementById("units");
+	uParam.value = "";
 
+	for (var i=0; i<uSel.selectedOptions.length; i++) {
+		if (uParam.value.length > 0) {
+			uParam.value = uParam.value + ",";
+		}
+		uParam.value = uParam.value + uSel.selectedOptions[i].value;
+	}
 }
