@@ -191,7 +191,6 @@ if (length $areas > 0 || length $locations > 0 || length $units > 0) {
     }
   }
   if (length $locations > 0) {
-    print "locations is :$locations:\n";
     my @sqlLocs = split ',', $locations;
     $_ = "'$_'" for @sqlLocs;
     $where .= "$locCol in (".(join ',', @sqlLocs).")";
@@ -200,7 +199,6 @@ if (length $areas > 0 || length $locations > 0 || length $units > 0) {
     }
   }
   if (length $units > 0) {
-    print "Units is :$units:\n";
     my @sqlUnits = split ',', $units;
     $_ = "'$_'" for @sqlUnits;
     $where .= "$unitCol in (".(join ',', @sqlUnits).")";
@@ -314,13 +312,11 @@ for my $iArea (sort keys %unitsByLoc) {
   print $strOpt;
 }
 
-print<<EOF;
+print "
   </select>
 </div>
 <div style='float:left; margin:0; width:33%;'>
-  <select id='limitLoc' size='10' style='width:100%;' multiple onChange=updateLocs()>
-
-EOF
+  <select id='limitLoc' size='10' style='width:100%;' multiple onChange=updateLocs()>\n";
 
 # Prompts: @visibleLocs @visibleUnits @allLocs @allUnits %unitsByLoc
 my @selectedLocs = split ',', $locations;
@@ -351,24 +347,46 @@ for my $iLoc (sort @allLocs) {
   print $strOpt;
 }
 
-print<<EOF;
+print "
   </select>
 </div><div style='float:left; margin:0; width:33%;'>
-  <select id='limitUnit' size='10' style='width:100%;' multiple onChange=updateLocs()>
-    <option value='all'>All</option>
-    <!-- todo options -->
-  </select>
+  <select id='limitUnit' size='10' style='width:100%;' multiple onChange=updateLocs()>\n";
+
+# Because location is not unique to an array we'll need to use the hash, at
+# minimum to identify area and location for each unit. Given that, it *would*
+# make more sense to navigate the hash for everything here, however that restricts
+# our ability to sort the results on unit name.
+# DECISION => Navigate the hash, building options (other than 'all') into an
+# array. Sort that before printing.
+my @unitOptions;
+my %selectedUnits = map {$_ => 1} (split ',', $units);
+my %visibleUnitsHash = map {$_ => 1} @visibleUnits;
+print "<option value='all' ".((length $units > 0)?"":" selected").">All</option>\n";
+
+# Loop through the hash down to the units level
+for my $areaKey (keys %unitsByLoc) {
+  for my $locKey (keys %unitsByLoc->{$areaKey}) {
+#    print "dumping :$areaKey:$locKey:\n".Dumper(@{%unitsByLoc->{$areaKey}->{$locKey}})."\n";
+    for my $iUnit (@{%unitsByLoc->{$areaKey}->{$locKey}}) {
+      my $thisUnit = "<option value='$iUnit' kArea='$areaKey' kLoc='$locKey'";
+      $thisUnit .= " selected" if (exists($selectedUnits{$iUnit}));
+      $thisUnit .= " hidden='hidden' disabled='true'" unless (exists($visibleUnitsHash{$iUnit}));
+      $thisUnit .= ">$iUnit</option>\n";
+      push(@unitOptions, $thisUnit);
+    }
+  }
+}
+
+print "$_\n" for sort @unitOptions;
+print "  </select>
 </div>
 <div style='float:left; width:100%;'><p>
 <form method='post'>
-
-EOF
-
-print "
 <input type='hidden' name='cols' id='cols' value='$selectColumns'/>
 <input type='hidden' name='sort' id='sort' value='$sortColumns'/>
 <input type='hidden' name='locs' id='locs' value='$locations'/>
 <input type='hidden' name='units' id='units' value='$units'/>
+<input type='hidden' name='areas' id='areas' value='$areas'/>
 <input type='submit' value='Update'/>
 </form></p>
 </div>
