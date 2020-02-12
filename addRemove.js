@@ -95,94 +95,85 @@ function updateSort() {
 	sort.value = str;
 }
 
-function areasChanged() {
+function locsChanged() {
 	var aSel = document.getElementById("limitArea");
 	var lSel = document.getElementById("limitLoc");
+	var uSel = document.getElementById("limitUnit");
 	var areaParam = document.getElementById("areas");
-	areaParam.value = "";
+	var locParam = document.getElementById("locs");
 
+	areaParam.value = "";
+	locParam.value = "";
+
+	// Hide all locations and units then selectively show them
+	// While annoying this is necessary because of the lack of
+	// uniqueness
+	for (var i=1; i < lSel.options.length; i++) {
+		if (!lSel.options[i].hasAttribute("hidden")) {
+			lSel.options[i].setAttribute("hidden", "hidden");
+			lSel.options[i].setAttribute("disabled", "true");
+		}
+	}
+	for (var i=1; i < uSel.options.length; i++) {
+		if (!uSel.options[i].hasAttribute("hidden")) {
+			uSel.options[i].setAttribute("hidden", "hidden");
+			uSel.options[i].setAttribute("disabled", "true");
+		}
+	}
+
+	// Bulid post params
 	var selectedAreas = aSel.selectedOptions;
-	for (var i=0; i<selectedAreas.length; i++) {
-		// Build the post parameter as we go
+	var selectedLocs = lSel.selectedOptions;
+
+	for (var i=0; i < selectedAreas.length; i++) {
 		if (areaParam.value.length > 0) {
 			areaParam.value = areaParam.value + ",";
 		}
 		areaParam.value = areaParam.value + selectedAreas[i].value;
-
-		// Skip over the 'all' entry
-		for (var j=1; j<lSel.options.length; j++) {
-			// kArea may contain comma-separated values
-			var kArea = lSel.options[j].getAttribute("kArea").split(",");
-			var hidden = 1;
-			// Nothing hidden if all areas selected
-			if (aSel.options[0].selected) {
-				hidden = 0;
-			}
-			for (var k=0; (k<kArea.length && hidden) == 1; k++) {
-				if (kArea[k] == selectedAreas[i].value) {
-					hidden = 0;
-				}
-			}
-			if (hidden == 0) {
-				if (lSel.options[j].hasAttribute("hidden")) {
-					lSel.options[j].removeAttribute("hidden");
-					lSel.options[j].removeAttribute("disabled");
-				}
-			} else {
-				if (!lSel.options[j].hasAttribute("hidden")) {
-					lSel.options[j].setAttribute("hidden", "hidden");
-					lSel.options[j].setAttribute("disabled", "true");
-				}
-			}
-		}
 	}
-	// Finally update locations based on changes
-	locsChanged();
-	// TODO: Need to do something with units here to cater for locations
-	//			with multiple areas. Currently selecting Sydney not (empty)
-	//		  will show AQB0098 incorrectly.
-}
-
-function locsChanged() {
-	var lSel = document.getElementById("limitLoc");
-	var uSel = document.getElementById("limitUnit");
-	var locParam = document.getElementById("locs");
-
-	locParam.value = "";
-	var selectedLocs = lSel.selectedOptions;
 	for (var i=0; i < selectedLocs.length; i++) {
 		if (locParam.value.length > 0) {
 			locParam.value = locParam.value + ",";
 		}
 		locParam.value = locParam.value + selectedLocs[i].value;
-// BUG: This re-hides all units except for the last location
-		// Skip 'all' units
-		for (var j=1; j < uSel.options.length; j++) {
-			var kLoc = uSel.options[j].getAttribute("kLoc");
-			var hidden = 1;
-			// Show the unit if 'all' selected
-			if (lSel.options[0].selected) {
-				hidden = 0;
-			}
-			if ((kLoc == selectedLocs[i].value) && (hidden == 1)) {
-				hidden = 0;
-			}
+	}
 
-			if (hidden == 0) {
-				if (uSel.options[j].hasAttribute("hidden")) {
-					uSel.options[j].removeAttribute("hidden");
-					uSel.options[j].removeAttribute("disabled");
+	// Show locations for selected areas
+	for (var i=0; i < selectedAreas.length; i++) {
+		for (var j=1; j < lSel.options.length; j++) {
+			// Should the selected location be hidden?
+			var hidden = 1;
+			if (aSel.options[0].selected) {
+				hidden = 0;
+			}
+			// Locations may have multiple areas
+			var kArea = lSel.options[j].getAttribute("kArea").split(",");
+			for (var k=0; ((k < kArea.length) && (hidden == 1)) ; k++) {
+				if (selectedAreas[i].value == kArea[k]) {
+					hidden = 0;
 				}
-			} else {
-				if (!uSel.options[j].hasAttribute("hidden")) {
-					uSel.options[j].setAttribute("hidden", "hidden");
-					uSel.options[j].setAttribute("disabled", "true");
+			}
+			// Show the option
+			if ((hidden == 0) && (lSel.options[j].hasAttribute("hidden"))) {
+				lSel.options[j].removeAttribute("hidden");
+				lSel.options[j].removeAttribute("disabled");
+			}
+		}
+		for (var j=0; j < selectedLocs.length; j++) {
+			// Check units for area i and loc j
+			for (var n=1; n < uSel.options.length; n++) {
+				var kLoc = uSel.options[n].getAttribute("kLoc");
+				kArea = uSel.options[n].getAttribute("kArea");
+				if ((aSel.options[0].selected || kArea == selectedAreas[i].value) &&
+						(lSel.options[0].selected || kLoc == selectedLocs[j].value)) {
+							if (uSel.options[n].hasAttribute("hidden")) {
+								uSel.options[n].removeAttribute("hidden");
+								uSel.options[n].removeAttribute("disabled");
+							}
 				}
 			}
 		}
 	}
-	// Finally update units
-	unitsChanged();
 }
 
 function unitsChanged() {
