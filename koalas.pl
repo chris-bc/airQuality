@@ -214,6 +214,17 @@ if (length $areas > 0 || length $locations > 0 || length $units > 0) {
   }
 }
 
+# Don't want to alter @columnsToShow because it's used in subsequent functionality
+# Take a copy of it, mangle date columns to do some formatting, and push back into
+# $selectColumns
+my @dateCols = split ',', $selectColumns;
+for (@dateCols) {
+  if ((index($_,'date') != -1) || (index($_,'Date') != -1)) {
+    $_ = "datetime($_, 'localtime')";
+  }
+}
+$selectColumns = join ',', @dateCols;
+
 # Can't use parameterised values for specified locations because of the
 # way perl handles arrays and having an undetermined number of parameters
 $sql = "SELECT $selectColumns FROM $dbTable $where ORDER BY $sortColumns";
@@ -222,7 +233,7 @@ $statement->execute();
 
 while (my $row = $statement->fetchrow_hashref) {
 	print "<tr>";
-	print "<td>".($row->{$_}//"null")."</td>" for @columnsToShow;
+	print "<td>".($row->{$_}//"null")."</td>" for @dateCols;
 	print "</tr>";
 }
 $statement->finish;
