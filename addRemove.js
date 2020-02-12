@@ -95,3 +95,55 @@ function updateSort() {
 	sort.value = str;
 }
 
+function areasChanged() {
+	var aSel = document.getElementById("limitArea");
+	var lSel = document.getElementById("limitLoc");
+	var areaParam = document.getElementById("areas");
+	areaParam.value = "";
+
+	var selectedAreas = aSel.selectedOptions;
+	for (var i=0; i<selectedAreas.length; i++) {
+		// Build the post parameter as we go
+		if (areaParam.value.length > 0) {
+			areaParam.value = areaParam.value + ",";
+		}
+		areaParam.value = areaParam.value + selectedAreas[i].value;
+
+		// Skip over the 'all' entry
+		for (var j=1; j<lSel.options.length; j++) {
+			// kArea may contain comma-separated values
+			var kArea = lSel.options[j].getAttribute("kArea").split(",");
+			var hidden = 1;
+			// Nothing hidden if all areas selected
+			if (aSel.options[0].selected) {
+				hidden = 0;
+			}
+			for (var k=0; (k<kArea.length && hidden) == 1; k++) {
+				if (kArea[k] == selectedAreas[i].value) {
+					hidden = 0;
+				}
+			}
+			if (hidden == 0) {
+				if (lSel.options[j].hasAttribute("hidden")) {
+					lSel.options[j].removeAttribute("hidden");
+					lSel.options[j].removeAttribute("disabled");
+				}
+			} else {
+				if (!lSel.options[j].hasAttribute("hidden")) {
+					lSel.options[j].setAttribute("hidden", "hidden");
+					lSel.options[j].setAttribute("disabled", "true");
+				}
+			}
+		}
+	}
+	// Finally update locations based on changes
+	locsChanged();
+}
+
+function locsChanged() {
+
+}
+
+function unitsChanged() {
+
+}

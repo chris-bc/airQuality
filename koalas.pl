@@ -300,7 +300,7 @@ print<<EOF;
 </div>
 <div style='float:left; width:100%;'><h3>Limit Results to the following locations and/or units</h3></div>
 <div style='float:left; margin:0; width:33%;'>
-  <select id='limitArea' size='10' style='width:100%;' multiple onChange=updateLocs()>
+  <select id='limitArea' size='10' style='width:100%;' multiple onChange=areasChanged()>
 
 EOF
 
@@ -325,7 +325,7 @@ print "
   </select>
 </div>
 <div style='float:left; margin:0; width:33%;'>
-  <select id='limitLoc' size='10' style='width:100%;' multiple onChange=updateLocs()>\n";
+  <select id='limitLoc' size='10' style='width:100%;' multiple onChange=locsChanged()>\n";
 
 # Prompts: @visibleLocs @visibleUnits @allLocs @allUnits %unitsByLoc
 my @selectedLocs = split ',', $locations;
@@ -359,7 +359,7 @@ for my $iLoc (sort @allLocs) {
 print "
   </select>
 </div><div style='float:left; margin:0; width:33%;'>
-  <select id='limitUnit' size='10' style='width:100%;' multiple onChange=updateLocs()>\n";
+  <select id='limitUnit' size='10' style='width:100%;' multiple onChange=unitsChanged()>\n";
 
 # Because location is not unique to an array we'll need to use the hash, at
 # minimum to identify area and location for each unit. Given that, it *would*
