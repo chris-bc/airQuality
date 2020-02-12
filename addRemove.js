@@ -125,19 +125,6 @@ function locsChanged() {
 	var selectedAreas = aSel.selectedOptions;
 	var selectedLocs = lSel.selectedOptions;
 
-	for (var i=0; i < selectedAreas.length; i++) {
-		if (areaParam.value.length > 0) {
-			areaParam.value = areaParam.value + ",";
-		}
-		areaParam.value = areaParam.value + selectedAreas[i].value;
-	}
-	for (var i=0; i < selectedLocs.length; i++) {
-		if (locParam.value.length > 0) {
-			locParam.value = locParam.value + ",";
-		}
-		locParam.value = locParam.value + selectedLocs[i].value;
-	}
-
 	// Show locations for selected areas
 	for (var i=0; i < selectedAreas.length; i++) {
 		for (var j=1; j < lSel.options.length; j++) {
@@ -174,6 +161,42 @@ function locsChanged() {
 			}
 		}
 	}
+
+	// Finally, if selected locs or units are no longer visible
+	// Select 'all' options and rebuild post parameters
+	for (var i=1; i < lSel.options.length; i++) {
+		if (lSel.options[i].selected && lSel.options[i].hasAttribute("hidden")) {
+			lSel.options[i].selected = false;
+		}
+	}
+	for (var i=1; i < uSel.options.length; i++) {
+		if (uSel.options[i].selected && uSel.options[i].hasAttribute("hidden")) {
+			uSel.options[i].selected = false;
+		}
+	}
+	if (lSel.selectedOptions.length == 0) {
+		lSel.options[0].selected = true;
+	}
+	if (uSel.selectedOptions.length == 0) {
+		uSel.options[0].selected = true;
+	}
+
+	// Finally rebuild post params
+	selectedAreas = aSel.selectedOptions;
+	selectedLocs = lSel.selectedOptions;
+	for (var i=0; i < selectedAreas.length; i++) {
+		if (areaParam.value.length > 0) {
+			areaParam.value = areaParam.value + ",";
+		}
+		areaParam.value = areaParam.value + selectedAreas[i].value;
+	}
+	for (var i=0; i < selectedLocs.length; i++) {
+		if (locParam.value.length > 0) {
+			locParam.value = locParam.value + ",";
+		}
+		locParam.value = locParam.value + selectedLocs[i].value;
+	}
+	unitsChanged();
 }
 
 function unitsChanged() {
