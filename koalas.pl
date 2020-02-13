@@ -34,7 +34,8 @@ my $sortColumns = "UnitNumber,lastsensingdate DESC";
 my $areas = "";
 my $locations = "";
 my $units = "";
-my $limitTime = 0;
+# By default limit time to the last 3 days
+my $limitTime = 1;
 my $timeNum = "1";
 my $timeType = "hours";
 
