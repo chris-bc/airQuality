@@ -200,149 +200,11 @@ my %k = map {$_ => 1} @keys;
 exists($k{$_}) or die "Select column $_ is not valid" for @columnsToShow;
 exists($k{(split ' ', $_)[0]}) or die "Sort column ".(split ' ',$_)[0]." is not valid\n" for @sortColumns;
 
-print "<html><head></head><body><h1>Sensor Data</h1><p><table border=1>";
-print "<th>$_</th>" for @columnsToShow;
-
-# Build where clause based on locations and units variables
-my $where = "";
-if (length $areas > 0 || length $locations > 0 || length $units > 0 || $limitTime == 1) {
-  $where .= "WHERE ";
-  if (length $areas > 0) {
-    my @sqlAreas = split ',', $areas;
-    $_ = "'$_'" for @sqlAreas;
-    $where .= "$areaCol in (".(join ',', @sqlAreas).")";
-    if (length $locations > 0 || length $units > 0 || $limitTime == 1) {
-      $where .= " AND ";
-    }
-  }
-  if (length $locations > 0) {
-    my @sqlLocs = split ',', $locations;
-    $_ = "'$_'" for @sqlLocs;
-    $where .= "$locCol in (".(join ',', @sqlLocs).")";
-    if (length $units > 0 || $limitTime == 1) {
-      $where .= " AND ";
-    }
-  }
-  if (length $units > 0) {
-    my @sqlUnits = split ',', $units;
-    $_ = "'$_'" for @sqlUnits;
-    $where .= "$unitCol in (".(join ',', @sqlUnits).")";
-    if ($limitTime == 1) {
-      $where .= " AND ";
-    }
-  }
-  if ($limitTime == 1) {
-    my $sqlTimeType = $timeType;
-    my $sqlTimeNum = $timeNum;
-    # SQLite doesn't support weeks, turn weeks into days.
-    if ($timeType eq "weeks") {
-      $sqlTimeType = "days";
-      $sqlTimeNum = $timeNum * 7;
-    }
-    $where .= "datetime($timeCol) >= datetime(\"now\", \"-$sqlTimeNum $sqlTimeType\")";
-  }
-}
-
-# Don't want to alter @columnsToShow because it's used in subsequent functionality
-# Take a copy of it, mangle date columns to do some formatting, and push back into
-# $selectColumns
-my @dateCols = split ',', $selectColumns;
-for (@dateCols) {
-  if ((index($_,'date') != -1) || (index($_,'Date') != -1)) {
-    $_ = "strftime('%d-%m-%Y %H:%M:%S', $_, 'localtime')";
-  }
-}
-my $sqlSelectColumns = join ',', @dateCols;
-
-# Can't use parameterised values for specified locations because of the
-# way perl handles arrays and having an undetermined number of parameters
-$sql = "SELECT $sqlSelectColumns FROM $dbTable $where ORDER BY $sortColumns";
-$statement = $dbh->prepare($sql);
-$statement->execute();
-
-while (my $row = $statement->fetchrow_hashref) {
-	print "<tr>";
-	print "<td>".($row->{$_}//"null")."</td>" for @dateCols;
-	print "</tr>";
-}
-$statement->finish;
-$dbh->disconnect;
-print "</table></p>";
-
-print<<EOF;
-<script src="addRemove.js"></script>
-<p>
-<h3>Columns to show</h3>
-
-<div style="width:50%;">
-  <div style="float:left; margin:0; width:40%;">
-    <select id="allcols" size="10" style="width:100%;">
-
-EOF
-
-for (@keys) {
-  print "<option value='$_'>$_</option>\n" unless (exists($colsHash{$_}));
-}
-
-print<<EOF;
-    </select>
-  </div>
-  <div style="float:left; margin:0; width:20%;height=100%;text-align:center;">
-    <br/><button onClick="addCol()" style="width:80%;"> &gt; </button><br/><br/>
-    <button onClick="rmCol()" style="width:80%;"> &lt; </button><br/><br/>
-    <button onClick="rmAll()" style="width:80%;"> &lt;&lt; </button>
-  </div>
-  <div style="float:left; margin:0; width:40%;">
-    <select name="selCols" id="selCols" size="10" style="width:100%;">
-
-EOF
-
-print "<option value='$_'>$_</option>\n" for @columnsToShow;
-
-print<<EOF;
-
-    </select>
-  </div>
-</div>
-</p>
-<p>
-<div style="float:left; width:100%;">
-<p><h3>Sort columns</h3></p></div>
-<div style='width:50%;'>
-  <div style="float:left; margin:0; width:40%;">
-    <select id="allSortCols" size="10" style="width:100%;">
-
-EOF
-
-for (@keys) {
-  print "<option value='$_'>$_</option>\n" unless (exists($sortColsHash{$_}));
-}
-
-print<<EOF;
-    </select>
-  </div>
-  <div style="float:left; margin:0; width:20%; height=100%; text-align:center;">
-    <br/><button onClick="addSort()" style="width:80%;"> &gt; ASC </button><br/><br/>
-    <button onClick="addSortDesc()" style="width:80%;"> &gt; DESC </button><br/><br/>
-    <button onClick="rmSort()" style="width:80%;"> &lt; </button><br/><br/>
-    <button onClick="rmSortAll()" style="width:80%;"> &lt;&lt; </button>
-  </div>
-  <div style="float:left; margin:0; width:40%;">
-    <select name="selSortCols" id="selSortCols" size="10" style="width:100%;">
-
-EOF
-
-print "<option value='$_'>$_</option>\n" for @sortColumns;
-
-print<<EOF;
-    </select>
-  </div>
-</div>
+print "<html><head></head><body><h1>Sensor Data</h1>
+<script src=\"addRemove.js\"></script>
 <div style='float:left; width:100%;'><h3>Limit Results to the following locations and/or units</h3></div>
 <div style='float:left; margin:0; width:33%;'>
-  <select id='limitArea' size='10' style='width:100%;' multiple onChange=locsChanged()>
-
-EOF
+  <select id='limitArea' size='10' style='width:100%;' multiple onChange=locsChanged()>\n";
 
 # Two approaches for options that should not be visible:
 # hidden='hidden' will hide the options on Chrome and Firefox
@@ -452,5 +314,143 @@ print "</select>
 <input type='hidden' name='areas' id='areas' value='$areas'/>
 <input type='submit' value='Update'/>
 </form></p>
+</div>
+
+<p><table border=1>";
+print "<th>$_</th>" for @columnsToShow;
+
+# Build where clause based on locations and units variables
+my $where = "";
+if (length $areas > 0 || length $locations > 0 || length $units > 0 || $limitTime == 1) {
+  $where .= "WHERE ";
+  if (length $areas > 0) {
+    my @sqlAreas = split ',', $areas;
+    $_ = "'$_'" for @sqlAreas;
+    $where .= "$areaCol in (".(join ',', @sqlAreas).")";
+    if (length $locations > 0 || length $units > 0 || $limitTime == 1) {
+      $where .= " AND ";
+    }
+  }
+  if (length $locations > 0) {
+    my @sqlLocs = split ',', $locations;
+    $_ = "'$_'" for @sqlLocs;
+    $where .= "$locCol in (".(join ',', @sqlLocs).")";
+    if (length $units > 0 || $limitTime == 1) {
+      $where .= " AND ";
+    }
+  }
+  if (length $units > 0) {
+    my @sqlUnits = split ',', $units;
+    $_ = "'$_'" for @sqlUnits;
+    $where .= "$unitCol in (".(join ',', @sqlUnits).")";
+    if ($limitTime == 1) {
+      $where .= " AND ";
+    }
+  }
+  if ($limitTime == 1) {
+    my $sqlTimeType = $timeType;
+    my $sqlTimeNum = $timeNum;
+    # SQLite doesn't support weeks, turn weeks into days.
+    if ($timeType eq "weeks") {
+      $sqlTimeType = "days";
+      $sqlTimeNum = $timeNum * 7;
+    }
+    $where .= "datetime($timeCol) >= datetime(\"now\", \"-$sqlTimeNum $sqlTimeType\")";
+  }
+}
+
+# Don't want to alter @columnsToShow because it's used in subsequent functionality
+# Take a copy of it, mangle date columns to do some formatting, and push back into
+# $selectColumns
+my @dateCols = split ',', $selectColumns;
+for (@dateCols) {
+  if ((index($_,'date') != -1) || (index($_,'Date') != -1)) {
+    $_ = "strftime('%d-%m-%Y %H:%M:%S', $_, 'localtime')";
+  }
+}
+my $sqlSelectColumns = join ',', @dateCols;
+
+# Can't use parameterised values for specified locations because of the
+# way perl handles arrays and having an undetermined number of parameters
+$sql = "SELECT $sqlSelectColumns FROM $dbTable $where ORDER BY $sortColumns";
+$statement = $dbh->prepare($sql);
+$statement->execute();
+
+while (my $row = $statement->fetchrow_hashref) {
+	print "<tr>";
+	print "<td>".($row->{$_}//"null")."</td>" for @dateCols;
+	print "</tr>";
+}
+$statement->finish;
+$dbh->disconnect;
+print "</table></p>";
+
+print<<EOF;
+<p>
+<h3>Columns to show</h3>
+
+<div style="width:50%;">
+  <div style="float:left; margin:0; width:40%;">
+    <select id="allcols" size="10" style="width:100%;">
+
+EOF
+
+for (@keys) {
+  print "<option value='$_'>$_</option>\n" unless (exists($colsHash{$_}));
+}
+
+print<<EOF;
+    </select>
+  </div>
+  <div style="float:left; margin:0; width:20%;height=100%;text-align:center;">
+    <br/><button onClick="addCol()" style="width:80%;"> &gt; </button><br/><br/>
+    <button onClick="rmCol()" style="width:80%;"> &lt; </button><br/><br/>
+    <button onClick="rmAll()" style="width:80%;"> &lt;&lt; </button>
+  </div>
+  <div style="float:left; margin:0; width:40%;">
+    <select name="selCols" id="selCols" size="10" style="width:100%;">
+
+EOF
+
+print "<option value='$_'>$_</option>\n" for @columnsToShow;
+
+print<<EOF;
+
+    </select>
+  </div>
+</div>
+</p>
+<p>
+<div style="float:left; width:100%;">
+<p><h3>Sort columns</h3></p></div>
+<div style='width:50%;'>
+  <div style="float:left; margin:0; width:40%;">
+    <select id="allSortCols" size="10" style="width:100%;">
+
+EOF
+
+for (@keys) {
+  print "<option value='$_'>$_</option>\n" unless (exists($sortColsHash{$_}));
+}
+
+print<<EOF;
+    </select>
+  </div>
+  <div style="float:left; margin:0; width:20%; height=100%; text-align:center;">
+    <br/><button onClick="addSort()" style="width:80%;"> &gt; ASC </button><br/><br/>
+    <button onClick="addSortDesc()" style="width:80%;"> &gt; DESC </button><br/><br/>
+    <button onClick="rmSort()" style="width:80%;"> &lt; </button><br/><br/>
+    <button onClick="rmSortAll()" style="width:80%;"> &lt;&lt; </button>
+  </div>
+  <div style="float:left; margin:0; width:40%;">
+    <select name="selSortCols" id="selSortCols" size="10" style="width:100%;">
+
+EOF
+
+print "<option value='$_'>$_</option>\n" for @sortColumns;
+
+print "
+    </select>
+  </div>
 </div>
 </body></html>";
