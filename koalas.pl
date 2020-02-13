@@ -196,9 +196,6 @@ if (length $locations > 0) {
   }
 }
 
-# DEBUG
-#print "Visible locations completed.\nAREAS: ".Dumper(keys %unitsByLoc)."\n\nLOCATIONS: ".Dumper(@visibleLocs)."\n\nUNITS: ".Dumper(@visibleUnits)."\n";
-
 # Validate columns in parameters are valid
 my %k = map {$_ => 1} @keys;
 exists($k{$_}) or die "Select column $_ is not valid" for @columnsToShow;
