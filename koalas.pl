@@ -9,6 +9,7 @@ use Data::Dumper;
 
 print CGI::header();
 
+# Initialise variables
 my $dbFile = "koala.sqlite";
 my $dbTable = "kSensor";
 my $dsn = "DBI:SQLite:$dbFile";
@@ -17,21 +18,34 @@ my $areaCol = "locationstring";
 my $locCol = "locationdescription";
 my $unitCol = "UnitNumber";
 my $timeCol = "lastsensingdate";
+my %timeHsh = ("hours", 23, "days", 30, "weeks", 51, "months", 11, "years", 5);
+my @keys = ();
+my %unitsByLoc;
+my @allLocs;
+my @allUnits;
+my %tmpLocs;
+my %tmpUnits;
+my @visibleLocs;
+my @visibleUnits = ();
 
-my $cgi = CGI->new();
+# Initialise parameters
 my $selectColumns = "UnitNumber,locationdescription,lastsensingdate,pm1,pm10,pm25,Longitude,Latitude";
-if ($cgi->param('cols') && length $cgi->param('cols') > 0) {
-  $selectColumns = $cgi->param('cols');
-}
-
 my $sortColumns = "UnitNumber,lastsensingdate DESC";
-if ($cgi->param('sort') && length $cgi->param('sort') > 0) {
-  $sortColumns = $cgi->param('sort');
-}
-
 my $areas = "";
 my $locations = "";
 my $units = "";
+my $limitTime = 0;
+my $timeNum = "1";
+my $timeType = "hours";
+
+# Get parameters
+my $cgi = CGI->new();
+if ($cgi->param('cols') && length $cgi->param('cols') > 0) {
+  $selectColumns = $cgi->param('cols');
+}
+if ($cgi->param('sort') && length $cgi->param('sort') > 0) {
+  $sortColumns = $cgi->param('sort');
+}
 if ($cgi->param('areas') && length $cgi->param('areas') > 0 && lc($cgi->param('areas')) ne "all") {
   $areas = $cgi->param('areas');
 }
@@ -41,10 +55,6 @@ if ($cgi->param('locs') && length $cgi->param('locs') > 0 && lc($cgi->param('loc
 if ($cgi->param('units') && length $cgi->param('units') > 0 && lc($cgi->param('units')) ne "all") {
   $units = $cgi->param('units');
 }
-
-my $limitTime = 0;
-my $timeNum = "1";
-my $timeType = "hours";
 if ($cgi->param('limitTime') && length $cgi->param('limitTime') > 0) {
   $limitTime = 1;
 }
@@ -54,7 +64,6 @@ if ($cgi->param('timeNum') && length $cgi->param('timeNum') > 0) {
 if ($cgi->param('timeType') && length $cgi->param('timeType') > 0) {
   $timeType = $cgi->param('timeType');
 }
-my %timeHsh = ("hours", 23, "days", 30, "weeks", 51, "months", 11, "years", 5);
 
 # Set default time params if they're invalid
 $limitTime = 0 unless ($limitTime == 0 || $limitTime == 1);
@@ -76,7 +85,6 @@ my $dbh = DBI->connect($dsn, \%attr);
 #TODO Check opened successfully
 
 # Get a list of columns to use later
-my @keys = ();
 my $sql = "PRAGMA table_info($dbTable)";
 my $statement = $dbh->prepare($sql);
 $statement->execute();
@@ -88,11 +96,6 @@ while (my @data = $statement->fetchrow_array()) {
 $statement->finish;
 
 # Get a hash of locaions and their units to use later
-my %unitsByLoc;
-my @allLocs;
-my @allUnits;
-my %tmpLocs;
-my %tmpUnits;
 # TODO: Prepare the statement to avoid SQLI. Commented line below errors.
 $sql = "SELECT DISTINCT $areaCol, $locCol,$unitCol from $dbTable ORDER BY $areaCol,$locCol,$unitCol";
 #$statement = $dbh->prepare($sql, $locCol, $unitCol, $locCol, $unitCol);
@@ -130,13 +133,11 @@ if (length $areas > 0) {
     exists(%unitsByLoc->{$_}) or die "Invalid area '$_' specified\n";
   }
 }
-
 if (length $locations > 0) {
   for (split ',', $locations) {
     exists($tmpLocs{$_}) or die "Invalid location '$_' specified\n";
   }
 }
-
 if (length $units > 0) {
   for (split ',', $units) {
     exists ($tmpUnits{$_}) or die "Invalid unit '$_' specified\n";
@@ -144,8 +145,6 @@ if (length $units > 0) {
 }
 
 # If location inputs are specified determine which are visible by default
-my @visibleLocs;
-my @visibleUnits = ();
 
 # DEBUG
 #$areas = "Adelaide,Sydney";
