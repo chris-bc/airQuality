@@ -16,6 +16,7 @@ my %attr = (PrintError=>0, RaiseError=>1, AutoCommit=>1, FetchHashKeyName=>'NAME
 my $areaCol = "locationstring";
 my $locCol = "locationdescription";
 my $unitCol = "UnitNumber";
+my $timeCol = "lastsensingdate";
 
 my $cgi = CGI->new();
 my $selectColumns = "UnitNumber,locationdescription,lastsensingdate,pm1,pm10,pm25,Longitude,Latitude";
@@ -45,7 +46,7 @@ my $limitTime = 0;
 my $timeNum = "1";
 my $timeType = "hours";
 if ($cgi->param('limitTime') && length $cgi->param('limitTime') > 0) {
-  $limitTime = $cgi->param('limitTime');
+  $limitTime = 1;
 }
 if ($cgi->param('timeNum') && length $cgi->param('timeNum') > 0) {
   $timeNum = $cgi->param('timeNum');
@@ -150,6 +151,9 @@ my @visibleUnits = ();
 #$areas = "Adelaide,Sydney";
 #$locations = "Adelaide,Katoomba AQMS";
 #$units = "AQB0049,AQB0059,AQB0004,AQB0005";
+#$limitTime = 1;
+#$timeNum = "5";
+#$timeType = "hours";
 
 if (length $areas > 0) {
   # Area(s) have been specified. Only relevant locations are visible
@@ -205,13 +209,13 @@ print "<th>$_</th>" for @columnsToShow;
 
 # Build where clause based on locations and units variables
 my $where = "";
-if (length $areas > 0 || length $locations > 0 || length $units > 0) {
+if (length $areas > 0 || length $locations > 0 || length $units > 0 || $limitTime == 1) {
   $where .= "WHERE ";
   if (length $areas > 0) {
     my @sqlAreas = split ',', $areas;
     $_ = "'$_'" for @sqlAreas;
     $where .= "$areaCol in (".(join ',', @sqlAreas).")";
-    if (length $locations > 0 || length $units > 0) {
+    if (length $locations > 0 || length $units > 0 || $limitTime == 1) {
       $where .= " AND ";
     }
   }
@@ -219,7 +223,7 @@ if (length $areas > 0 || length $locations > 0 || length $units > 0) {
     my @sqlLocs = split ',', $locations;
     $_ = "'$_'" for @sqlLocs;
     $where .= "$locCol in (".(join ',', @sqlLocs).")";
-    if (length $units > 0) {
+    if (length $units > 0 || $limitTime == 1) {
       $where .= " AND ";
     }
   }
@@ -227,6 +231,19 @@ if (length $areas > 0 || length $locations > 0 || length $units > 0) {
     my @sqlUnits = split ',', $units;
     $_ = "'$_'" for @sqlUnits;
     $where .= "$unitCol in (".(join ',', @sqlUnits).")";
+    if ($limitTime == 1) {
+      $where .= " AND ";
+    }
+  }
+  if ($limitTime == 1) {
+    my $sqlTimeType = $timeType;
+    my $sqlTimeNum = $timeNum;
+    # SQLite doesn't support weeks, turn weeks into days.
+    if ($timeType eq "weeks") {
+      $sqlTimeType = "days";
+      $sqlTimeNum = $timeNum * 7;
+    }
+    $where .= "datetime($timeCol) >= datetime(\"now\", \"-$sqlTimeNum $sqlTimeType\")";
   }
 }
 
@@ -236,14 +253,14 @@ if (length $areas > 0 || length $locations > 0 || length $units > 0) {
 my @dateCols = split ',', $selectColumns;
 for (@dateCols) {
   if ((index($_,'date') != -1) || (index($_,'Date') != -1)) {
-    $_ = "datetime($_, 'localtime')";
+    $_ = "strftime('%d-%m-%Y %H:%M:%S', $_, 'localtime')";
   }
 }
-$selectColumns = join ',', @dateCols;
+my $sqlSelectColumns = join ',', @dateCols;
 
 # Can't use parameterised values for specified locations because of the
 # way perl handles arrays and having an undetermined number of parameters
-$sql = "SELECT $selectColumns FROM $dbTable $where ORDER BY $sortColumns";
+$sql = "SELECT $sqlSelectColumns FROM $dbTable $where ORDER BY $sortColumns";
 $statement = $dbh->prepare($sql);
 $statement->execute();
 
@@ -284,7 +301,7 @@ print<<EOF;
 
 EOF
 
-print "<option value='$_'>$_</option>/n" for @columnsToShow;
+print "<option value='$_'>$_</option>\n" for @columnsToShow;
 
 print<<EOF;
 
@@ -420,11 +437,11 @@ print "  </select>
 <div style='float:left; width:100%;'>
   <input type='checkbox' onClick=timeEnableDisable() name='limitTime' id='limitTime'" . (($limitTime == 1)?" checked":"") . "/>
   <label for='limitTime'>Limit results to the last </label>
-  <select id='timeNum'" . (($limitTime == 0)?" disabled='true'":"") . ">\n";
+  <select id='timeNum' name='timeNum'" . (($limitTime == 0)?" disabled='true'":"") . ">\n";
 for (my $i=1; $i <= $timeHsh{$timeType}; $i++) {
   print "<option value=$i" . (($i == $timeNum)?" selected":"") . ">$i</option>\n";
 }
-print "</select><select id='timeType' onChange=updateTime()" . (($limitTime == 0)?" disabled='true'":"") . ">\n";
+print "</select><select id='timeType' name='timeType' onChange=updateTime()" . (($limitTime == 0)?" disabled='true'":"") . ">\n";
 for (keys %timeHsh) {
   print "<option value ='$_'" . (($_ eq $timeType)?" selected":"") . ">$_</option>\n";
 }
