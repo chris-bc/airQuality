@@ -33,16 +33,32 @@ my $locations = "";
 my $units = "";
 if ($cgi->param('areas') && length $cgi->param('areas') > 0 && lc($cgi->param('areas')) ne "all") {
   $areas = $cgi->param('areas');
-  # TODO: validate input
 }
 if ($cgi->param('locs') && length $cgi->param('locs') > 0 && lc($cgi->param('locs')) ne "all") {
   $locations = $cgi->param('locs');
-  # TODO: validate input
 }
 if ($cgi->param('units') && length $cgi->param('units') > 0 && lc($cgi->param('units')) ne "all") {
   $units = $cgi->param('units');
-  # TODO: validate input
 }
+
+my $limitTime = 0;
+my $timeNum = "1";
+my $timeType = "hours";
+if ($cgi->param('limitTime') && length $cgi->param('limitTime') > 0) {
+  $limitTime = $cgi->param('limitTime');
+}
+if ($cgi->param('timeNum') && length $cgi->param('timeNum') > 0) {
+  $timeNum = $cgi->param('timeNum');
+}
+if ($cgi->param('timeType') && length $cgi->param('timeType') > 0) {
+  $timeType = $cgi->param('timeType');
+}
+my %timeHsh = ("hours", 23, "days", 30, "weeks", 51, "months", 11, "years", 5);
+
+# Set default time params if they're invalid
+$limitTime = 0 unless ($limitTime == 0 || $limitTime == 1);
+$timeType = "hours" unless exists($timeHsh{$timeType});
+$timeNum = "1" unless ($timeNum >= 1 && $timeNum <= $timeHsh{$timeType});
 
 my @columnsToShow = split ',', $selectColumns;
 my @sortColumns = split ',', $sortColumns;
@@ -400,8 +416,22 @@ for my $areaKey (keys %unitsByLoc) {
 print "$_\n" for sort @unitOptions;
 print "  </select>
 </div>
-<div style='float:left; width:100%;'><p>
 <form method='post'>
+<div style='float:left; width:100%;'>
+  <input type='checkbox' onClick=timeEnableDisable() name='limitTime' id='limitTime'" . (($limitTime == 1)?" checked":"") . "/>
+  <label for='limitTime'>Limit results to the last </label>
+  <select id='timeNum'" . (($limitTime == 0)?" disabled='true'":"") . ">\n";
+for (my $i=1; $i <= $timeHsh{$timeType}; $i++) {
+  print "<option value=$i" . (($i == $timeNum)?" selected":"") . ">$i</option>\n";
+}
+print "</select><select id='timeType' onChange=updateTime()" . (($limitTime == 0)?" disabled='true'":"") . ">\n";
+for (keys %timeHsh) {
+  print "<option value ='$_'" . (($_ eq $timeType)?" selected":"") . ">$_</option>\n";
+}
+
+print "</select>
+</div>
+<div style='float:left; width:100%;'><p>
 <input type='hidden' name='cols' id='cols' value='$selectColumns'/>
 <input type='hidden' name='sort' id='sort' value='$sortColumns'/>
 <input type='hidden' name='locs' id='locs' value='$locations'/>
