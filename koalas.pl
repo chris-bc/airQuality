@@ -65,6 +65,7 @@ if ($cgi->param('timeType') && length $cgi->param('timeType') > 0) {
   $timeType = $cgi->param('timeType');
 }
 
+# Process and validate parameters
 # Set default time params if they're invalid
 $limitTime = 0 unless ($limitTime == 0 || $limitTime == 1);
 $timeType = "hours" unless exists($timeHsh{$timeType});
@@ -81,10 +82,9 @@ my %sortColsHash = map {(split ' ', $_)[0] => 1} @sortColumns;
 # Does the DB exist?
 (-e $dbFile) or die "Cannot find database $dbFile, Terminating\n\n";
 # Connect
-my $dbh = DBI->connect($dsn, \%attr);
-#TODO Check opened successfully
+my $dbh = DBI->connect($dsn, \%attr) or die "Unable to connect to database $dbFile, Terminating\n\n";
 
-# Get a list of columns to use later
+# Get a list of DB columns to allow column validation
 my $sql = "PRAGMA table_info($dbTable)";
 my $statement = $dbh->prepare($sql);
 $statement->execute();
@@ -95,10 +95,8 @@ while (my @data = $statement->fetchrow_array()) {
 @keys = sort @keys;
 $statement->finish;
 
-# Get a hash of locaions and their units to use later
-# TODO: Prepare the statement to avoid SQLI. Commented line below errors.
+# Get a hash of locaions and their units for column validation and later use
 $sql = "SELECT DISTINCT $areaCol, $locCol,$unitCol from $dbTable ORDER BY $areaCol,$locCol,$unitCol";
-#$statement = $dbh->prepare($sql, $locCol, $unitCol, $locCol, $unitCol);
 $statement = $dbh->prepare($sql);
 $statement->execute();
 
@@ -144,8 +142,6 @@ if (length $units > 0) {
   }
 }
 
-# If location inputs are specified determine which are visible by default
-
 # DEBUG
 #$areas = "Adelaide,Sydney";
 #$locations = "Adelaide,Katoomba AQMS";
@@ -154,6 +150,7 @@ if (length $units > 0) {
 #$timeNum = "5";
 #$timeType = "hours";
 
+# If location inputs are specified determine which are visible by default
 if (length $areas > 0) {
   # Area(s) have been specified. Only relevant locations are visible
   for (split ',', $areas) {
@@ -169,7 +166,6 @@ my %areaSpec = map {$_ => 1} (split ',', $areas);
 if (length $locations > 0) {
   for (split ',', $locations) {
     # Find the location's areas
-    # BUG: need to validate areas against specified areas (if any)
     for my $a (keys %unitsByLoc) {
       if ((length $areas == 0) || exists($areaSpec{$a})) {
         # Either the area is visible or we're looking at all areas.
@@ -200,7 +196,8 @@ my %k = map {$_ => 1} @keys;
 exists($k{$_}) or die "Select column $_ is not valid" for @columnsToShow;
 exists($k{(split ' ', $_)[0]}) or die "Sort column ".(split ' ',$_)[0]." is not valid\n" for @sortColumns;
 
-print "<html><head></head><body><h1>Sensor Data</h1>
+# Finally render the HTML
+print "<html><head></head><body><h1>Air Quality Data</h1>
 <script src=\"addRemove.js\"></script>
 <div style='float:left; width:100%;'><h3>Limit Results to the following locations and/or units</h3></div>
 <div style='float:left; margin:0; width:33%;'>
@@ -229,7 +226,6 @@ print "
 <div style='float:left; margin:0; width:33%;'>
   <select id='limitLoc' size='10' style='width:100%;' multiple onChange=locsChanged()>\n";
 
-# Prompts: @visibleLocs @visibleUnits @allLocs @allUnits %unitsByLoc
 my @selectedLocs = split ',', $locations;
 print "<option value='all'".((length $locations > 0)?"":" selected").">All</option>\n";
 # Loop through @allLocs. For each loc, select if is in @selectedLocs,
@@ -277,7 +273,6 @@ print "<option value='all' ".((length $units > 0)?"":" selected").">All</option>
 # Loop through the hash down to the units level
 for my $areaKey (keys %unitsByLoc) {
   for my $locKey (keys %unitsByLoc->{$areaKey}) {
-#    print "dumping :$areaKey:$locKey:\n".Dumper(@{%unitsByLoc->{$areaKey}->{$locKey}})."\n";
     for my $iUnit (@{%unitsByLoc->{$areaKey}->{$locKey}}) {
       my $thisUnit = "<option value='$iUnit' kArea='$areaKey' kLoc='$locKey'";
       $thisUnit .= " selected" if (exists($selectedUnits{$iUnit}));
@@ -304,6 +299,7 @@ for (keys %timeHsh) {
   print "<option value ='$_'" . (($_ eq $timeType)?" selected":"") . ">$_</option>\n";
 }
 
+# Hidden form elements are updated by javascript functions in response to selections
 print "</select>
 </div>
 <div style='float:left; width:100%;'><p>
@@ -317,6 +313,7 @@ print "</select>
 </div>
 
 <p><table border=1>";
+# Render the data table
 print "<th>$_</th>" for @columnsToShow;
 
 # Build where clause based on locations and units variables
@@ -360,8 +357,8 @@ if (length $areas > 0 || length $locations > 0 || length $units > 0 || $limitTim
 }
 
 # Don't want to alter @columnsToShow because it's used in subsequent functionality
-# Take a copy of it, mangle date columns to do some formatting, and push back into
-# $selectColumns
+# Take a copy of it, mangle date columns to do some formatting, and push  into
+# $sqlSelectColumns
 my @dateCols = split ',', $selectColumns;
 for (@dateCols) {
   if ((index($_,'date') != -1) || (index($_,'Date') != -1)) {
@@ -385,6 +382,7 @@ $statement->finish;
 $dbh->disconnect;
 print "</table></p>";
 
+# Display column options
 print<<EOF;
 <p>
 <h3>Columns to show</h3>
@@ -453,4 +451,11 @@ print "
     </select>
   </div>
 </div>
-</body></html>";
+<div style='float:left; width:100%;'><p><h3>About</h3></p>
+<p>This page draws on data made available as part of the KOALA project
+(Knowing Our Ambient Local Air-quality), an array of particulate matter sensors
+installed primarily in and around the Blue Mountains.<br/>
+For more information on this project see <a href='http://bluemountains.sensors.net.au/'>http://bluemountains.sensors.net.au/</a></p>
+<p>This project is <a href='https://github.com/chris-bc/airQuality'>hosted on GitHub</a>. Feel free to develop it further and send me a pull request</p>
+<p><font size=-1>Built by Chris Bennetts-Cash. <a href='http://www.bennettscash.id.au'>http://www.bennettscash.id.au</a></font></p>
+</div></body></html>";
