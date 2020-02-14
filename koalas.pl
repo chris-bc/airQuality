@@ -501,8 +501,13 @@ print "
 <div style='float:left; width:100%;'><p><h3>About</h3></p>
 <p>This page draws on data made available as part of the KOALA project
 (Knowing Our Ambient Local Air-quality), an array of particulate matter sensors
-installed primarily in and around the Blue Mountains.<br/>
+installed primarily in and around the Blue Mountains. This page was inspired by
+their public pages only providing the most recent air quality observation for
+each sensor.<br/>
+This site polls their publicly-available dataset for new observations every
+ten minutes, building a database of observations over time to allow patterns
+and trends to be identified.<br/>
 For more information on this project see <a href='http://bluemountains.sensors.net.au/'>http://bluemountains.sensors.net.au/</a></p>
 <p>This project is <a href='https://github.com/chris-bc/airQuality'>hosted on GitHub</a>. Feel free to develop it further and send me a pull request</p>
-<p><font size=-1>Built by Chris Bennetts-Cash. <a href='http://www.bennettscash.id.au'>http://www.bennettscash.id.au</a></font></p>
+<p><font size=-1>Built by Chris Bennetts-Cash, 2020. <a href='http://www.bennettscash.id.au'>http://www.bennettscash.id.au</a></font></p>
 </div></div></body></html>";
