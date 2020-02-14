@@ -18,6 +18,9 @@ my $areaCol = "locationstring";
 my $locCol = "locationdescription";
 my $unitCol = "UnitNumber";
 my $timeCol = "lastsensingdate";
+my $pm25col = "pm25";
+my $pm10col = "pm10";
+my $pm1col = "pm1";
 my %timeHsh = ("hours", 23, "days", 30, "weeks", 51, "months", 11, "years", 5);
 my @keys = ();
 my %unitsByLoc;
@@ -38,6 +41,12 @@ my $units = "";
 my $limitTime = 1;
 my $timeNum = "1";
 my $timeType = "hours";
+my $pm25med = 10;
+my $pm25high = 25;
+my $pm10med = 20;
+my $pm10high = 50;
+my $pm1med = 10;
+my $pm1high = 25;
 
 # Get parameters
 my $cgi = CGI->new();
@@ -67,6 +76,24 @@ if ($cgi->param('timeNum') && length $cgi->param('timeNum') > 0) {
 }
 if ($cgi->param('timeType') && length $cgi->param('timeType') > 0) {
   $timeType = $cgi->param('timeType');
+}
+if ($cgi->param('pm25med') && length $cgi->param('pm25med') > 0) {
+  $pm25med = $cgi->param('pm25med');
+}
+if ($cgi->param('pm25high') && length $cgi->param('pm25high') > 0) {
+  $pm25high = $cgi->param('pm25high');
+}
+if ($cgi->param('pm10med') && length $cgi->param('pm10med') > 0) {
+  $pm10med = $cgi->param('pm10med');
+}
+if ($cgi->param('pm10high') && length $cgi->param('pm10high') > 0) {
+  $pm10high = $cgi->param('pm10high');
+}
+if ($cgi->param('pm1med') && length $cgi->param('pm1med') > 0) {
+  $pm1med = $cgi->param('pm1med');
+}
+if ($cgi->param('pm1high') && length $cgi->param('pm1high') > 0) {
+  $pm1high = $cgi->param('pm1high');
 }
 
 # Process and validate parameters
@@ -152,7 +179,7 @@ if (length $units > 0) {
 #$units = "AQB0049,AQB0059,AQB0004,AQB0005";
 #$limitTime = 1;
 #$timeNum = "5";
-#$timeType = "hours";
+#$timeType = "weeks";
 
 # If location inputs are specified determine which are visible by default
 if (length $areas > 0) {
@@ -202,8 +229,9 @@ exists($k{(split ' ', $_)[0]}) or die "Sort column ".(split ' ',$_)[0]." is not 
 
 # Finally render the HTML
 print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1'>
-  <link rel='stylesheet' href='bootstrap.min.css'><script src='bootstrap.min.js'></script>
-  <script src='addRemove.js'></script></head><body>
+  <link rel='stylesheet' href='bootstrap.min.css'>
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
+  <script src='bootstrap.min.js'></script><script src='addRemove.js'></script></head><body>
 <div class='container'>
 <h1 class='text-center'>Air Quality Data</h1>
 <div class='row'><div class='col'><h3 class='text-center'>Limit Results to the following locations and/or units</h3></div></div>
@@ -380,8 +408,23 @@ $statement = $dbh->prepare($sql);
 $statement->execute();
 
 while (my $row = $statement->fetchrow_hashref) {
-	print "<tr>";
-	print "<td>".($row->{$_}//"null")."</td>" for @dateCols;
+	print "<tr";
+  # Colour code the row based on PM data
+  if (exists($row->{$pm25col}) || exists($row->{$pm10col}) || exists($row->{$pm1col})) {
+    print " class='table-";
+    my $pm25val = ((exists($row->{$pm25col}))?($row->{$pm25col}):0);
+    my $pm10val = ((exists($row->{$pm10col}))?($row->{$pm10col}):0);
+    my $pm1val = ((exists($row->{$pm1col}))?($row->{$pm1col}):0);
+    if ($pm25val < $pm25med && $pm10val < $pm10med && $pm1val < $pm1med) {
+      print "success'";
+    } elsif ($pm25val < $pm25high && $pm10val < $pm10high && $pm1val < $pm1high) {
+      print "warning'";
+    } else {
+      print "danger'";
+    }
+  }
+	print ">";
+  print "<td>".((length $row->{$_} > 0)?$row->{$_}:"(null)")."</td>" for @dateCols;
 	print "</tr>";
 }
 $statement->finish;
