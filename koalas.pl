@@ -58,6 +58,9 @@ if ($cgi->param('units') && length $cgi->param('units') > 0 && lc($cgi->param('u
 }
 if ($cgi->param('limitTime') && length $cgi->param('limitTime') > 0) {
   $limitTime = 1;
+} elsif (length $cgi->param > 0) {
+  # Because we default to limiting to the past hour, check if the parameter is deliberately absent
+  $limitTime = 0;
 }
 if ($cgi->param('timeNum') && length $cgi->param('timeNum') > 0) {
   $timeNum = $cgi->param('timeNum');
@@ -198,11 +201,15 @@ exists($k{$_}) or die "Select column $_ is not valid" for @columnsToShow;
 exists($k{(split ' ', $_)[0]}) or die "Sort column ".(split ' ',$_)[0]." is not valid\n" for @sortColumns;
 
 # Finally render the HTML
-print "<html><head></head><body><h1>Air Quality Data</h1>
-<script src=\"addRemove.js\"></script>
-<div style='float:left; width:100%;'><h3>Limit Results to the following locations and/or units</h3></div>
-<div style='float:left; margin:0; width:33%;'>
-  <select id='limitArea' size='10' style='width:100%;' multiple onChange=locsChanged()>\n";
+print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1'>
+  <link rel='stylesheet' href='bootstrap.min.css'><script src='bootstrap.min.js'></script>
+  <script src='addRemove.js'></script></head><body>
+<div class='container'>
+<h1>Air Quality Data</h1>
+<div class='row'><div class='col'><h3>Limit Results to the following locations and/or units</h3></div></div>
+<div class='row mb-3'>
+<div class='col-sm-4'>
+  <select id='limitArea' size='10' class='custom-select' multiple onChange=locsChanged()>\n";
 
 # Two approaches for options that should not be visible:
 # hidden='hidden' will hide the options on Chrome and Firefox
@@ -224,8 +231,8 @@ for my $iArea (sort keys %unitsByLoc) {
 print "
   </select>
 </div>
-<div style='float:left; margin:0; width:33%;'>
-  <select id='limitLoc' size='10' style='width:100%;' multiple onChange=locsChanged()>\n";
+<div class='col-sm-4'>
+  <select id='limitLoc' size='10' class='custom-select' multiple onChange=locsChanged()>\n";
 
 my @selectedLocs = split ',', $locations;
 print "<option value='all'".((length $locations > 0)?"":" selected").">All</option>\n";
@@ -257,8 +264,8 @@ for my $iLoc (sort @allLocs) {
 
 print "
   </select>
-</div><div style='float:left; margin:0; width:33%;'>
-  <select id='limitUnit' size='10' style='width:100%;' multiple onChange=unitsChanged()>\n";
+</div><div class='col-sm-4'>
+  <select id='limitUnit' size='10' class='custom-select' multiple onChange=unitsChanged()>\n";
 
 # Because location is not unique to an array we'll need to use the hash, at
 # minimum to identify area and location for each unit. Given that, it *would*
@@ -286,37 +293,35 @@ for my $areaKey (keys %unitsByLoc) {
 
 print "$_\n" for sort @unitOptions;
 print "  </select>
-</div>
-<form method='post'>
-<div style='float:left; width:100%;'>
-  <input type='checkbox' onClick=timeEnableDisable() name='limitTime' id='limitTime'" . (($limitTime == 1)?" checked":"") . "/>
-  <label for='limitTime'>Limit results to the last </label>
-  <select id='timeNum' name='timeNum'" . (($limitTime == 0)?" disabled='true'":"") . ">\n";
+</div></div>
+<form method='post' ><div class='row mb-3'><div class='col'>
+<div class='custom-control custom-checkbox'>
+<input type='checkbox' class='custom-control-input' onClick=timeEnableDisable() name='limitTime' id='limitTime'" . (($limitTime == 1)?" checked":"") . "/>
+<label class='custom-control-label mr-sm-2' for='limitTime'>Limit results to the last </label></div></div><div class='col'>
+  <select id='timeNum' class='custom-select mr-sm-2' name='timeNum'" . (($limitTime == 0)?" disabled='true'":"") . ">\n";
 for (my $i=1; $i <= $timeHsh{$timeType}; $i++) {
   print "<option value=$i" . (($i == $timeNum)?" selected":"") . ">$i</option>\n";
 }
-print "</select><select id='timeType' name='timeType' onChange=updateTime()" . (($limitTime == 0)?" disabled='true'":"") . ">\n";
+print "</select></div><div class='col'><select id='timeType' class='custom-select mr-sm-2' name='timeType' onChange=updateTime()" . (($limitTime == 0)?" disabled='true'":"") . ">\n";
 for (keys %timeHsh) {
   print "<option value ='$_'" . (($_ eq $timeType)?" selected":"") . ">$_</option>\n";
 }
 
 # Hidden form elements are updated by javascript functions in response to selections
 print "</select>
-</div>
-<div style='float:left; width:100%;'><p>
+</div></div>
 <input type='hidden' name='cols' id='cols' value='$selectColumns'/>
 <input type='hidden' name='sort' id='sort' value='$sortColumns'/>
 <input type='hidden' name='locs' id='locs' value='$locations'/>
 <input type='hidden' name='units' id='units' value='$units'/>
 <input type='hidden' name='areas' id='areas' value='$areas'/>
-<input type='submit' value='Update'/>
-</form></p>
-</div>
+<input type='submit' class='btn btn-primary btn-block mb-3' value='Update'/>
+</form>
 
-<p><table border=1>";
+<div class='table-responsive'><table class='table table-bordered table-striped'><thead><tr>";
 # Render the data table
 print "<th>$_</th>" for @columnsToShow;
-
+print "</tr></thead>";
 # Build where clause based on locations and units variables
 my $where = "";
 if (length $areas > 0 || length $locations > 0 || length $units > 0 || $limitTime == 1) {
@@ -381,16 +386,16 @@ while (my $row = $statement->fetchrow_hashref) {
 }
 $statement->finish;
 $dbh->disconnect;
-print "</table></p>";
+print "</table></div>";
 
 # Display column options
 print<<EOF;
-<p>
-<h3>Columns to show</h3>
+<div class='row'><div class='col-sm-6'>
+<h3 class='text-center'>Columns to show</h3>
 
-<div style="width:50%;">
-  <div style="float:left; margin:0; width:40%;">
-    <select id="allcols" size="10" style="width:100%;">
+<div class="row">
+  <div class="col">
+    <select id="allcols" size="10" class="custom-select" style="width:100%;">
 
 EOF
 
@@ -401,13 +406,13 @@ for (@keys) {
 print<<EOF;
     </select>
   </div>
-  <div style="float:left; margin:0; width:20%;height=100%;text-align:center;">
-    <br/><button onClick="addCol()" style="width:80%;"> &gt; </button><br/><br/>
-    <button onClick="rmCol()" style="width:80%;"> &lt; </button><br/><br/>
-    <button onClick="rmAll()" style="width:80%;"> &lt;&lt; </button>
+  <div class="col">
+    <br/><button onClick="addCol()" class="btn-light mb-3 btn-block mt-3"> &gt; </button>
+    <button onClick="rmCol()" class="btn-block btn-light mb-3 mt-3"> &lt; </button>
+    <button onClick="rmAll()" class="btn-block mb-3 btn-light mt-3"> &lt;&lt; </button>
   </div>
-  <div style="float:left; margin:0; width:40%;">
-    <select name="selCols" id="selCols" size="10" style="width:100%;">
+  <div class="col">
+    <select name="selCols" id="selCols" size="10" class="custom-select" style="width:100%;">
 
 EOF
 
@@ -418,13 +423,11 @@ print<<EOF;
     </select>
   </div>
 </div>
-</p>
-<p>
-<div style="float:left; width:100%;">
-<p><h3>Sort columns</h3></p></div>
-<div style='width:50%;'>
-  <div style="float:left; margin:0; width:40%;">
-    <select id="allSortCols" size="10" style="width:100%;">
+</div><div class='col-sm-6'>
+<h3 class='text-center'>Sort columns</h3>
+<div class='row'>
+  <div class='col'>
+    <select id="allSortCols" size="10" class="custom-select" style="width:100%;">
 
 EOF
 
@@ -435,14 +438,14 @@ for (@keys) {
 print<<EOF;
     </select>
   </div>
-  <div style="float:left; margin:0; width:20%; height=100%; text-align:center;">
-    <br/><button onClick="addSort()" style="width:80%;"> &gt; ASC </button><br/><br/>
-    <button onClick="addSortDesc()" style="width:80%;"> &gt; DESC </button><br/><br/>
-    <button onClick="rmSort()" style="width:80%;"> &lt; </button><br/><br/>
-    <button onClick="rmSortAll()" style="width:80%;"> &lt;&lt; </button>
+  <div class='col'>
+    <button onClick="addSort()" class="btn-block btn-light mb-3 mt-3"> &gt; ASC </button>
+    <button onClick="addSortDesc()" class="btn-block btn-light mb-3"> &gt; DESC </button>
+    <button onClick="rmSort()" class="btn-block btn-light mb-3"> &lt; </button>
+    <button onClick="rmSortAll()" class="btn-block btn-light mb-3"> &lt;&lt; </button>
   </div>
-  <div style="float:left; margin:0; width:40%;">
-    <select name="selSortCols" id="selSortCols" size="10" style="width:100%;">
+  <div class='col'>
+    <select name="selSortCols" id="selSortCols" size="10" class="custom-select" style="width:100%;">
 
 EOF
 
@@ -451,7 +454,7 @@ print "<option value='$_'>$_</option>\n" for @sortColumns;
 print "
     </select>
   </div>
-</div>
+</div></div></div>
 <div style='float:left; width:100%;'><p><h3>About</h3></p>
 <p>This page draws on data made available as part of the KOALA project
 (Knowing Our Ambient Local Air-quality), an array of particulate matter sensors
@@ -459,4 +462,4 @@ installed primarily in and around the Blue Mountains.<br/>
 For more information on this project see <a href='http://bluemountains.sensors.net.au/'>http://bluemountains.sensors.net.au/</a></p>
 <p>This project is <a href='https://github.com/chris-bc/airQuality'>hosted on GitHub</a>. Feel free to develop it further and send me a pull request</p>
 <p><font size=-1>Built by Chris Bennetts-Cash. <a href='http://www.bennettscash.id.au'>http://www.bennettscash.id.au</a></font></p>
-</div></body></html>";
+</div></div></body></html>";
