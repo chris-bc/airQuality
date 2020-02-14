@@ -205,8 +205,8 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
   <link rel='stylesheet' href='bootstrap.min.css'><script src='bootstrap.min.js'></script>
   <script src='addRemove.js'></script></head><body>
 <div class='container'>
-<h1>Air Quality Data</h1>
-<div class='row'><div class='col'><h3>Limit Results to the following locations and/or units</h3></div></div>
+<h1 class='text-center'>Air Quality Data</h1>
+<div class='row'><div class='col'><h3 class='text-center'>Limit Results to the following locations and/or units</h3></div></div>
 <div class='row mb-3'>
 <div class='col-sm-4'>
   <select id='limitArea' size='10' class='custom-select' multiple onChange=locsChanged()>\n";
