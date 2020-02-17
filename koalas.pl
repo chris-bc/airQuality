@@ -102,6 +102,12 @@ $limitTime = 0 unless ($limitTime == 0 || $limitTime == 1);
 $timeType = "hours" unless exists($timeHsh{$timeType});
 $timeNum = "1" unless ($timeNum >= 1 && $timeNum <= $timeHsh{$timeType});
 
+# Validate PM values
+($pm1med >= 0 && $pm1med <= 100 && $pm1high >= 0 && $pm1high <= 100 &&
+  $pm25med >= 0 && $pm25med <= 100 && $pm25high >= 0 && $pm25high <= 100 &&
+  $pm10med >= 0 && $pm10med <= 100 && $pm10high >= 0 && $pm10high <= 100)
+  or die "Invalid PM parameters provided, terminating\n";
+
 my @columnsToShow = split ',', $selectColumns;
 my @sortColumns = split ',', $sortColumns;
 my %colsHash = map {$_ => 1} @columnsToShow;
@@ -358,9 +364,50 @@ print "</select>
 <input type='hidden' name='locs' id='locs' value='$locations'/>
 <input type='hidden' name='units' id='units' value='$units'/>
 <input type='hidden' name='areas' id='areas' value='$areas'/>
+<input type='hidden' name='pm1med' id='pm1med' value='$pm1med'/>
+<input type='hidden' name='pm1high' id='pm1high' value='$pm1high'/>
+<input type='hidden' name='pm25med' id='pm25med' value='$pm25med'/>
+<input type='hidden' name='pm25high' id='pm25high' value='$pm25high'/>
+<input type='hidden' name='pm10med' id='pm10med' value='$pm10med'/>
+<input type='hidden' name='pm10high' id='pm10high' value='$pm10high'/>
 <input type='submit' class='btn btn-primary btn-block mb-3' value='Update'/>
 </form>
-</div><div id='threshold' class='container' style='padding-top:75px;'><div class='row'><h3 class='text-center'>Air Quality Thresholds</h3></div></div>
+</div><div id='threshold' class='container' style='padding-top:75px;'>
+  <h3 class='text-center'>Air Quality Thresholds</h3>
+  <div class='row'><div class='col-sm-4'>
+      <h4 class='text-center'>PM 1</h4>
+      <div class='row align-items-center'>
+        <div class='col badge badge-warning'>Warning Threshold</div>
+        <div class='col'><div class='row justify-content-center'><span id='pm1MedVal' class='badge badge-pill badge-warning text-center'>$pm1med</span></div>
+        <div class='row justify-content-center'><input id='pm1MedSlider' name='pm1MedSlider' type='range' min='1' max='100' value='$pm1med' onInput='updatePm1Med()'/></div></div>
+      </div><div class='row align-items-center'>
+        <div class='col badge badge-danger'>Danger Threshold</div>
+        <div class='col'><div class='row justify-content-center'><span id='pm1HighVal' class='badge badge-pill badge-danger text-center'>$pm1high</span></div>
+        <div class='row justify-content-center'><input id='pm1HighSlider' name='pm1HighSlider' type='range' min='1' max='100' value='$pm1high' onInput='updatePm1High()'/></div></div>
+      </div>
+    </div><div class='col-sm-4'>
+      <h4 class='text-center'>PM 2.5</h4>
+      <div class='row align-items-center'>
+        <div class='col badge badge-warning'>Warning Threshold</div>
+        <div class='col'><div class='row justify-content-center'><span id='pm25MedVal' class='badge badge-pill badge-warning text-center'>$pm25med</span></div>
+        <div class='row justify-content-center'><input id='pm25MedSlider' name='pm25MedSlider' type='range' min='1' max='100' value='$pm25med' onInput='updatePm25Med()'/></div></div>
+      </div><div class='row align-items-center'>
+        <div class='col badge badge-danger'>Danger Threshold</div>
+        <div class='col'><div class='row justify-content-center'><span id='pm25HighVal' class='badge badge-pill badge-danger text-center'>$pm25high</span></div>
+        <div class='row justify-content-center'><input id='pm25HighSlider' name='pm25HighSlider' type='range' min='1' max='100' value='$pm25high' onInput='updatePm25High()'/></div></div>
+      </div>
+    </div><div class='col-sm-4'>
+      <h4 class='text-center'>PM 10</h4>
+      <div class='row align-items-center'>
+        <div class='col badge badge-warning'>Warning Threshold</div>
+        <div class='col'><div class='row justify-content-center'><span id='pm10MedVal' class='badge badge-pill badge-warning text-center'>$pm10med</span></div>
+        <div class='row justify-content-center'><input id='pm10MedSlider' name='pm10MedSlider' type='range' min='1' max='100' value='$pm10med' onInput='updatePm10Med()'/></div></div>
+      </div><div class='row align-items-center'>
+        <div class='col badge badge-danger'>Danger Threshold</div>
+        <div class='col'><div class='row justify-content-center'><span id='pm10HighVal' class='badge badge-pill badge-danger text-center'>$pm10high</span></div>
+        <div class='row justify-content-center'><input id='pm10HighSlider' name='pm10HighSlider' type='range' min='1' max='100' value='$pm10high' onInput='updatePm10High()'/></div></div>
+      </div>
+  </div></div></div>
 <div id='sensorData' class='table-responsive' style='padding-top:75px;'><table class='table table-bordered table-striped'><thead><tr>";
 # Render the data table
 print "<th>$_</th>" for @columnsToShow;

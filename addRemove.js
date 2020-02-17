@@ -255,3 +255,51 @@ function updateTime() {
 		selNum.appendChild(opt);
 	}
 }
+
+function updatePm1Med() {
+	var span = document.getElementById("pm1MedVal");
+	var inp = document.getElementById("pm1med");
+	var value = document.getElementById("pm1MedSlider").value;
+	span.innerText = value;
+	inp.value = value;
+}
+
+function updatePm1High() {
+	var span = document.getElementById("pm1HighVal");
+	var inp = document.getElementById("pm1high");
+	var value = document.getElementById("pm1HighSlider").value;
+	span.innerText = value;
+	inp.value = value;
+}
+
+function updatePm25Med() {
+	var span = document.getElementById("pm25MedVal");
+	var inp = document.getElementById("pm25med");
+	var value = document.getElementById("pm25MedSlider").value;
+	span.innerText = value;
+	inp.value = value;
+}
+
+function updatePm25High() {
+	var span = document.getElementById("pm25HighVal");
+	var inp = document.getElementById("pm25high");
+	var value = document.getElementById("pm25HighSlider").value;
+	span.innerText = value;
+	inp.value = value;
+}
+
+function updatePm10Med() {
+	var span = document.getElementById("pm10MedVal");
+	var inp = document.getElementById("pm10med");
+	var value = document.getElementById("pm10MedSlider").value;
+	span.innerText = value;
+	inp.value = value;
+}
+
+function updatePm10High() {
+	var span = document.getElementById("pm10HighVal");
+	var inp = document.getElementById("pm10high");
+	var value = document.getElementById("pm10HighSlider").value;
+	span.innerText = value;
+	inp.value = value;
+}
