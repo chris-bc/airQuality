@@ -125,6 +125,7 @@ function locsChanged() {
 	var selectedAreas = aSel.selectedOptions;
 	var selectedLocs = lSel.selectedOptions;
 
+
 	// Show locations for selected areas
 	for (var i=0; i < selectedAreas.length; i++) {
 		for (var j=1; j < lSel.options.length; j++) {

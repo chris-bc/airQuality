@@ -231,9 +231,36 @@ exists($k{(split ' ', $_)[0]}) or die "Sort column ".(split ' ',$_)[0]." is not 
 print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1'>
   <link rel='stylesheet' href='bootstrap.min.css'>
   <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
-  <script src='bootstrap.min.js'></script><script src='addRemove.js'></script></head><body>
+  <script src='bootstrap.min.js'></script><script src='addRemove.js'></script>
+  </head><body data-spy='scroll' data-target='#myNav' data-offset='70' style='position:relative; padding-top:75px;'>
+<nav id='myNav' class='navbar navbar-light bg-light navbar-expand-md fixed-top'>\n";
+#<div class='container-fluid'><div class='navbar-header'>
+print"  <button type='button' class='navbar-toggler' data-toggle='collapse' data-target='#myNavBar' aria-controls='myNavBar' aria-expanded='false' aria-label='Toggle Navigation'>
+    <span class='navbar-toggler-icon'></span></button>\n";
+#  <a class='navbar-brand' href='koalas.pl'>blueSKY</a>
+#</div><div><div class='collapse navbar-collapse' id='myNavBar'>
+print "<div class='container'><a class='navbar-brand' href='koalas.pl'>blueSKIES</a>
+<div class='collapse navbar-collapse' id='myNavBar'>
+  <ul class='navbar-nav'>
+    <li class='nav-item active'><a class='nav-link' href='#filter'>Data Filters</a></li>
+    <li class='nav-item'><a class='nav-link' href='#threshold'>Air Quality Thresholds</a></li>
+    <li class='nav-item'><a class='nav-link' href='#sensorData'>Sensor Data</a></li>
+    <li class='nav-item'><a class='nav-link' href='#selection'>Data Selection</a></li>
+    <li class='nav-item'><a class='nav-link' href='#about'>About</a></li></ul>
+</div></div></nav>\n";
+#</div></div></div></nav>
+#print "<a class='navbar-brand' href='#'>blueSKY</a>
+#<ul class='nav nav-pills'>
+#  <li class='nav-item'><a class='nav-link' href='#filter'>Data Filters</a></li>
+#  <li class='nav-item'><a class-'nav-link' href='#threshold'>Air Quality Thresholds</a></li>
+#  <li class='nav-item'><a class='nav-link' href='#sensorData'>Sensor Data</a></li>
+#  <li class='nav-item'><a class='nav-link' href='#selection'>Data Selection</a></li>
+#  <li class='nav-item'><a class='nav-link' href='#about'>About</a></li>
+#</ul></nav>
+print "
 <div class='container'>
 <h1 class='text-center'>Air Quality Data</h1>
+<div id='filter' class='container'>
 <div class='row'><div class='col'><h3 class='text-center'>Limit Results to the following locations and/or units</h3></div></div>
 <div class='row mb-3'>
 <div class='col-sm-4'>
@@ -345,8 +372,8 @@ print "</select>
 <input type='hidden' name='areas' id='areas' value='$areas'/>
 <input type='submit' class='btn btn-primary btn-block mb-3' value='Update'/>
 </form>
-
-<div class='table-responsive'><table class='table table-bordered table-striped'><thead><tr>";
+</div><div id='threshold' class='container'><div class='row'><h3 class='text-center'>Air Quality Thresholds</h3></div></div>
+<div id='sensorData' class='table-responsive'><table class='table table-bordered table-striped'><thead><tr>";
 # Render the data table
 print "<th>$_</th>" for @columnsToShow;
 print "</tr></thead>";
@@ -433,7 +460,7 @@ print "</table></div>";
 
 # Display column options
 print<<EOF;
-<div class='row'><div class='col-sm-6'>
+<div id='selection' class='row'><div class='col-sm-6'>
 <h3 class='text-center'>Columns to show</h3>
 
 <div class="row">
@@ -498,7 +525,7 @@ print "
     </select>
   </div>
 </div></div></div>
-<div style='float:left; width:100%;'><p><h3>About</h3></p>
+<div id='about' style='float:left; width:100%;'><p><h3>About</h3></p>
 <p>This page draws on data made available as part of the KOALA project
 (Knowing Our Ambient Local Air-quality), an array of particulate matter sensors
 installed primarily in and around the Blue Mountains. This page was inspired by
