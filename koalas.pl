@@ -260,7 +260,7 @@ print "<div class='container'><a class='navbar-brand' href='koalas.pl'>blueSKIES
 print "
 <div class='container'>
 <h1 class='text-center'>Air Quality Data</h1>
-<div id='filter' class='container'>
+<div id='filter' class='container' style='padding-top:75px;''>
 <div class='row'><div class='col'><h3 class='text-center'>Limit Results to the following locations and/or units</h3></div></div>
 <div class='row mb-3'>
 <div class='col-sm-4'>
@@ -372,8 +372,8 @@ print "</select>
 <input type='hidden' name='areas' id='areas' value='$areas'/>
 <input type='submit' class='btn btn-primary btn-block mb-3' value='Update'/>
 </form>
-</div><div id='threshold' class='container'><div class='row'><h3 class='text-center'>Air Quality Thresholds</h3></div></div>
-<div id='sensorData' class='table-responsive'><table class='table table-bordered table-striped'><thead><tr>";
+</div><div id='threshold' class='container' style='padding-top:75px;'><div class='row'><h3 class='text-center'>Air Quality Thresholds</h3></div></div>
+<div id='sensorData' class='table-responsive' style='padding-top:75px;'><table class='table table-bordered table-striped'><thead><tr>";
 # Render the data table
 print "<th>$_</th>" for @columnsToShow;
 print "</tr></thead>";
@@ -460,7 +460,7 @@ print "</table></div>";
 
 # Display column options
 print<<EOF;
-<div id='selection' class='row'><div class='col-sm-6'>
+<div id='selection' class='row' style='padding-top:75px;'><div class='col-sm-6'>
 <h3 class='text-center'>Columns to show</h3>
 
 <div class="row">
@@ -525,7 +525,7 @@ print "
     </select>
   </div>
 </div></div></div>
-<div id='about' style='float:left; width:100%;'><p><h3>About</h3></p>
+<div id='about' style='float:left; width:100%; padding-top:75px;'><p><h3>About</h3></p>
 <p>This page draws on data made available as part of the KOALA project
 (Knowing Our Ambient Local Air-quality), an array of particulate matter sensors
 installed primarily in and around the Blue Mountains. This page was inspired by
