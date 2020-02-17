@@ -1,4 +1,5 @@
 var chartData = [];
+var bMeans = false;
 
 function rmAll() {
 	var sel = document.getElementById("selCols");
@@ -315,7 +316,6 @@ function prepareChartData() {
 	//   for each location. Otherwise (single location or subset of units)
 	//	 just use each observation
 
-	var bMeans = false;
 	var pm1col = -1;
 	var pm25col = -1;
 	var pm10col = -1;
@@ -475,4 +475,6 @@ function prepareChartData() {
 			}
 		}
 	}
+
+
 }
