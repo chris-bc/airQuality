@@ -238,7 +238,8 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
   <link rel='stylesheet' href='bootstrap.min.css'>
   <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
   <script src='bootstrap.min.js'></script><script src='addRemove.js'></script>
-  </head><body data-spy='scroll' data-target='#myNav' data-offset='70' style='position:relative; padding-top:75px;'>
+  <script src='Chart.bundle.min.js'></script>
+  </head><body onload='initChartJs()' data-spy='scroll' data-target='#myNav' data-offset='70' style='position:relative; padding-top:75px;'>
 <nav id='myNav' class='navbar navbar-light bg-light navbar-expand-md fixed-top'>
 <div class='navbar-header'>
     <button type='button' class='navbar-toggler mr-sm-2' data-toggle='collapse' data-target='#myNavBar' aria-controls='myNavBar' aria-expanded='false' aria-label='Toggle Navigation'>
@@ -517,7 +518,7 @@ while (my $row = $statement->fetchrow_hashref) {
 }
 $statement->finish;
 $dbh->disconnect;
-print "</table></div>";
+print "</table></div><div class='container-fluid'><canvas id='myChart'></canvas></div>";
 
 # Display column options
 print<<EOF;

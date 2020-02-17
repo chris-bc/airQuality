@@ -325,7 +325,7 @@ function prepareChartData() {
 	var pm1colText = "pm1";
 	var pm25colText = "pm25";
 	var pm10colText = "pm10";
-	var locColText = "locationDescription";
+	var locColText = "locationdescription";
 	var unitColText = "UnitNumber";
 	var timeColText = "lastsensingdate";
 
@@ -388,22 +388,22 @@ function prepareChartData() {
 	var rowPm10;
 	for (var i=0; i < tableRows.length; i++) {
 		// Fetch time and PM values regardless of the approach
-		rowTime = tableRows[i].cells[timeCol];
+		rowTime = tableRows[i].cells[timeCol].textContent;
 		if (pm1col >= 0) {
-			rowPm1 = tableRows[i].cells[pm1col];
+			rowPm1 = tableRows[i].cells[pm1col].textContent;
 		}
 		if (pm25col >= 0) {
-			rowPm25 = tableRows[i].cells[pm25col];
+			rowPm25 = tableRows[i].cells[pm25col].textContent;
 		}
 		if (pm10col >= 0) {
-			rowPm10 = tableRows[i].cells[pm10col];
+			rowPm10 = tableRows[i].cells[pm10col].textContent;
 		}
 
 		if (bMeans) {
-			rowId = tableRows[i].cells[locCol];
+			rowId = tableRows[i].cells[locCol].textContent;
 			// TODO: Manipulate the time so it's rounded to the nearest 4 hours
 		} else {
-			rowId = tableRows[i].cells[unitCol];
+			rowId = tableRows[i].cells[unitCol].textContent;
 		}
 		// Create row object if doesn't exist
 		if (!(rowId in chartData)) {
@@ -476,5 +476,98 @@ function prepareChartData() {
 		}
 	}
 
+	// Done preparing the (generic) data structure
+}
 
+function initChartJs() {
+	// Prepare datasets for Chart.js
+	// Requires: prepareChartData() has been called
+	if (chartData.length == 0) {
+		prepareChartData();
+	}
+
+	var lineData = {};
+	lineData.datasets = [];
+	var pm1ds;
+	var pm25ds;
+	var pm10ds;
+
+	// We have a dataset for each unit/loc X pmType
+	// Each dataset contains time values (x) and pm values (y)
+	for (var rowId in chartData) {
+		// Build all times and PMs into datasets
+		pm1ds = {};
+		pm25ds = {};
+		pm10ds = {};
+		pm1ds.data = [];
+		pm25ds.data = [];
+		pm10ds.data = [];
+		for (var time in chartData[rowId]) {
+			if ("pm1" in chartData[rowId][time]) {
+				if (!("label" in pm1ds)) {
+					pm1ds["label"] = rowId + " - PM1";
+					pm1ds["pointRadius"] = 6;
+					pm1ds["showLine"] = true;
+					var col = rndColour();
+					pm1ds["pointBackgroundColor"] = col;
+					pm1ds["backgroundColor"] = col;
+				}
+				pm1ds.data.push({x: time, y: chartData[rowId][time]["pm1"]});
+			}
+			if ("pm25" in chartData[rowId][time]) {
+				if (!("label" in pm25ds)) {
+					pm25ds["label"] = rowId + " - PM2.5";
+					pm25ds["pointRadius"] = 6;
+					pm25ds["showLine"] = true;
+					var col = rndColour();
+					pm25ds["pointBackgroundColor"] = col;
+					pm25ds["backgroundColor"] = col;
+				}
+				pm25ds.data.push({x: time, y: chartData[rowId][time]["pm25"]});
+			}
+			if ("pm10" in chartData[rowId][time]) {
+				if (!("label" in pm10ds)) {
+					pm10ds["label"] = rowId + " - PM10";
+					pm10ds["pointRadius"] = 6;
+					pm10ds["showLine"] = true;
+					var col = rndColour();
+					pm10ds["pointBackgroundColor"] = col;
+					pm10ds["backgroundColor"] = col;
+				}
+				pm10ds.data.push({x: time, y: chartData[rowId][time]["pm10"]});
+			}
+		}
+
+		// Push the series for rowId X PM into the dataset
+		if ("label" in pm1ds) {
+			lineData.datasets.push(pm1ds);
+		}
+		if ("label" in pm25ds) {
+			lineData.datasets.push(pm25ds);
+		}
+		if ("label" in pm10ds) {
+			lineData.datasets.push(pm10ds);
+		}
+	}
+
+	var c = document.getElementById('myChart');
+	new Chart(c, {
+		type: 'line',
+		data: lineData,
+		options: {
+			scales: {
+				xAxes: [{
+					type: 'time',
+					distribution: 'linear',
+				}]
+			}
+		}
+	});
+}
+
+function rndColour() {
+	var r = Math.floor(Math.random() * 255);
+	var g = Math.floor(Math.random() * 255);
+	var b = Math.floor(Math.random() * 255);
+	return "rgb(" + r + "," + g + "," + b + ")";
 }
