@@ -243,7 +243,7 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
 <div class='navbar-header'>
     <button type='button' class='navbar-toggler mr-sm-2' data-toggle='collapse' data-target='#myNavBar' aria-controls='myNavBar' aria-expanded='false' aria-label='Toggle Navigation'>
     <span class='navbar-toggler-icon'></span></button>
-    <a class='navbar-brand mr-sm-2' href='koalas.pl'>blueSKIES</a></div>
+    <a class='navbar-brand mr-sm-2' href='#'>blueSKIES</a></div>
 <div class='collapse navbar-collapse' id='myNavBar'>
   <ul class='navbar-nav'>
     <li class='nav-item'><a class='nav-link' href='#filter'>Data Filters</a></li>
