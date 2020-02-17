@@ -416,7 +416,13 @@ print "</select>
       reasons I felt it important to allow these thresholds to be adjusted based on your understanding.<br/>
       During online analysis of a number of air quality and particulate matter sources I came to the conclusion that the
       default values used on this page are appropriate. Key information that gleaned from this research was that:<br/>
-      etc.
+      <ul class='list-group list-group-flush'>
+        <li class='list-group-item'>For PM2.5 the maximum safe level is an average of 10&#13197; per m&#179; in a 12-month period;</li>
+        <li class='list-group-item'>Similarly, the maximum safe level of PM2.5 is an average of 25&#13197; per m&#179; in a 24-hour period;</li>
+        <li class='list-group-item'>For PM10 the agreed values are slightly higher, at 20&#13197; per m&#179; in a 12-month period;</li>
+        <li class='list-group-item'>And 50&#13197; per m&#179; of PM10 in a 24-hour period;</li>
+        <li class='list-group-item'>It appears that few studies into safe levels of PM1 (particulates with a diameter less than 0.1&#13211;)
+          have resulted in recommended safe levels, however some sources applied similar targets as PM2.5, which I also have done.</li></ul>
     </div></div>
   <div class='row mt-sm-3'><button class='btn btn-primary btn-block mb-3' value='Update' onClick='submitForm()'>Update</button></div></div>
 <div id='sensorData' class='table-responsive' style='padding-top:75px;'><table class='table table-bordered table-striped'><thead><tr>";
