@@ -343,7 +343,7 @@ for my $areaKey (keys %unitsByLoc) {
 print "$_\n" for sort @unitOptions;
 print "  </select>
 </div></div>
-<form method='post' ><div class='row mb-3'><div class='col'>
+<form method='post' id='pageForm'><div class='row mb-3'><div class='col'>
 <div class='custom-control custom-checkbox'>
 <input type='checkbox' class='custom-control-input' onClick=timeEnableDisable() name='limitTime' id='limitTime'" . (($limitTime == 1)?" checked":"") . "/>
 <label class='custom-control-label mr-sm-2' for='limitTime'>Limit results to the last </label></div></div><div class='col'>
@@ -407,7 +407,18 @@ print "</select>
         <div class='col'><div class='row justify-content-center'><span id='pm10HighVal' class='badge badge-pill badge-danger text-center'>$pm10high</span></div>
         <div class='row justify-content-center'><input id='pm10HighSlider' name='pm10HighSlider' type='range' min='1' max='100' value='$pm10high' onInput='updatePm10High()'/></div></div>
       </div>
-  </div></div></div>
+  </div></div>
+  <div class='row mt-sm-3'><button class='btn btn-info btn-block mb-3' type='button' data-toggle='collapse' data-target='#thresholdInfo' aria-expanded='false' aria-controls='thresholdInfo'>
+    Overview of default thresholds</button></div>
+  <div class='collapse' id='thresholdInfo'>
+    <div class='card card-body'>
+      I am by no means an expert on the effects of the different types of particulate matter on human health, and this is one of the
+      reasons I felt it important to allow these thresholds to be adjusted based on your understanding.<br/>
+      During online analysis of a number of air quality and particulate matter sources I came to the conclusion that the
+      default values used on this page are appropriate. Key information that gleaned from this research was that:<br/>
+      etc.
+    </div></div>
+  <div class='row mt-sm-3'><button class='btn btn-primary btn-block mb-3' value='Update' onClick='submitForm()'>Update</button></div></div>
 <div id='sensorData' class='table-responsive' style='padding-top:75px;'><table class='table table-bordered table-striped'><thead><tr>";
 # Render the data table
 print "<th>$_</th>" for @columnsToShow;

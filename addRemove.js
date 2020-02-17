@@ -303,3 +303,7 @@ function updatePm10High() {
 	span.innerText = value;
 	inp.value = value;
 }
+
+function submitForm() {
+	document.getElementById("pageForm").submit();
+}
