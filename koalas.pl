@@ -582,12 +582,12 @@ print "
 learning of the KOALA (Knowing Our Ambient Local Air-quality) array of particulate
 matter sensors, including 12 sensors in the villages of the Blue Mountains, New
 South Wales. From this, blueSKIES was born.</p>
-<p>While KOALA, in addition to broader environmental sensors made available by the
+<p>While KOALA, as well as broader environmental sensors made available by the
 NSW Government, are great initiatives a substantial drawback is the absence of any
 historical data in the datasets made available to the public. blueSKIES seeks to
 correct this. This page is enabled by a service that polls KOALA's dataset every
 10 minutes, drawing any new sensor observations into the database driving this
-page. This service was activated around 11.30 am on Saturday 8 February 2020,
+page. This service was activated around 11.30 am on Sunday 9 February 2020,
 and an increasingly valuable timeseries of air quality data is gradually being
 formed to allow patterns and trends in the data to be identified.</p>
 <p>One of my goals in developing this page is to make the available data as
@@ -597,8 +597,7 @@ providing you with options to select what data is selected and how it is viewed,
 rather than providing a fixed dataset that meets my needs. If you have any feature
 requests please <a href='mailto:chris\@bennettscash.id.au'>contact me</a>.</p>
 <p>I am currently working on adding the following features to the page:
-<ul><li>Configuration of air quality thresholds</li>
-<li>Presenting the data in a chart</li>
+<ul><li>Presenting the data in a chart</li>
 <li>Exporting selected data to CSV</li></ul></p>
 <p>For more information on the KOALAS project see <a href='http://bluemountains.sensors.net.au/'>http://bluemountains.sensors.net.au/</a></p>
 <p>blueSKIES is <a href='https://github.com/chris-bc/airQuality'>hosted on GitHub</a>. Feel free to develop it further and send me a pull request</p>
