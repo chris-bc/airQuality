@@ -250,10 +250,19 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
     <li class='nav-item'><a class='nav-link' href='#threshold'>Air Quality Thresholds</a></li>
     <li class='nav-item'><a class='nav-link' href='#sensorData'>Sensor Data</a></li>
     <li class='nav-item'><a class='nav-link' href='#selection'>Data Selection</a></li>
-    <li class='nav-item'><a class='nav-link' href='#about'>About</a></li></ul>
+    <li class='nav-item'><a class='nav-link' href='#about'>About</a></li>
+    <li class='nav-item dropdown'>
+      <a class='nav-link dropdown-toggle' href='#' id='navbarDropDown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
+        Other Pages
+      </a><div class='dropdown-menu' aria-labelledBy='navbarDropDown' id='navbarDropLinks' name='navbarDropLinks'>
+        <a class='dropdown-item disabled' href='#'>NSW Sensor Data</a>
+        <div class='dropdown-divider'></div>
+        <a class='dropdown-item' target='_blank' href='http://www.bennettscash.id.au'>bennettscash</a>
+      </div></li></ul>
 </div></nav>
 <div class='container'>
-<h1 class='text-center'>Air Quality Data</h1>
+<img src='blueskies-banner.jpg' class='img-fluid' alt='Site Banner'/>
+<h1 class='text-center mt-sm-2'>Air Quality Data</h1>
 <div id='filter' class='container' style='padding-top:75px;''>
 <div class='row'><div class='col'><h3 class='text-center'>Limit Results to the following locations and/or units</h3></div></div>
 <div class='row mb-3'>
