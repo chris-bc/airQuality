@@ -233,31 +233,19 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
   <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
   <script src='bootstrap.min.js'></script><script src='addRemove.js'></script>
   </head><body data-spy='scroll' data-target='#myNav' data-offset='70' style='position:relative; padding-top:75px;'>
-<nav id='myNav' class='navbar navbar-light bg-light navbar-expand-md fixed-top'>\n";
-#<div class='container-fluid'><div class='navbar-header'>
-print"  <button type='button' class='navbar-toggler' data-toggle='collapse' data-target='#myNavBar' aria-controls='myNavBar' aria-expanded='false' aria-label='Toggle Navigation'>
-    <span class='navbar-toggler-icon'></span></button>\n";
-#  <a class='navbar-brand' href='koalas.pl'>blueSKY</a>
-#</div><div><div class='collapse navbar-collapse' id='myNavBar'>
-print "<div class='container'><a class='navbar-brand' href='koalas.pl'>blueSKIES</a>
+<nav id='myNav' class='navbar navbar-light bg-light navbar-expand-md fixed-top'>
+<div class='navbar-header'>
+    <button type='button' class='navbar-toggler mr-sm-2' data-toggle='collapse' data-target='#myNavBar' aria-controls='myNavBar' aria-expanded='false' aria-label='Toggle Navigation'>
+    <span class='navbar-toggler-icon'></span></button>
+    <a class='navbar-brand mr-sm-2' href='koalas.pl'>blueSKIES</a></div>
 <div class='collapse navbar-collapse' id='myNavBar'>
   <ul class='navbar-nav'>
-    <li class='nav-item active'><a class='nav-link' href='#filter'>Data Filters</a></li>
+    <li class='nav-item'><a class='nav-link' href='#filter'>Data Filters</a></li>
     <li class='nav-item'><a class='nav-link' href='#threshold'>Air Quality Thresholds</a></li>
     <li class='nav-item'><a class='nav-link' href='#sensorData'>Sensor Data</a></li>
     <li class='nav-item'><a class='nav-link' href='#selection'>Data Selection</a></li>
     <li class='nav-item'><a class='nav-link' href='#about'>About</a></li></ul>
-</div></div></nav>\n";
-#</div></div></div></nav>
-#print "<a class='navbar-brand' href='#'>blueSKY</a>
-#<ul class='nav nav-pills'>
-#  <li class='nav-item'><a class='nav-link' href='#filter'>Data Filters</a></li>
-#  <li class='nav-item'><a class-'nav-link' href='#threshold'>Air Quality Thresholds</a></li>
-#  <li class='nav-item'><a class='nav-link' href='#sensorData'>Sensor Data</a></li>
-#  <li class='nav-item'><a class='nav-link' href='#selection'>Data Selection</a></li>
-#  <li class='nav-item'><a class='nav-link' href='#about'>About</a></li>
-#</ul></nav>
-print "
+</div></nav>
 <div class='container'>
 <h1 class='text-center'>Air Quality Data</h1>
 <div id='filter' class='container' style='padding-top:75px;''>
@@ -526,15 +514,29 @@ print "
   </div>
 </div></div></div>
 <div id='about' style='float:left; width:100%; padding-top:75px;'><p><h3>About</h3></p>
-<p>This page draws on data made available as part of the KOALA project
-(Knowing Our Ambient Local Air-quality), an array of particulate matter sensors
-installed primarily in and around the Blue Mountains. This page was inspired by
-their public pages only providing the most recent air quality observation for
-each sensor.<br/>
-This site polls their publicly-available dataset for new observations every
-ten minutes, building a database of observations over time to allow patterns
-and trends to be identified.<br/>
-For more information on this project see <a href='http://bluemountains.sensors.net.au/'>http://bluemountains.sensors.net.au/</a></p>
-<p>This project is <a href='https://github.com/chris-bc/airQuality'>hosted on GitHub</a>. Feel free to develop it further and send me a pull request</p>
-<p><font size=-1>Built by Chris Bennetts-Cash, 2020. <a href='http://www.bennettscash.id.au'>http://www.bennettscash.id.au</a></font></p>
+<p>blueSKIES (Sensor Knowledge Ingestion and Extraction System) was inspired by
+learning of the KOALA (Knowing Our Ambient Local Air-quality) array of particulate
+matter sensors, including 12 sensors in the villages of the Blue Mountains, New
+South Wales. From this, blueSKIES was born.</p>
+<p>While KOALA, in addition to broader environmental sensors made available by the
+NSW Government, are great initiatives a substantial drawback is the absence of any
+historical data in the datasets made available to the public. blueSKIES seeks to
+correct this. This page is enabled by a service that polls KOALA's dataset every
+10 minutes, drawing any new sensor observations into the database driving this
+page. This service was activated around 11.30 am on Saturday 8 February 2020,
+and an increasingly valuable timeseries of air quality data is gradually being
+formed to allow patterns and trends in the data to be identified.</p>
+<p>One of my goals in developing this page is to make the available data as
+accessible and customisable as possible to support anyone who wishes to use the
+data to generate further insights or innovations. This has led to a focus on
+providing you with options to select what data is selected and how it is viewed,
+rather than providing a fixed dataset that meets my needs. If you have any feature
+requests please <a href='mailto:chris\@bennettscash.id.au'>contact me</a>.</p>
+<p>I am currently working on adding the following features to the page:
+<ul><li>Configuration of air quality thresholds</li>
+<li>Presenting the data in a chart</li>
+<li>Exporting selected data to CSV</li></ul></p>
+<p>For more information on the KOALAS project see <a href='http://bluemountains.sensors.net.au/'>http://bluemountains.sensors.net.au/</a></p>
+<p>blueSKIES is <a href='https://github.com/chris-bc/airQuality'>hosted on GitHub</a>. Feel free to develop it further and send me a pull request</p>
+<p><font size=-1>Built by <a href='mailto:chris\@bennettscash.id.au'>Chris Bennetts-Cash</a>, 2020. <a href='http://www.bennettscash.id.au'>http://www.bennettscash.id.au</a></font></p>
 </div></div></body></html>";
