@@ -1,3 +1,5 @@
+var chartData = [];
+
 function rmAll() {
 	var sel = document.getElementById("selCols");
 	var avail = document.getElementById("allcols");
@@ -306,4 +308,171 @@ function updatePm10High() {
 
 function submitForm() {
 	document.getElementById("pageForm").submit();
+}
+
+function prepareChartData() {
+	// If multiple locations and 'any' unit then generate 4-hourly means
+	//   for each location. Otherwise (single location or subset of units)
+	//	 just use each observation
+
+	var bMeans = false;
+	var pm1col = -1;
+	var pm25col = -1;
+	var pm10col = -1;
+	var locCol = -1;
+	var unitCol = -1;
+	var timeCol = -1;
+	var pm1colText = "pm1";
+	var pm25colText = "pm25";
+	var pm10colText = "pm10";
+	var locColText = "locationDescription";
+	var unitColText = "UnitNumber";
+	var timeColText = "lastsensingdate";
+
+
+	// Are we doing means or all values?
+	var lSel = document.getElementById("limitLoc");
+	var uSel = document.getElementById("limitUnit");
+
+	// If 'any' location is selected and more than 1 location is available
+	// and more than 1 unit is available, use means
+	if (lSel.options[0].selected && lSel.options.length > 1 && uSel.options.length > 1) {
+		bMeans = true;
+	}
+	for (var i=1, tot=0; i < lSel.selectedOptions.length && !bMeans; i++) {
+		if (lSel.selectedOptions[i].selected) {
+			tot++;
+		}
+		if (tot > 2) {
+			bMeans = true;
+		}
+	}
+
+	// Loop through table headers to identify column indices
+	var sTable = document.getElementById("dataTable");
+	var headers = sTable.tHead.rows[0].cells;
+	for (var i = 0; i < headers.length; i++) {
+		if (headers[i].textContent == pm1colText) {
+			pm1col = i;
+		} else if (headers[i].textContent == pm25colText) {
+			pm25col = i;
+		} else if (headers[i].textContent == pm10colText) {
+			pm10col = i;
+		} else if (headers[i].textContent == locColText) {
+			locCol = i;
+		} else if (headers[i].textContent == unitColText) {
+			unitCol = i;
+		} else if (headers[i].textContent == timeColText) {
+			timeCol = i;
+		}
+	}
+
+	// Bail if we don't have required columns
+	if ( (pm1col == -1 && pm25col == -1 && pm10col == -1) ||
+				(bMeans && locCol == -1) || (!bMeans && unitCol == -1) ||
+				(timeCol == -1) ) {
+		// Nothing to chart
+		return;
+	}
+
+	// Loop through table rows building chartData[]
+	// Data structure:
+	// chartData[unit][time][pm1]|[pm25]|[pm10] if !bMeans
+	// chartData[loc][time rounded to nearest 4h][pm1]|[pm25]|[pm10] if bMeans
+	chartData = [];
+	var tableRows = sTable.tBodies[0].rows;
+	var rowId;
+	var rowTime;
+	var rowPm1;
+	var rowPm25;
+	var rowPm10;
+	for (var i=0; i < tableRows.length; i++) {
+		// Fetch time and PM values regardless of the approach
+		rowTime = tableRows[i].cells[timeCol];
+		if (pm1col >= 0) {
+			rowPm1 = tableRows[i].cells[pm1col];
+		}
+		if (pm25col >= 0) {
+			rowPm25 = tableRows[i].cells[pm25col];
+		}
+		if (pm10col >= 0) {
+			rowPm10 = tableRows[i].cells[pm10col];
+		}
+
+		if (bMeans) {
+			rowId = tableRows[i].cells[locCol];
+			// TODO: Manipulate the time so it's rounded to the nearest 4 hours
+		} else {
+			rowId = tableRows[i].cells[unitCol];
+		}
+		// Create row object if doesn't exist
+		if (!(rowId in chartData)) {
+			chartData[rowId] = [];
+		}
+		// Create time object if doesn't exist
+		if (!(rowTime in chartData[rowId])) {
+			chartData[rowId][rowTime] = [];
+		}
+
+		if (bMeans) {
+			// track values and number of entries before finally calculating means
+			if (pm1col >= 0) {
+				if ("pm1" in chartData[rowId][rowTime]) {
+					chartData[rowId][rowTime]["pm1"] += rowPm1;
+					chartData[rowId][rowTime]["pm1Count"] ++;
+				} else {
+					chartData[rowId][rowTime]["pm1"] = rowPm1;
+					chartData[rowId][rowTime]["pm1Count"] = 1;
+				}
+			}
+			if (pm25col >= 0) {
+				if ("pm25" in chartData[rowId][rowTime]) {
+					chartData[rowId][rowTime]["pm25"] += rowPm25;
+					chartData[rowId][rowTime]["pm25Count"] ++;
+				} else {
+					chartData[rowId][rowTime]["pm25"] = rowPm25;
+					chartData[rowId][rowTime]["pm25Count"] = 1;
+				}
+			}
+			if (pm10col >= 0) {
+				if ("pm10" in chartData[rowId][rowTime]) {
+					chartData[rowId][rowTime]["pm10"] += rowPm10;
+					chartData[rowId][rowTime]["pm10Count"] ++;
+				} else {
+					chartData[rowId][rowTime]["pm10"] = rowPm10;
+					chartData[rowId][rowTime]["pm10Count"] = 1;
+				}
+			}
+		} else {
+			if (pm1col >= 0) {
+				chartData[rowId][rowTime]["pm1"] = rowPm1;
+			}
+			if (pm25col >= 0) {
+				chartData[rowId][rowTime]["pm25"] = rowPm25;
+			}
+			if (pm10col >= 0) {
+				chartData[rowId][rowTime]["pm10"] = rowPm10;
+			}
+		}
+	}
+
+	// If calculating means do that now
+	if (bMeans) {
+		for (var i in chartData) {
+			for (var j in chartData[i]) {
+				if ("pm1" in chartData[i][j]) {
+					chartData[i][j]["pm1"] = chartData[i][j]["pm1"] / chartData[i][j]["pm1Count"];
+					delete chartData[i][j]["pm1Count"];
+				}
+				if ("pm25" in chartData[i][j]) {
+					chartData[i][j]["pm25"] = chartData[i][j]["pm25"] / chartData[i][j]["pm25Count"];
+					delete chartData[i][j]["pm25Count"];
+				}
+				if ("pm10" in chartData[i][j]) {
+					chartData[i][j]["pm10"] = chartData[i][j]["pm10"] / chartData[i][j]["pm10Count"];
+					delete chartData[i][j]["pm10Count"];
+				}
+			}
+		}
+	}
 }

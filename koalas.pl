@@ -434,7 +434,7 @@ print "</select>
           have resulted in recommended safe levels, however some sources applied similar targets as PM2.5, which I also have done.</li></ul>
     </div></div>
   <div class='row mt-sm-3'><button class='btn btn-primary btn-block mb-3' value='Update' onClick='submitForm()'>Update</button></div></div>
-<div id='sensorData' class='table-responsive' style='padding-top:75px;'><table class='table table-bordered table-striped'><thead><tr>";
+<div id='sensorData' class='table-responsive' style='padding-top:75px;'><table id='dataTable' class='table table-bordered table-striped'><thead><tr>";
 # Render the data table
 print "<th>$_</th>" for @columnsToShow;
 print "</tr></thead>";
