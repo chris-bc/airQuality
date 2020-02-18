@@ -336,17 +336,10 @@ function prepareChartData() {
 
 	// If 'any' location is selected and more than 1 location is available
 	// and more than 1 unit is available with 'any' unit selected, use means
-	if (lSel.options[0].selected && lSel.options.length > 1 && uSel.options.length > 1 && uSel.options[0].selected) {
+	// Or if multiple locations are selected and multiple units are available and 'any' unit is selected
+	if (((lSel.options[0].selected && lSel.options.length > 2) || (lSel.selectedOptions.length > 1))
+	 			&& uSel.options.length > 1 && uSel.options[0].selected) {
 		bMeans = true;
-	}
-	// If multiple locations are selected and multiple units are available and 'any' unit is selected
-	for (var i=1, tot=0; i < lSel.selectedOptions.length && !bMeans && uSel.options.length > 1 && uSel.options[0].selected; i++) {
-		if (lSel.selectedOptions[i].selected) {
-			tot++;
-		}
-		if (tot > 2) {
-			bMeans = true;
-		}
 	}
 
 	// Loop through table headers to identify column indices
@@ -381,6 +374,9 @@ function prepareChartData() {
 	// chartData[unit][time][pm1]|[pm25]|[pm10] if !bMeans
 	// chartData[loc][time rounded to nearest 4h][pm1]|[pm25]|[pm10] if bMeans
 	chartData = [];
+	if (sTable.tBodies[0] === undefined) {
+		return;
+	}
 	var tableRows = sTable.tBodies[0].rows;
 	var rowId;
 	var rowTime;
@@ -466,7 +462,7 @@ function prepareChartData() {
 			// track values and number of entries before finally calculating means
 			if (pm1col >= 0) {
 				if ("pm1" in chartData[rowId][rowTime]) {
-					chartData[rowId][rowTime]["pm1"] += rowPm1;
+					chartData[rowId][rowTime]["pm1"] = Number(chartData[rowId][rowTime]["pm1"]) + Number(rowPm1);
 					chartData[rowId][rowTime]["pm1Count"] ++;
 				} else {
 					chartData[rowId][rowTime]["pm1"] = rowPm1;
@@ -475,7 +471,7 @@ function prepareChartData() {
 			}
 			if (pm25col >= 0) {
 				if ("pm25" in chartData[rowId][rowTime]) {
-					chartData[rowId][rowTime]["pm25"] += rowPm25;
+					chartData[rowId][rowTime]["pm25"] = Number(chartData[rowId][rowTime]["pm25"]) + Number(rowPm25);
 					chartData[rowId][rowTime]["pm25Count"] ++;
 				} else {
 					chartData[rowId][rowTime]["pm25"] = rowPm25;
@@ -484,7 +480,7 @@ function prepareChartData() {
 			}
 			if (pm10col >= 0) {
 				if ("pm10" in chartData[rowId][rowTime]) {
-					chartData[rowId][rowTime]["pm10"] += rowPm10;
+					chartData[rowId][rowTime]["pm10"] = Number(chartData[rowId][rowTime]["pm10"]) + Number(rowPm10);
 					chartData[rowId][rowTime]["pm10Count"] ++;
 				} else {
 					chartData[rowId][rowTime]["pm10"] = rowPm10;
@@ -509,15 +505,15 @@ function prepareChartData() {
 		for (var i in chartData) {
 			for (var j in chartData[i]) {
 				if ("pm1" in chartData[i][j]) {
-					chartData[i][j]["pm1"] = chartData[i][j]["pm1"] / chartData[i][j]["pm1Count"];
+					chartData[i][j]["pm1"] = Number(chartData[i][j]["pm1"]) / Number(chartData[i][j]["pm1Count"]);
 					delete chartData[i][j]["pm1Count"];
 				}
 				if ("pm25" in chartData[i][j]) {
-					chartData[i][j]["pm25"] = chartData[i][j]["pm25"] / chartData[i][j]["pm25Count"];
+					chartData[i][j]["pm25"] = Number(chartData[i][j]["pm25"]) / Number(chartData[i][j]["pm25Count"]);
 					delete chartData[i][j]["pm25Count"];
 				}
 				if ("pm10" in chartData[i][j]) {
-					chartData[i][j]["pm10"] = chartData[i][j]["pm10"] / chartData[i][j]["pm10Count"];
+					chartData[i][j]["pm10"] = Number(chartData[i][j]["pm10"]) / Number(chartData[i][j]["pm10Count"]);
 					delete chartData[i][j]["pm10Count"];
 				}
 			}
@@ -620,7 +616,20 @@ function initChartJs() {
 		var bgCols = [];
 		for (var ds in lineData.datasets) {
 			for (var obs in lineData.datasets[ds].data) {
-				labels.push( lineData.datasets[ds]["label"] + " - " + lineData.datasets[ds].data[obs]["x"] );
+				// Format time for display D MMM, H:mm a
+				var months = [undefined, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+				var time = lineData.datasets[ds].data[obs]["x"];
+				var strTime = parseInt(time.substring(0,2)) + " ";
+				strTime += months[parseInt(time.substring(3,5))] + ", ";
+				var h = parseInt(time.substring(11,13));
+				var a = "AM";
+				if (h > 12) {
+					h -= 12;
+					a = "PM";
+				}
+				strTime += h + ":" + parseInt(time.substring(14,16)) + " " + a;
+
+				labels.push( lineData.datasets[ds]["label"] + " - " + strTime );
 				bgCols.push(rndColour());
 				barData.push(lineData.datasets[ds].data[obs]["y"]);
 			}
@@ -646,11 +655,17 @@ function initChartJs() {
 						ticks: {
 							beginAtZero: true
 						}
-					}]
+					}],
 				}
 			}
 		});
 	} else {
+
+		// If we're viewing hours or days of data display minutes, otherwise days
+		var timeUnit = "day";
+		if (document.getElementById("timeType").value == "hours" || document.getElementById("timeType").value == "days") {
+			timeUnit = "minute";
+		}
 		new Chart(c, {
 			type: chartType,
 			data: lineData,
@@ -661,8 +676,8 @@ function initChartJs() {
 						distribution: 'linear',
 						time: {
 							parser: "DD-MM-YYYY HH:mm:ss",
-							unit: "day",
-							displayFormats: {day: 'MMM D YYYY'}
+							unit: timeUnit,
+							displayFormats: {day: 'MMM D YYYY', minute: 'D MMM, h:mm a'}
 						}
 					}]
 				}

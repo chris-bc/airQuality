@@ -1,6 +1,1 @@
-bar chart if fewer than 3 obs
-trim timedate to nearest 4h if bMeans
-
-katoomba & lithgow locs, all units - shows bar chart by unit, should show bar chart by location
-katoomba & lithgow locs, units 64 - 64 - shows bar chart by unit as well, should show line chart
-  - Now showing line chart but dates commence 1970.
+need to sort column display (by time, unit, PM?)
