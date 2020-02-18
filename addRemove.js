@@ -491,6 +491,7 @@ function initChartJs() {
 	var pm1ds;
 	var pm25ds;
 	var pm10ds;
+	var chartType = "line";
 
 	// We have a dataset for each unit/loc X pmType
 	// Each dataset contains time values (x) and pm values (y)
@@ -502,6 +503,11 @@ function initChartJs() {
 		pm1ds.data = [];
 		pm25ds.data = [];
 		pm10ds.data = [];
+
+		// Use a bar chart if any unit has fewer than 3 observations
+		if (chartData[rowId].length < 3) {
+			chartType = "bar";
+		}
 		for (var time in chartData[rowId]) {
 			if ("pm1" in chartData[rowId][time]) {
 				if (!("label" in pm1ds)) {
@@ -551,18 +557,58 @@ function initChartJs() {
 	}
 
 	var c = document.getElementById('myChart');
-	new Chart(c, {
-		type: 'line',
-		data: lineData,
-		options: {
-			scales: {
-				xAxes: [{
-					type: 'time',
-					distribution: 'linear',
-				}]
+
+	// If building a bar chart we need to hack away at that now
+	if (chartType == "bar") {
+		var barData = [];
+		var labels = [];
+		var bgCols = [];
+		for (var ds in lineData.datasets) {
+			for (var obs in lineData.datasets[ds].data) {
+				labels.push( lineData.datasets[ds]["label"] + " - " + lineData.datasets[ds].data[obs]["x"] );
+				bgCols.push(rndColour());
+				barData.push(lineData.datasets[ds].data[obs]["y"]);
 			}
 		}
-	});
+
+		new Chart(c, {
+			type: chartType,
+			data: {
+				labels: labels,
+				datasets: [
+					{
+						data: barData,
+						backgroundColor: bgCols
+					}
+				]
+			},
+			options: {
+				legend: {
+					display: false,
+				},
+				scales: {
+					yAxes: [{
+						ticks: {
+							beginAtZero: true
+						}
+					}]
+				}
+			}
+		});
+	} else {
+		new Chart(c, {
+			type: chartType,
+			data: lineData,
+			options: {
+				scales: {
+					xAxes: [{
+						type: 'time',
+						distribution: 'linear',
+					}]
+				}
+			}
+		});
+	}
 }
 
 function rndColour() {

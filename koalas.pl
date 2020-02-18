@@ -250,6 +250,7 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
     <li class='nav-item'><a class='nav-link' href='#filter'>Data Filters</a></li>
     <li class='nav-item'><a class='nav-link' href='#threshold'>Air Quality Thresholds</a></li>
     <li class='nav-item'><a class='nav-link' href='#sensorData'>Sensor Data</a></li>
+    <li class='nav-item'><a class='nav-link' href='#chart'>Sensor Chart</a></li>
     <li class='nav-item'><a class='nav-link' href='#selection'>Data Selection</a></li>
     <li class='nav-item'><a class='nav-link' href='#about'>About</a></li>
     <li class='nav-item dropdown'>
@@ -518,7 +519,45 @@ while (my $row = $statement->fetchrow_hashref) {
 }
 $statement->finish;
 $dbh->disconnect;
-print "</table></div><div class='container-fluid'><canvas id='myChart'></canvas></div>";
+print "</table></div><div id='chart' class='container-fluid mt-sm-3' style='padding-top: 75px;'>
+<div class='row mt-sm-3'><button class='btn btn-info btn-block mb-3' type='button' data-toggle='collapse' data-target='#chartInfo' aria-expanded='false' aria-controls='chartInfo'>
+  About the chart</button></div>
+<div class='collapse' id='chartInfo'><div class='card card-body'>
+  <p>The chart shown below will vary based on a number of conditions around
+  the column and row filters in an attempt to provide the most useful chart
+  based on the combination of data being displayed. At a later time I may add
+  the ability to customise these display types through input options, but for
+  now I feel these provide a useful chart for a variety of purposes.</p>
+  <p>If multiple locations are selected and 'any' unit is selected the chart
+  will display the mean (average) particate matter values for each location,
+  with times grouped into 4-hourly intervals.</p>
+  <p>If a single location is selected, or multiple locations are selected but
+  a specific subset of units are selected, the chart will display the actual
+  particulate matter values for each unit at the observed time.</p>
+  <p>Once the above conditions have been taken into account the number of
+  observations for each location or unit is evaluated. If any unit/location
+  has fewer than three observations the chart will display as a bar chart.
+  If all units or locations have three or more observations a line chart will
+  be shown.</p>
+  <p>Finally, because of the volume of data blueSKIES draws on - which is
+  continually growing as additional sensor readings are made - it is not
+  practical to draw all that data into the chart. For this reason the page is
+  only able to construct a chart based on the row and column filtes you have
+  selected. This can cause some problems, but also allows you to further
+  customise the chart.</p>
+  <p>If you choose not to display the time column (lastsensingdate) the chart
+  will have nothing to plot on the X axis and will not display (NB: Yes, you're
+  right, the bar chart could be drawn without time. I'll get on that soon). </p>
+  <p>Similarly, if you don't show any of PM1, PM2.5 and PM10 the chart will have
+  no observations to chart, so nothing will be shown. The chart will determine
+  which of the particulate matters you have displayed and accommodate your
+  selections - if you select some but not the others those selected will be
+  displayed and the chart will not attempt to use those not available.</p>
+  <p>Finally, the rules outlined above determine whether locationdescription
+  or UnitNumber are required for the chart to operate. If required but not
+  present the chart will not be displayed.</p>
+</div></div>
+<canvas id='myChart'></canvas></div>";
 
 # Display column options
 print<<EOF;
