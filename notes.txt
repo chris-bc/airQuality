@@ -1,2 +1,2 @@
-need to sort column display (by time, unit, PM?)
 scroll to view about chart div (or chart) when it's clicked (shown or hidden)
+migrate to html
