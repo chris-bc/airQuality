@@ -335,11 +335,12 @@ function prepareChartData() {
 	var uSel = document.getElementById("limitUnit");
 
 	// If 'any' location is selected and more than 1 location is available
-	// and more than 1 unit is available, use means
-	if (lSel.options[0].selected && lSel.options.length > 1 && uSel.options.length > 1) {
+	// and more than 1 unit is available with 'any' unit selected, use means
+	if (lSel.options[0].selected && lSel.options.length > 1 && uSel.options.length > 1 && uSel.options[0].selected) {
 		bMeans = true;
 	}
-	for (var i=1, tot=0; i < lSel.selectedOptions.length && !bMeans; i++) {
+	// If multiple locations are selected and multiple units are available and 'any' unit is selected
+	for (var i=1, tot=0; i < lSel.selectedOptions.length && !bMeans && uSel.options.length > 1 && uSel.options[0].selected; i++) {
 		if (lSel.selectedOptions[i].selected) {
 			tot++;
 		}
