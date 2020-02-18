@@ -403,6 +403,53 @@ function prepareChartData() {
 		if (bMeans) {
 			rowId = tableRows[i].cells[locCol].textContent;
 			// TODO: Manipulate the time so it's rounded to the nearest 4 hours
+			var oldDate = new Date();
+			oldDate.setFullYear(rowTime.substring(6, 10));
+			oldDate.setMonth((rowTime.substring(3, 5) - 1));
+			oldDate.setDate(rowTime.substring(0, 2));
+			oldDate.setSeconds(0);
+			oldDate.setMinutes(0);
+			var oldHour = rowTime.substring(11, 13);
+			if (oldHour >= 22) {
+				oldDate.setHours(0);
+				oldDate.setDate((oldDate.getDate() + 1));
+			} else if (oldHour >= 18) {
+				oldDate.setHours(20);
+			} else if (oldHour >= 14) {
+				oldDate.setHours(16);
+			} else if (oldHour >= 10) {
+				oldDate.setHours(12);
+			} else if (oldHour >= 6) {
+				oldDate.setHours(8);
+			} else if (oldHour >= 2) {
+				oldDate.setHours(4);
+			} else {
+				oldDate.setHours(0);
+			}
+
+			// Rebuild rowTime
+			// TODO: Do this better
+			rowTime = "";
+			if (oldDate.getDate() < 10) {
+				rowTime += "0";
+			}
+			rowTime += oldDate.getDate() + "-";
+			if (oldDate.getMonth() < 10) {
+				rowTime += "0";
+			}
+			rowTime += (oldDate.getMonth() + 1) + "-" + oldDate.getFullYear() + " ";
+			if (oldDate.getHours() < 10) {
+				rowTime += "0";
+			}
+			rowTime += oldDate.getHours() + ":";
+			if (oldDate.getMinutes() < 10) {
+				rowTime += "0";
+			}
+			rowTime += oldDate.getMinutes() + ":";
+			if (oldDate.getSeconds() < 10) {
+				rowTime += "0";
+			}
+			rowTime += oldDate.getSeconds();
 		} else {
 			rowId = tableRows[i].cells[unitCol].textContent;
 		}
@@ -505,11 +552,13 @@ function initChartJs() {
 		pm25ds.data = [];
 		pm10ds.data = [];
 
-		// Use a bar chart if any unit has fewer than 3 observations
-		if (chartData[rowId].length < 3) {
-			chartType = "bar";
-		}
+		var numObs = 0;
+
 		for (var time in chartData[rowId]) {
+			// Use a bar chart if any unit has fewer than 3 observations
+			// Count number of observations
+			numObs++;
+
 			if ("pm1" in chartData[rowId][time]) {
 				if (!("label" in pm1ds)) {
 					pm1ds["label"] = rowId + " - PM1";
@@ -543,6 +592,11 @@ function initChartJs() {
 				}
 				pm10ds.data.push({x: time, y: chartData[rowId][time]["pm10"]});
 			}
+		}
+
+		// Determine whether we use a bar chart
+		if (numObs < 3) {
+			chartType = "bar";
 		}
 
 		// Push the series for rowId X PM into the dataset
