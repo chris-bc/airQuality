@@ -610,10 +610,10 @@ function initChartJs() {
 	var c = document.getElementById('myChart');
 
 	// If building a bar chart we need to hack away at that now
+	// Flatten the data structure into an array of objects so we can sort it later
 	if (chartType == "bar") {
-		var barData = [];
-		var labels = [];
-		var bgCols = [];
+		var dataContainer = [];
+
 		for (var ds in lineData.datasets) {
 			for (var obs in lineData.datasets[ds].data) {
 				// Format time for display D MMM, H:mm a
@@ -625,14 +625,35 @@ function initChartJs() {
 				var a = "AM";
 				if (h > 12) {
 					h -= 12;
+				}
+				if (h >= 12) {
 					a = "PM";
 				}
 				strTime += h + ":" + parseInt(time.substring(14,16)) + " " + a;
 
-				labels.push( lineData.datasets[ds]["label"] + " - " + strTime );
-				bgCols.push(rndColour());
-				barData.push(lineData.datasets[ds].data[obs]["y"]);
+				// Build a flat object array for the values
+				var o = {};
+				o["label"] = lineData.datasets[ds]["label"] + "-" + strTime;
+				o["bgCol"] = rndColour();
+				o["data"] = lineData.datasets[ds].data[obs]["y"];
+				o["sortLabel"] = lineData.datasets[ds]["label"] + "-" + time.substring(6, 10) + time.substring(3, 5) + time.substring(0, 2) + time.substring(11, 16);
+				dataContainer.push(o);
 			}
+		}
+
+		// Sort the object array on sortLabel
+		dataContainer.sort(function(a, b) {
+			return a["sortLabel"] < b["sortLabel"];
+		});
+
+		// Unroll the elements into arrays
+		var barData = [];
+		var labels = [];
+		var bgCols = [];
+		for (var i in dataContainer) {
+			barData.push(dataContainer[i]["data"]);
+			labels.push(dataContainer[i]["label"]);
+			bgCols.push(dataContainer[i]["bgCol"]);
 		}
 
 		new Chart(c, {

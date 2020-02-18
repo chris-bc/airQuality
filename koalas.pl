@@ -646,7 +646,7 @@ providing you with options to select what data is selected and how it is viewed,
 rather than providing a fixed dataset that meets my needs. If you have any feature
 requests please <a href='mailto:chris\@bennettscash.id.au'>contact me</a>.</p>
 <p>I am currently working on adding the following features to the page:
-<ul><li>Presenting the data in a chart</li>
+<ul>
 <li>Exporting selected data to CSV</li></ul></p>
 <p>For more information on the KOALAS project see <a href='http://bluemountains.sensors.net.au/'>http://bluemountains.sensors.net.au/</a></p>
 <p>blueSKIES is <a href='https://github.com/chris-bc/airQuality'>hosted on GitHub</a>. Feel free to develop it further and send me a pull request</p>
