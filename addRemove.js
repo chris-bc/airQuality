@@ -584,7 +584,7 @@ function initChartJs() {
 			if ("pm10" in chartData[rowId][time]) {
 				if (!("label" in pm10ds)) {
 					pm10ds["label"] = rowId + " - PM10";
-					pm10ds["pointRadius"] = 6;
+					pm10ds["pointRadius"] = 2;
 					pm10ds["showLine"] = true;
 					var col = rndColour();
 					pm10ds["pointBackgroundColor"] = col;
@@ -659,6 +659,11 @@ function initChartJs() {
 					xAxes: [{
 						type: 'time',
 						distribution: 'linear',
+						time: {
+							parser: "DD-MM-YYYY HH:mm:ss",
+							unit: "day",
+							displayFormats: {day: 'MMM D YYYY'}
+						}
 					}]
 				}
 			}
