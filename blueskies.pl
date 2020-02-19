@@ -98,7 +98,7 @@ if ($cgi->param('pm1high') && length $cgi->param('pm1high') > 0) {
 
 # Process and validate parameters
 # Set default time params if they're invalid
-$limitTime = 0 unless ($limitTime == 0 || $limitTime == 1);
+$limitTime = 1 unless ($limitTime == 0 || $limitTime == 1);
 $timeType = "hours" unless exists($timeHsh{$timeType});
 $timeNum = "1" unless ($timeNum >= 1 && $timeNum <= $timeHsh{$timeType});
 
@@ -238,7 +238,7 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
   <link rel='stylesheet' href='bootstrap.min.css'>
   <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
   <script src='bootstrap.min.js'></script><script src='addRemove.js'></script>
-  <script src='Chart.bundle.min.js'></script>
+  <script src='skiesUtils.js'></script><script src='Chart.bundle.min.js'></script>
   </head><body onload='initChartJs()' data-spy='scroll' data-target='#myNav' data-offset='70' style='position:relative; padding-top:75px;'>
 <nav id='myNav' class='navbar navbar-light bg-light navbar-expand-md fixed-top'>
 <div class='navbar-header'>
@@ -257,7 +257,7 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
       <a class='nav-link dropdown-toggle' href='#' id='navbarDropDown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
         Other Pages
       </a><div class='dropdown-menu' aria-labelledBy='navbarDropDown' id='navbarDropLinks' name='navbarDropLinks'>
-        <a class='dropdown-item disabled' href='#'>NSW Sensor Data</a>
+        <a class='dropdown-item' href='nswksies.pl' target='_blank'>nswSKIES</a>
         <div class='dropdown-divider'></div>
         <a class='dropdown-item' target='_blank' href='http://www.bennettscash.id.au'>bennettscash</a>
       </div></li></ul>
@@ -265,7 +265,7 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
 <div class='container'>
 <img src='blueskies-banner.jpg' class='img-fluid' alt='Site Banner'/>
 <h1 class='text-center mt-sm-2'>Air Quality Data</h1>
-<div id='filter' class='container' style='padding-top:75px;''>
+<div id='filter' class='container' style='padding-top:75px;'>
 <div class='row'><div class='col'><h3 class='text-center'>Limit Results to the following locations and/or units</h3></div></div>
 <div class='row mb-3'>
 <div class='col-sm-4'>
@@ -390,33 +390,33 @@ print "</select>
       <div class='row align-items-center'>
         <div class='col badge badge-warning'>Warning Threshold</div>
         <div class='col'><div class='row justify-content-center'><span id='pm1MedVal' class='badge badge-pill badge-warning text-center'>$pm1med</span></div>
-        <div class='row justify-content-center'><input id='pm1MedSlider' name='pm1MedSlider' type='range' min='1' max='100' value='$pm1med' onInput='updatePm1Med()'/></div></div>
+        <div class='row justify-content-center'><input id='pm1MedSlider' name='pm1MedSlider' type='range' min='1' max='100' value='$pm1med' onInput='updateThreshold(\"pm1MedVal\", \"pm1med\", \"pm1MedSlider\")'/></div></div>
       </div><div class='row align-items-center'>
         <div class='col badge badge-danger'>Danger Threshold</div>
         <div class='col'><div class='row justify-content-center'><span id='pm1HighVal' class='badge badge-pill badge-danger text-center'>$pm1high</span></div>
-        <div class='row justify-content-center'><input id='pm1HighSlider' name='pm1HighSlider' type='range' min='1' max='100' value='$pm1high' onInput='updatePm1High()'/></div></div>
+        <div class='row justify-content-center'><input id='pm1HighSlider' name='pm1HighSlider' type='range' min='1' max='100' value='$pm1high' onInput='updateThreshold(\"pm1HighVal\", \"pm1high\", \"pm1HighSlider\")'/></div></div>
       </div>
     </div><div class='col-sm-4'>
       <h4 class='text-center'>PM 2.5</h4>
       <div class='row align-items-center'>
         <div class='col badge badge-warning'>Warning Threshold</div>
         <div class='col'><div class='row justify-content-center'><span id='pm25MedVal' class='badge badge-pill badge-warning text-center'>$pm25med</span></div>
-        <div class='row justify-content-center'><input id='pm25MedSlider' name='pm25MedSlider' type='range' min='1' max='100' value='$pm25med' onInput='updatePm25Med()'/></div></div>
+        <div class='row justify-content-center'><input id='pm25MedSlider' name='pm25MedSlider' type='range' min='1' max='100' value='$pm25med' onInput='updateThreshold(\"pm25MedVal\", \"pm25med\", \"pm25MedSlider\")'/></div></div>
       </div><div class='row align-items-center'>
         <div class='col badge badge-danger'>Danger Threshold</div>
         <div class='col'><div class='row justify-content-center'><span id='pm25HighVal' class='badge badge-pill badge-danger text-center'>$pm25high</span></div>
-        <div class='row justify-content-center'><input id='pm25HighSlider' name='pm25HighSlider' type='range' min='1' max='100' value='$pm25high' onInput='updatePm25High()'/></div></div>
+        <div class='row justify-content-center'><input id='pm25HighSlider' name='pm25HighSlider' type='range' min='1' max='100' value='$pm25high' onInput='updateThreshold(\"pm25HighVal\", \"pm25high\", \"pm25HighSlider\")'/></div></div>
       </div>
     </div><div class='col-sm-4'>
       <h4 class='text-center'>PM 10</h4>
       <div class='row align-items-center'>
         <div class='col badge badge-warning'>Warning Threshold</div>
         <div class='col'><div class='row justify-content-center'><span id='pm10MedVal' class='badge badge-pill badge-warning text-center'>$pm10med</span></div>
-        <div class='row justify-content-center'><input id='pm10MedSlider' name='pm10MedSlider' type='range' min='1' max='100' value='$pm10med' onInput='updatePm10Med()'/></div></div>
+        <div class='row justify-content-center'><input id='pm10MedSlider' name='pm10MedSlider' type='range' min='1' max='100' value='$pm10med' onInput='updateThreshold(\"pm10MedVal\", \"pm10med\", \"pm10MedSlider\")'/></div></div>
       </div><div class='row align-items-center'>
         <div class='col badge badge-danger'>Danger Threshold</div>
         <div class='col'><div class='row justify-content-center'><span id='pm10HighVal' class='badge badge-pill badge-danger text-center'>$pm10high</span></div>
-        <div class='row justify-content-center'><input id='pm10HighSlider' name='pm10HighSlider' type='range' min='1' max='100' value='$pm10high' onInput='updatePm10High()'/></div></div>
+        <div class='row justify-content-center'><input id='pm10HighSlider' name='pm10HighSlider' type='range' min='1' max='100' value='$pm10high' onInput='updateThreshold(\"pm10HighVal\", \"pm10high\", \"pm10HighSlider\")'/></div></div>
       </div>
   </div></div>
   <div class='row mt-sm-3'><button class='btn btn-info btn-block mb-3' type='button' data-toggle='collapse' data-target='#thresholdInfo' aria-expanded='false' aria-controls='thresholdInfo'>
@@ -648,7 +648,7 @@ requests please <a href='mailto:chris\@bennettscash.id.au'>contact me</a>.</p>
 <p>I am currently working on adding the following features to the page:
 <ul>
 <li>Exporting selected data to CSV</li></ul></p>
-<p>For more information on the KOALAS project see <a href='http://bluemountains.sensors.net.au/'>http://bluemountains.sensors.net.au/</a></p>
+<p>For more information on the KOALAS project see <a href='http://bluemountains.sensors.net.au/' target='_blank'>http://bluemountains.sensors.net.au/</a></p>
 <p>blueSKIES is <a href='https://github.com/chris-bc/airQuality'>hosted on GitHub</a>. Feel free to develop it further and send me a pull request</p>
-<p><font size=-1>Built by <a href='mailto:chris\@bennettscash.id.au'>Chris Bennetts-Cash</a>, 2020. <a href='http://www.bennettscash.id.au'>http://www.bennettscash.id.au</a></font></p>
+<p><font size=-1>Built by <a href='mailto:chris\@bennettscash.id.au'>Chris Bennetts-Cash</a>, 2020. <a href='http://www.bennettscash.id.au' target='_blank'>http://www.bennettscash.id.au</a></font></p>
 </div></div></body></html>";
