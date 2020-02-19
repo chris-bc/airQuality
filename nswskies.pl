@@ -88,7 +88,6 @@ if ($cgi->param('humHigh') && length $cgi->param('humHigh') > 0) {
 $limitTime = 1 unless ($limitTime == 0 || $limitTime == 1);
 $timeType = "hours" unless exists($timeHsh{$timeType});
 $timeNum = "1" unless ($timeNum >= 1 && $timeNum <= $timeHsh{$timeType});
-$limitTime = (($limitTime == 1)?"checked":"");
 
 # Validate thresholds
 ($pm1med >= 0 && $pm1med <= 100 && $pm1high >= 0 && $pm1high <= 100 &&
@@ -111,7 +110,14 @@ my %sortColsHash = map {(split ' ', $_)[0] => 1} @sortColumns;
 exists($sortColsHash{$_}) or die "Invalid sort column: $_, terminating\n"
   for (keys %sortColsHash);
 
-
+# Pre-generate HTML to display options for timeNum and timeType
+my $timeNumHtml = "";
+my $timeTypeHtml = "";
+my $limitTimeHtml = (($limitTime == 1)?" checked":"");
+$timeTypeHtml .= "<option value='$_'" . (($timeType eq $_)?" selected":"") . ">$_</option>\n" for (keys %timeHsh);
+for (my $i=1; $i <= $timeHsh{$timeType}; $i++) {
+  $timeNumHtml .= "<option value='$i'" . (($timeNum == $i)?" selected":"") . ">$i</option>\n";
+}
 
 # Does the DB exist?
 (-e $dbFile) or die "Cannot find database $dbFile, Terminating\n";
@@ -171,12 +177,16 @@ print<<EOF;
     </div></div>
     <form method='post' id='pageForm'><div class='row mb-3'>
       <div class='col'><div class='custom-control custom-checkbox'>
-        <input type='checkbox' class='custom-control-input' onClick='timeEnableDisable()' onLoad='timeEnableDisable()' name='limitTime' id='limitTime' $limitTime />
+        <input type='checkbox' class='custom-control-input' onClick='timeEnableDisable()' onLoad='timeEnableDisable()' name='limitTime' id='limitTime'$limitTimeHtml/>
         <label class='custom-control-label mr-sm-2' for='limitTime'>Limit results to the last </label></div></div>
-      <div class='col'><select id='timeNum' class='custom-select mr-sm-2' name='timeNum'><option value=$timeNum selected>$timeNum</option></select></div>
+      <div class='col'><select id='timeNum' class='custom-select mr-sm-2' name='timeNum'>\n$timeNumHtml\n</select></div>
       <div class='col'><select id='timeType' class='custom-select mr-sm-2' name='timeType' onChange='updateTime()'>
-        <option value=$timeType selected>$timeType</option>
-      </select></div></div>
+        $timeTypeHtml\n</select></div></div>
+      <div id='timeAlert' class='alert alert-danger d-none' role='alert'>
+        <strong>Caution!</strong> Disabling the time filter may result in a very
+        large amount of data being downloaded from the server. Loading the page
+        with this setting may take some time.
+      </div>
       <input type='hidden' name='sort' id='sort' value='$sortColumnsStr'/>
       <input type='hidden' name='pm1med' id='pm1med' value='$pm1med'/>
       <input type='hidden' name='pm1high' id='pm1high' value='$pm1high'/>

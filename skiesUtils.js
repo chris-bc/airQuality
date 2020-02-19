@@ -9,6 +9,16 @@ function timeEnableDisable() {
 		n.setAttribute("disabled", "true");
 		t.setAttribute("disabled", "true");
 	}
+
+  // Trigger an alert if one is there to trigger
+  var a = document.getElementById("timeAlert");
+  if (a !== undefined) {
+    if (c.checked) {
+      $("#timeAlert").removeClass("show").addClass("d-none");
+    } else {
+      $("#timeAlert").removeClass("d-none").addClass("show");
+    }
+  }
 }
 
 function updateTime() {
