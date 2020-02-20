@@ -123,7 +123,7 @@ for (my $i=1; $i <= $timeHsh{$timeType}; $i++) {
 # Pre-generate HTML to display sort options
 my $sortHtml = "";
 for (sort @allColumns) {
-  $sortHtml .= "<button type='button' id='sort-btn-$_' onClick='sortChange(\"$_\")' class='list-group-item list-group-item-action d-flex justify-content-between align-items-center";
+  $sortHtml .= "<button type='button' id='sort-btn-$_' onClick='sortChange(\"$_\")' class='py-1 list-group-item list-group-item-action d-flex justify-content-between align-items-center";
   # Add the active class if the column is a sort column
   if (exists($sortColsHash{$_})) {
     $sortHtml .= " active";
