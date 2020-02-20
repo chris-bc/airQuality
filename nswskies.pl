@@ -123,18 +123,15 @@ for (my $i=1; $i <= $timeHsh{$timeType}; $i++) {
 # Pre-generate HTML to display sort options
 my $sortHtml = "";
 for (sort @allColumns) {
-  $sortHtml .= "<button type='button' class='list-group-item list-group-item-action d-flex justify-content-between align-items-center";
+  $sortHtml .= "<button type='button' id='sort-btn-$_' onClick='sortChange(\"$_\")' class='list-group-item list-group-item-action d-flex justify-content-between align-items-center";
   # Add the active class if the column is a sort column
   if (exists($sortColsHash{$_})) {
     $sortHtml .= " active";
   }
-  $sortHtml .= "' col='$_'>$_\n<div><span class='badge badge-light badge-pill mr-2";
-  unless (exists($sortColsHash{$_})) {
-    $sortHtml .= " d-none";
-  }
-  $sortHtml .= "' id='sortNum-$_'>";
+  $sortHtml .= "' col='$_'>$_\n<div><span class='badge badge-light badge-pill mr-2' id='sortNum-$_'>";
+
   # If this is a sort column find out which number it is
-  my $sortOrder = "ASC";
+  my $sortOrder = "";
   if (exists($sortColsHash{$_})) {
     my $i;
     for ($i=0; $i < (scalar @sortColumns) && $_ ne ((split ' ', $sortColumns[$i])[0]); $i++) {}
@@ -143,13 +140,13 @@ for (sort @allColumns) {
       $sortHtml .= ($i + 1);
     }
     # And is it ascending or descending?
-    $sortOrder = "DESC" if (lc($sortColsHash{$_}) eq "desc");
+    if (lc($sortColsHash{$_}) eq "desc") {
+      $sortOrder = "DESC";
+    } else {
+      $sortOrder = "ASC";
+    }
   }
-  $sortHtml .= "</span><span class='badge badge-light badge-pill";
-  unless (exists($sortColsHash{$_})) {
-    $sortHtml .= " d-none";
-  }
-  $sortHtml .= "' id='sortOrder-$_'>$sortOrder</span></div></button>\n";
+  $sortHtml .= "</span><span class='badge badge-light badge-pill' id='sortOrder-$_'>$sortOrder</span></div></button>\n";
 }
 
 # Does the DB exist?
