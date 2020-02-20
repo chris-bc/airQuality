@@ -18,6 +18,9 @@ my $pm25col = "PM2";
 my $pm1col = "PM1";
 my $pm10col = "PM10";
 my %timeHsh = ("hours", 23, "days", 30, "weeks", 51, "months", 11, "years", 5);
+my $selectedUnitsStr = "";
+my @selectedUnits;
+my @allUnits;
 
 # Initialise parameters
 my $selectColumns = "UnitNumber,SensingDate,TempDegC,Humidity,PM1,PM2,PM10,Latitude,Longitude";
@@ -83,6 +86,9 @@ if ($cgi->param('humMed') && length $cgi->param('humMed') > 0) {
 if ($cgi->param('humHigh') && length $cgi->param('humHigh') > 0) {
   $humHigh = $cgi->param('humHigh');
 }
+if ($cgi->param('units') && length $cgi->param('units') > 0) {
+  $selectedUnitsStr = $cgi->param('units');
+}
 
 # Set default time params if they're invalid
 $limitTime = 1 unless ($limitTime == 0 || $limitTime == 1);
@@ -110,6 +116,26 @@ my %sortColsHash = map {(split ' ', $_)[0] => ((scalar (split ' ', $_) > 1)?((sp
 # Validate that sort columns are valid
 exists($sortColsHash{$_}) or die "Invalid sort column: $_, terminating\n"
   for (keys %sortColsHash);
+
+# Does the DB exist?
+(-e $dbFile) or die "Cannot find database $dbFile, Terminating\n";
+# Connect to DB
+my $dbh = DBI->connect($dsn, \%attr) or die "Unable to connect to database $dbFile, Terminating\n";
+
+# Select all units and validate them
+my $sql = "SELECT DISTINCT $unitCol FROM $dbTable";
+my $statement = $dbh->prepare($sql);
+$statement->execute();
+while (my @row = $statement->fetchrow_array) {
+  push(@allUnits, $row[0]);
+}
+($statement->rows > 0) or die "Failed to fetch any units\n\n";
+$statement->finish();
+
+# Validate that each unit in selectedUnits is a real unit
+@selectedUnits = split ',', $selectedUnitsStr;
+my %allUnitsHash = map{$_ => 1} @allUnits;
+exists($allUnitsHash{$_}) or die "Specified selected unit \"$_\" not found.\n" for @selectedUnits;
 
 # Pre-generate HTML to display options for timeNum and timeType
 my $timeNumHtml = "";
@@ -149,10 +175,16 @@ for (sort @allColumns) {
   $sortHtml .= "</span><span class='badge badge-light badge-pill' id='sortOrder-$_'>$sortOrder</span></div></button>\n";
 }
 
-# Does the DB exist?
-(-e $dbFile) or die "Cannot find database $dbFile, Terminating\n";
-# Connect to DB
-my $dbh = DBI->connect($dsn, \%attr) or die "Unable to connect to database $dbFile, Terminating\n";
+# Pre-generate HTML for unit selection options
+my $unitsHtml = "";
+my %selectedUnitsHash = map {$_ => 1} @selectedUnits;
+for (sort @allUnits) {
+  $unitsHtml .= "<button type='button' id='unit-btn-$_' onClick='toggleUnit(\"$_\")' class='py-1 list-group-item list-group-item-action";
+  if (exists($selectedUnitsHash{$_})) {
+    $unitsHtml .= " active";
+  }
+  $unitsHtml .= "' unit='$_'>$_</button>\n";
+}
 
 # Reverse geocode on page or via an external mechanism?
 # Without reverse geocode there's little value in displaying items in a table
@@ -202,9 +234,10 @@ print<<EOF;
   <div id='navFilter' class='container' style='padding-top:75px;'>
     <div class='row mb-3 align-items-center justify-content-center'><div class='col-sm-6'>
       <h5 class='text-center'>Sort Criteria</h5>
-      <div class='list-group' id='sortList'>$sortHtml</div>
+      <div id='sortContainer'><div class='list-group' id='sortList'>$sortHtml</div></div>
     </div><div class='col-sm-6'>
       <h5 class='text-center'>Select units</h5>
+      <div id='unitContainer' style='overflow-y:auto;'><div class='list-group' id='unitsList'>$unitsHtml</div></div>
     </div></div>
     <form method='post' id='pageForm'><div class='row mb-3'>
       <div class='col'><div class='custom-control custom-checkbox'>
@@ -219,6 +252,7 @@ print<<EOF;
         with this setting may take some time.
       </div>
       <input type='hidden' name='sort' id='sort' value='$sortColumnsStr'/>
+      <input type='hidden' name='units' id='units' value='$selectedUnitsStr'/>
       <input type='hidden' name='pm1med' id='pm1med' value='$pm1med'/>
       <input type='hidden' name='pm1high' id='pm1high' value='$pm1high'/>
       <input type='hidden' name='pm25med' id='pm25med' value='$pm25med'/>

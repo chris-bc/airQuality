@@ -1,3 +1,8 @@
+// Set the unit listing to be the same height as the sort column listing
+$( document ).ready(function() {
+  $("#unitContainer").css("height", $("#sortContainer").css("height"));
+})
+
 function rebuildSortString() {
   var listGroup = document.getElementById("sortList");
   var sortStr = document.getElementById("sort");
@@ -81,5 +86,31 @@ function sortRebuildNumbers(removedNum) {
         document.getElementById("sortNum-" + document.getElementById("sortList").children[child].getAttribute("col")).innerText = (i - 1);
       }
     }
+  }
+}
+
+function toggleUnit(unitNumber) {
+  // If the selected unit is active deactivate it and vice versa
+  // Add or remove the unit from the sort input field
+  var unitsInp = document.getElementById("units");
+  var btnSel = "#unit-btn-" + unitNumber;
+  if ($(btnSel).hasClass("active")) {
+    $(btnSel).removeClass("active");
+    // Remove unitNumber from units.value
+    var unitsArr = unitsInp.value.split(",");
+    var i = unitsArr.indexOf(unitNumber);
+    if (i > -1) {
+      unitsArr.splice(i, 1);
+    } else {
+      // unit not found. This should never happen
+      alert("Unable to find " + unitNumber + " in units array!");
+    }
+    unitsInp.value = unitsArr.join(",");
+  } else {
+    $(btnSel).addClass("active");
+    if (unitsInp.value.length > 0) {
+      unitsInp.value = unitsInp.value + ",";
+    }
+    unitsInp.value = unitsInp.value + unitNumber;
   }
 }
