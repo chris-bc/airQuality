@@ -35,10 +35,11 @@ function sortChange(colName) {
     if (dir.innerText == "ASC") {
       dir.innerText = "DESC";
     } else {
+      var oldNum = num.innerText;
       dir.innerText = "";
       num.innerText = "";
       $(btnSel).removeClass("active");
-      //sortRebuildNumbers();
+      sortRebuildNumbers(oldNum);
     }
   } else {
     $(btnSel).addClass("active");
@@ -60,4 +61,25 @@ function getSortColNum() {
     }
   }
   return maxNum;
+}
+
+function sortRebuildNumbers(removedNum) {
+  // If the number we removed is greater than the max number now displayed
+  // there's nothing to do
+  var maxNum = getSortColNum()
+  if (removedNum <= maxNum) {
+    var childCount = document.getElementById("sortList").childElementCount;
+    for (var i=(parseInt(removedNum) + 1); i<= maxNum; i++) {
+      // Find the element with num i and reduce it by 1
+      var child;
+      for (child=0; child < childCount &&
+          document.getElementById("sortNum-" + document.getElementById("sortList").children[child].getAttribute("col")).innerText != i; child++) {}
+      if (child == childCount) {
+        // Not found - this shouldn't happen
+        alert("An error occurred - I couldn't find a row in sort position " + i);
+      } else {
+        document.getElementById("sortNum-" + document.getElementById("sortList").children[child].getAttribute("col")).innerText = (i - 1);
+      }
+    }
+  }
 }
