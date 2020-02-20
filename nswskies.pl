@@ -236,7 +236,7 @@ print<<EOF;
       <h5 class='text-center'>Sort Criteria</h5>
       <div id='sortContainer'><div class='list-group' id='sortList'>$sortHtml</div></div>
     </div><div class='col-sm-6'>
-      <h5 class='text-center'>Select units</h5>
+      <h5 class='text-center'>Select Units</h5>
       <div id='unitContainer' style='overflow-y:auto;'><div class='list-group' id='unitsList'>$unitsHtml</div></div>
     </div></div>
     <form method='post' id='pageForm'><div class='row mb-3'>
