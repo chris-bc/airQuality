@@ -103,7 +103,8 @@ my %colsHash = map {$_ => 1} @allColumns;
 
 # @sortColumns contains elements that include ASC/DESC
 # Get a list of columns that are used for sorting
-my %sortColsHash = map {(split ' ', $_)[0] => 1} @sortColumns;
+# Updated to include the sort spec if available as the value, otherwise 1
+my %sortColsHash = map {(split ' ', $_)[0] => ((scalar (split ' ', $_) > 1)?((split ' ', $_)[1]):1)} @sortColumns;
 
 # For now assuming all columns are displayed - can't select a subset of cols
 # Validate that sort columns are valid
@@ -117,6 +118,38 @@ my $limitTimeHtml = (($limitTime == 1)?" checked":"");
 $timeTypeHtml .= "<option value='$_'" . (($timeType eq $_)?" selected":"") . ">$_</option>\n" for (keys %timeHsh);
 for (my $i=1; $i <= $timeHsh{$timeType}; $i++) {
   $timeNumHtml .= "<option value='$i'" . (($timeNum == $i)?" selected":"") . ">$i</option>\n";
+}
+
+# Pre-generate HTML to display sort options
+my $sortHtml = "";
+for (sort @allColumns) {
+  $sortHtml .= "<button type='button' class='list-group-item list-group-item-action d-flex justify-content-between align-items-center";
+  # Add the active class if the column is a sort column
+  if (exists($sortColsHash{$_})) {
+    $sortHtml .= " active";
+  }
+  $sortHtml .= "' col='$_'>$_\n<div><span class='badge badge-light badge-pill mr-2";
+  unless (exists($sortColsHash{$_})) {
+    $sortHtml .= " d-none";
+  }
+  $sortHtml .= "' id='sortNum-$_'>";
+  # If this is a sort column find out which number it is
+  my $sortOrder = "ASC";
+  if (exists($sortColsHash{$_})) {
+    my $i;
+    for ($i=0; $i < (scalar @sortColumns) && $_ ne ((split ' ', $sortColumns[$i])[0]); $i++) {}
+    if ($i < (scalar @sortColumns)) {
+      # We've found this column as sort column i+1
+      $sortHtml .= ($i + 1);
+    }
+    # And is it ascending or descending?
+    $sortOrder = "DESC" if (lc($sortColsHash{$_}) eq "desc");
+  }
+  $sortHtml .= "</span><span class='badge badge-light badge-pill";
+  unless (exists($sortColsHash{$_})) {
+    $sortHtml .= " d-none";
+  }
+  $sortHtml .= "' id='sortOrder-$_'>$sortOrder</span></div></button>\n";
 }
 
 # Does the DB exist?
@@ -140,7 +173,7 @@ print<<EOF;
   <link rel='stylesheet' href='bootstrap.min.css'>
   <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
   <script src='bootstrap.min.js'></script><script src='Chart.bundle.min.js'></script>
-  <script src='skiesUtils.js'></script>
+  <script src='skiesUtils.js'></script><script src='nswUtils.js'></script>
 </head><body data-spy='scroll' data-target='#myNav' data-offset='70' style='position:relative; padding-top:75px;'>
   <nav id ='myNav' class='navbar navbar-light bg-light navbar-expand-md fixed-top'>
     <div class='navbar-header'>
@@ -171,7 +204,8 @@ print<<EOF;
   </div>
   <div id='navFilter' class='container' style='padding-top:75px;'>
     <div class='row mb-3 align-items-center justify-content-center'><div class='col-sm-6'>
-      <h5 class='text-center'>Choose sort order</h5>
+      <h5 class='text-center'>Sort Criteria</h5>
+      <div class='list-group' id='sortList'>$sortHtml</div>
     </div><div class='col-sm-6'>
       <h5 class='text-center'>Select units</h5>
     </div></div>

@@ -2,3 +2,22 @@ scroll to view about chart div (or chart) when it's clicked (shown or hidden)
 migrate to html
 user-selectable chart options
 CSV export
+
+JS-based sort
+list group of columns
+sort columns active with a badge showing their sort order and asc/desc
+click->toggle through active/asc, active/desc, inactive
+  Check whether active (If can't do that check whether badge has text)
+  if active
+    get badge text
+      if ends with asc change to desc -> rebuilt sort string
+      if ends with desc remove active, remove text -> rebuilt sort numbering -> rebuild sort string
+      if empty set active asc, determine next col number -> rebuild sort string
+  rebuild sort string
+    loop through items looking for 1..none
+  rebuild sort numbering
+    // we know a number is missing - it could be 1, it could be the last, it could be in the middle
+    lastnumber = 0
+    loop through cols looking for lastnumber+1
+      found - update last number, restart loop
+      not found - loop through looking for next and subsequent numbers, subtracting 1 from them
