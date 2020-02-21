@@ -6,6 +6,7 @@ var pm1Col = { "col": "PM1", "index": -1 };
 var pm25Col = { "col": "PM2", "index": -1 };
 var pm10Col = { "col": "PM10", "index": -1 };
 var dateCol = { "col": "SensingDate", "index": -1 };
+var chartData = [];
 
 // Set the unit listing to be the same height as the sort column listing
 $( document ).ready(function() {
@@ -123,6 +124,7 @@ function toggleUnit(unitNumber) {
     unitsInp.value = unitsInp.value + unitNumber;
   }
   rebuildDataUnits();
+  displayChartJs();
 }
 
 function findColumnIndices() {
@@ -150,6 +152,10 @@ function findColumnIndices() {
 function rebuildDataUnits() {
   var unitsStr = document.getElementById("units").value;
   var dataTable = document.getElementById("dataTable");
+  if (dataTable.tBodies[0] === undefined) {
+    // No rows
+    return;
+  }
   var rows = dataTable.tBodies[0].rows;
 
   if (unitsStr.length == 0) {
@@ -204,6 +210,10 @@ function rebuildDataThresholds() {
   }
 
   // Go through all rows of the datatable and set the colour class appropriately
+  if (dataTable.tBodies[0] === undefined) {
+    // No rows
+    return;
+  }
   var rows = dataTable.tBodies[0].rows;
   for (var i=0; i < rows.length; i++) {
     var rowSel = "#" + rows[i].getAttribute("id");
@@ -231,5 +241,178 @@ function rebuildDataThresholds() {
     } else {
       $(rowSel).addClass("table-danger");
     }
+  }
+}
+
+function buildTableObjects() {
+  chartData = [];
+  if (unitCol["index"] == -1) {
+    findColumnIndices();
+  }
+
+  var table = document.getElementById("dataTable");
+  if (table.tBodies[0] === undefined) {
+    // No rows
+    return;
+  }
+  var rows = table.tBodies[0].rows;
+  for (var i=0; i < rows.length; i++) {
+    // Only include the row if it is shown
+    var rowSel = "#" + rows[i].getAttribute("id");
+    if (!($(rowSel).hasClass("d-none"))) {
+      var unit = rows[i].cells[unitCol["index"]].innerText;
+      var temp = Number(rows[i].cells[tempCol["index"]].innerText);
+      var hum = Number(rows[i].cells[humCol["index"]].innerText);
+      var pm1 = Number(rows[i].cells[pm1Col["index"]].innerText);
+      var pm25 = Number(rows[i].cells[pm25Col["index"]].innerText);
+      var pm10 = Number(rows[i].cells[pm10Col["index"]].innerText);
+      var obsTime = rows[i].cells[dateCol["index"]].innerText;
+
+      if (!(unit in chartData)) {
+        chartData[unit] = [];
+      }
+      chartData[unit][obsTime] = [];
+      chartData[unit][obsTime]["temp"] = temp;
+      chartData[unit][obsTime]["hum"] = hum;
+      chartData[unit][obsTime]["pm1"] = pm1;
+      chartData[unit][obsTime]["pm25"] = pm25;
+      chartData[unit][obsTime]["pm10"] = pm10;
+    }
+  }
+}
+
+function displayChartJs() {
+  // If any row has fewer than 3 observations display a bar chart, otherwise line
+  var pmChart = document.getElementById("pmChart");
+  var envChart = document.getElementById("envChart");
+  if (chartData.length == 0) {
+    buildTableObjects();
+  }
+  var numObs;
+  var minObs = 999;
+  for (var unitId in chartData) {
+    numObs = 0;
+    for (var time in chartData[unitId]) {
+      numObs++;
+    }
+    if (numObs < minObs) {
+      minObs = numObs;
+    }
+  }
+
+  if (minObs >= 3) {
+    // Prepare line charts
+    var pointRadius = 3;
+    var showLine = true;
+    var pmData = {};
+    var envData = {};
+    pmData.datasets = [];
+    envData.datasets = [];
+    var pm1ds;
+    var pm25ds;
+    var pm10ds;
+    var tempDs;
+    var humDs;
+    for (var unitId in chartData) {
+      pm1ds = {};
+      pm25ds = {};
+      pm10ds = {};
+      tempDs = {};
+      humDs = {};
+      pm1ds.data = [];
+      pm25ds.data = [];
+      pm10ds.data = [];
+      tempDs.data = [];
+      humDs.data = [];
+
+      pm1ds["label"] = unitId + " - PM1";
+      pm1ds["pointRadius"] = pointRadius;
+      pm1ds["showLine"] = showLine;
+      var col = rndColour();
+      pm1ds["pointBackgroundColor"] = col;
+      pm1ds["backgroundColor"] = col;
+      pm25ds["label"] = unitId + " - PM2.5";
+      pm25ds["pointRadius"] = pointRadius;
+      pm25ds["showLine"] = showLine;
+      col = rndColour();
+      pm25ds["pointBackgroundColor"] = col;
+      pm25ds["backgroundColor"] = col;
+      pm10ds["label"] = unitId + " - PM10";
+      pm10ds["pointRadius"] = pointRadius;
+      pm10ds["showLine"] = showLine;
+      col = rndColour();
+      pm10ds["pointBackgroundColor"] = col;
+      pm10ds["backgroundColor"] = col;
+      tempDs["label"] = unitId + " - Temp";
+      tempDs["pointRadius"] = pointRadius;
+      tempDs["showLine"] = showLine;
+      col = rndColour();
+      tempDs["pointBackgroundColor"] = col;
+      tempDs["backgroundColor"] = col;
+      humDs["label"] = unitId + " - Humidity";
+      humDs["pointRadius"] = pointRadius;
+      humDs["showLine"] = showLine;
+      col = rndColour();
+      humDs["pointBackgroundColor"] = col;
+      humDs["backgroundColor"] = col;
+
+      for (var time in chartData[unitId]) {
+        pm1ds.data.push({x: time, y: chartData[unitId][time]["pm1"]});
+        pm25ds.data.push({x: time, y: chartData[unitId][time]["pm25"]});
+        pm10ds.data.push({x: time, y: chartData[unitId][time]["pm10"]});
+        tempDs.data.push({x: time, y: chartData[unitId][time]["temp"]});
+        humDs.data.push({x: time, y: chartData[unitId][time]["hum"]});
+      }
+
+      pmData.datasets.push(pm1ds);
+      pmData.datasets.push(pm25ds);
+      pmData.datasets.push(pm10ds);
+      envData.datasets.push(tempDs);
+      envData.datasets.push(humDs);
+    }
+
+    // If we're viewing hours or days display minutes, otherwise days
+    var timeUnit = "day";
+    if (document.getElementById("timeType").value == "hours" || document.getElementById("timeType").value == "days") {
+      timeUnit = "minute";
+    }
+    new Chart(pmChart, {
+      type: 'line',
+      data: pmData,
+      options: {
+        scaleShowValues: true,
+        scales: {
+          xAxes: [{
+            type: 'time',
+            distribution: 'linear',
+            time: {
+              parser: "DD-MM-YYYY HH:mm:ss",
+              unit: timeUnit,
+              displayFormats: {day: 'MMM D YYYY', minute: 'D MMM, h:mm a'}
+            },
+          }]
+        }
+      }
+    });
+    new Chart(envChart, {
+      type: 'line',
+      data: envData,
+      options: {
+        scaleShowValue: true,
+        scales: {
+          xAxes: [{
+            type: 'time',
+            distribution: 'linear',
+            time: {
+              parser: "DD-MM-YYYY HH:mm:ss",
+              unit: timeUnit,
+              displayFormats: {day: 'MMM D YYYY', minute: 'D MMM, h:mm a'}
+            },
+          }]
+        }
+      }
+    });
+  } else {
+    // Prepare bar chart
   }
 }

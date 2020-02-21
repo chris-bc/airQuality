@@ -205,7 +205,7 @@ print<<EOF;
   <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
   <script src='bootstrap.min.js'></script><script src='Chart.bundle.min.js'></script>
   <script src='skiesUtils.js'></script><script src='nswUtils.js'></script>
-</head><body data-spy='scroll' data-target='#myNav' data-offset='70' style='position:relative; padding-top:75px;'>
+</head><body onload='displayChartJs()' data-spy='scroll' data-target='#myNav' data-offset='70' style='position:relative; padding-top:75px;'>
   <nav id ='myNav' class='navbar navbar-light bg-light navbar-expand-md fixed-top'>
     <div class='navbar-header'>
       <button type='button' class='navbar-toggler mr-sm-2' data-toggle='collapse' data-target='#myNavBar' aria-controls='myNavBar' aria-expanded='false' aria-label='Toggle Navigation'>
@@ -370,7 +370,9 @@ my $sqlSelectCols = join ',', @dateCols;
 # Build where clause based on units and time
 my $where = "";
 if ($selectedUnitsStr && length $selectedUnitsStr > 0) {
-  $where .= "$unitCol IN ($selectedUnitsStr)";
+  my @sqlUnits = split ',', $selectedUnitsStr;
+  $_ = "'$_'" for @sqlUnits;
+  $where .= "$unitCol IN (".(join ',', @sqlUnits).")";
 }
 if ($limitTime == 1) {
   if (length $where > 0) {
@@ -425,7 +427,8 @@ print<<EOF;
     </table></div>
   </div>
   <div id='navChart' class='container' style='padding-top:75px;'>
-    chart
+    <div class='row mb-3'><canvas id='pmChart'></canvas></div>
+    <div class='row mb-3'><canvas id='envChart'></canvas></div>
   </div>
   <div id='navAbout' class='container' style='padding-top:75px;'>
     <div class='row text-center'><h3>About</h3></div>
