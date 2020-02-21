@@ -6,7 +6,10 @@ var pm1Col = { "col": "PM1", "index": -1 };
 var pm25Col = { "col": "PM2", "index": -1 };
 var pm10Col = { "col": "PM10", "index": -1 };
 var dateCol = { "col": "SensingDate", "index": -1 };
+var latCol = { "col": "Latitude", "index": -1 };
+var longCol = { "col": "Longitude", "index": -1 };
 var chartData = [];
+var mapMarkers = [];
 
 // Set the unit listing to be the same height as the sort column listing
 $( document ).ready(function() {
@@ -145,6 +148,10 @@ function findColumnIndices() {
       pm10Col["index"] = i;
     } else if (headers[i].textContent == dateCol["col"]) {
       dateCol["index"] = i;
+    } else if (headers[i].textContent == latCol["col"]) {
+      latCol["index"] = i;
+    } else if (headers[i].textContent == longCol["col"]) {
+      longCol["index"] = i;
     }
   }
 }
@@ -161,7 +168,7 @@ function rebuildDataUnits() {
   if (unitsStr.length == 0) {
     // Display all units
     for (var i=0; i < rows.length; i++) {
-      var uSel = "#" + rows[i].getAttribute("id");
+      var uSel = "#data-" + rows[i].getAttribute("id");
       if ($(uSel).hasClass("d-none")) {
         $(uSel).removeClass("d-none");
       }
@@ -174,7 +181,7 @@ function rebuildDataUnits() {
 
     for (var i=0; i < rows.length; i++) {
       var unit = rows[i].cells[unitCol["index"]].textContent;
-      var uSel = "#" + rows[i].getAttribute("id");
+      var uSel = "#data-" + rows[i].getAttribute("id");
       if (unitsArr.indexOf(unit) > -1) {
         // Unit is selected. Display it if hidden
         if ($(uSel).hasClass("d-none")) {
@@ -216,7 +223,7 @@ function rebuildDataThresholds() {
   }
   var rows = dataTable.tBodies[0].rows;
   for (var i=0; i < rows.length; i++) {
-    var rowSel = "#" + rows[i].getAttribute("id");
+    var rowSel = "#data-" + rows[i].getAttribute("id");
     var hum = Number(rows[i].cells[humCol["index"]].textContent);
     var temp = Number(rows[i].cells[tempCol["index"]].textContent);
     var pm1 = Number(rows[i].cells[pm1Col["index"]].textContent);
@@ -258,7 +265,7 @@ function buildTableObjects() {
   var rows = table.tBodies[0].rows;
   for (var i=0; i < rows.length; i++) {
     // Only include the row if it is shown
-    var rowSel = "#" + rows[i].getAttribute("id");
+    var rowSel = "#data-" + rows[i].getAttribute("id");
     if (!($(rowSel).hasClass("d-none"))) {
       var unit = rows[i].cells[unitCol["index"]].innerText;
       var temp = Number(rows[i].cells[tempCol["index"]].innerText);
@@ -415,4 +422,57 @@ function displayChartJs() {
   } else {
     // Prepare bar chart
   }
+}
+
+function infoWindowFor(unit, time, temp, humidity, pm1, pm25, pm10) {
+  var ret = "<div id='content'><div id='siteNotice'></div><h1 id='firstHeading' class='firstHeading'>";
+  ret += unit + "</h1><div id='bodyContent'><p><b>Observation:</b> " + time;
+  ret += "</p><p><b>Temperature:</b> " + temp + "<br/><b>Humidity:</b> " + humidity;
+  ret += "<br/><b>PM 1:</b> " + pm1 + "<br/><b>PM 2.5:</b> " + pm25;
+  ret += "<br/><b>PM 10:</b> " + pm10 + "</p></div></div>";
+  return ret;
+}
+
+function initMap() {
+  var obs = document.getElementById("latestData");
+  if (obs.tBodies[0] === undefined) {
+    // No data
+    return;
+  }
+  if (unitCol["index"] == -1) {
+    findColumnIndices();
+  }
+
+  var map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 6,
+    center: {lat: -34.397, lng: 150.644},
+  });
+
+  mapMarkers = [];
+  var rows = obs.tBodies[0].rows;
+  for (var i=0; i < rows.length; i++) {
+    var u = rows[i].cells[unitCol["index"]].innerText;
+    var t = rows[i].cells[tempCol["index"]].innerText;
+    var h = rows[i].cells[humCol["index"]].innerText;
+    var d = rows[i].cells[dateCol["index"]].innerText;
+    var pm1 = rows[i].cells[pm1Col["index"]].innerText;
+    var pm25 = rows[i].cells[pm25Col["index"]].innerText;
+    var pm10 = rows[i].cells[pm10Col["index"]].innerText;
+    var lati = Number(rows[i].cells[latCol["index"]].innerText);
+    var long = Number(rows[i].cells[longCol["index"]].innerText);
+
+    var infoText = infoWindowFor(u, d, t, h, pm1, pm25, pm10);
+
+    mapMarkers[i] = new google.maps.Marker({
+      position: {lat: lati, lng: long},
+      map: map,
+      title: u
+    });
+    mapMarkers[i].info = new google.maps.InfoWindow({content: infoText});
+    mapMarkers[i].addListener('click', function() {
+      this.info.open(map, this);
+    });
+  }
+  var markerClusterer = new MarkerClusterer(map, mapMarkers,
+    {imagePath: "/markers/m"});
 }

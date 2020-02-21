@@ -19,6 +19,8 @@ my $pm1col = "PM1";
 my $pm10col = "PM10";
 my $tempCol = "TempDegC";
 my $humCol = "Humidity";
+my $latCol = "Latitude";
+my $longCol = "Longitude";
 my %timeHsh = ("hours", 23, "days", 30, "weeks", 51, "months", 11, "years", 5);
 my $selectedUnitsStr = "";
 my @selectedUnits;
@@ -188,6 +190,27 @@ for (sort @allUnits) {
   $unitsHtml .= "' unit='$_'>$_</button>\n";
 }
 
+# Build where clause based on units and time
+my $where = "";
+if ($selectedUnitsStr && length $selectedUnitsStr > 0) {
+  my @sqlUnits = split ',', $selectedUnitsStr;
+  $_ = "'$_'" for @sqlUnits;
+  $where .= "$unitCol IN (".(join ',', @sqlUnits).")";
+}
+if ($limitTime == 1) {
+  if (length $where > 0) {
+    $where .= " AND ";
+  }
+  my $sqlTimeType = $timeType;
+  my $sqlTimeNum = $timeNum;
+  # SQLite doesn't support weeks, turn weeks into days
+  if ($timeType eq "weeks") {
+    $sqlTimeType = "days";
+    $sqlTimeNum = $timeNum * 7;
+  }
+  $where .= "datetime($timeCol) >= datetime(\"now\", \"-$sqlTimeNum $sqlTimeType\")";
+}
+
 # Reverse geocode on page or via an external mechanism?
 # Without reverse geocode there's little value in displaying items in a table
 # Use case: View map, select unit, view history
@@ -195,6 +218,22 @@ for (sort @allUnits) {
 # Add map with markers for units -> select unit, display data and chart
 # Display heatmap of quality or temperature (selection)
 # render all data to a table in hidden rows and allow JS to reveal as appropriate?
+
+# Fetch latest observation for each unit into a hidden table to pass it to javascript
+my $latestTable = "<table id='latestData' class='d-none'>";
+$sql = "SELECT $unitCol, strftime('%d-%m-%Y %H:%M:%S',MAX($timeCol),'localtime'), $tempCol, $humCol, $pm1col, $pm25col, $pm10col, $latCol, $longCol FROM $dbTable";
+if (length $where > 0) {
+  $sql .= " WHERE $where";
+}
+$sql .= " GROUP BY $unitCol";
+$statement = $dbh->prepare($sql);
+$statement->execute();
+
+while (my @row = $statement->fetchrow_array()) {
+  $latestTable .= "<tr><td>$row[0]</td><td>$row[1]</td><td>$row[2]</td><td>$row[3]</td><td>$row[4]</td><td>$row[5]</td><td>$row[6]</td><td>$row[7]</td><td>$row[8]</td></tr>\n";
+}
+$latestTable .= "</table>";
+$statement->finish;
 
 print<<EOF;
 
@@ -205,6 +244,7 @@ print<<EOF;
   <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
   <script src='bootstrap.min.js'></script><script src='Chart.bundle.min.js'></script>
   <script src='skiesUtils.js'></script><script src='nswUtils.js'></script>
+  <script src="https://unpkg.com/\@google/markerclustererplus\@4.0.1/dist/markerclustererplus.min.js"></script>
 </head><body onload='displayChartJs()' data-spy='scroll' data-target='#myNav' data-offset='70' style='position:relative; padding-top:75px;'>
   <nav id ='myNav' class='navbar navbar-light bg-light navbar-expand-md fixed-top'>
     <div class='navbar-header'>
@@ -227,10 +267,11 @@ print<<EOF;
             <a class='dropdown-item' target='_blank' href='http://www.bennettscash.id.au'>bennettscash</a>
       </div></li></ul>
   </div></nav>
-  <div class='container'><h1>banner</h1>
+  <div class='container'><img src='nswskies-banner.jpg' class='img-fluid mb-3' alt='Site Banner'/>
   <h1 class='text-center mt-sm-2'>NSW Environmental Data</h1>
-  <div id='navMap' class='container' style='padding-top:75px;'><h5 class='text-center'>Map</h5>
-    <div id='map' class='container-fluid'>
+  <div id='navMap' class='container' style='padding-top:75px;height:600px;'><h5 class='text-center'>Map</h5>
+    $latestTable
+    <div id='map' class='container-fluid' style='height:100%;'>
     </div>
   </div>
   <div id='navFilter' class='container' style='padding-top:75px;'>
@@ -367,26 +408,7 @@ for (@allColumns) {
   }
 }
 my $sqlSelectCols = join ',', @dateCols;
-# Build where clause based on units and time
-my $where = "";
-if ($selectedUnitsStr && length $selectedUnitsStr > 0) {
-  my @sqlUnits = split ',', $selectedUnitsStr;
-  $_ = "'$_'" for @sqlUnits;
-  $where .= "$unitCol IN (".(join ',', @sqlUnits).")";
-}
-if ($limitTime == 1) {
-  if (length $where > 0) {
-    $where .= " AND ";
-  }
-  my $sqlTimeType = $timeType;
-  my $sqlTimeNum = $timeNum;
-  # SQLite doesn't support weeks, turn weeks into days
-  if ($timeType eq "weeks") {
-    $sqlTimeType = "days";
-    $sqlTimeNum = $timeNum * 7;
-  }
-  $where .= "datetime($timeCol) >= datetime(\"now\", \"-$sqlTimeNum $sqlTimeType\")";
-}
+
 $sql = "SELECT $sqlSelectCols FROM $dbTable";
 if ($where && length $where > 0) {
   $sql .= " WHERE $where";
@@ -400,7 +422,7 @@ $statement->execute();
 # Give each row a rowId so I can select it with jQuery
 my $rowId = 1;
 while (my $row = $statement->fetchrow_hashref) {
-  print "<tr id='$rowId'";
+  print "<tr id='data-$rowId'";
   $rowId++;
   # Colour code the row based on thresholds
   if (exists($row->{$pm25col}) || exists($row->{$pm10col}) || exists($row->{$pm1col}) || exists($row->{$tempCol}) || exists($row->{$humCol})) {
@@ -422,6 +444,7 @@ while (my $row = $statement->fetchrow_hashref) {
   print "<td>".((length $row->{$_} > 0)?$row->{$_}:"(null)")."</td>\n" for @dateCols;
   print "</tr>\n";
 }
+$statement->finish;
 
 print<<EOF;
     </table></div>
@@ -480,6 +503,6 @@ print<<EOF;
       Feel free to develop them further and send me a pull request.</p>
       <p><font size=-1>Built by <a href='mailto:chris\@bennettscash.id.au'>Chris
       Bennetts-Cash</a>, 2020. <a href='http://www.bennettscash.id.au' target='_blank'>http://www.bennettscash.id.au</a></font></p>
-</div></div></div></body></html>
+</div></div></div><script async defer src='https://maps.googleapis.com/maps/api/js?key=AIzaSyBd0HO6_-s90Qv0b601sxCH20YYEW5Mf3c&callback=initMap'></script></body></html>
 
 EOF
