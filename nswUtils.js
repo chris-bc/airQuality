@@ -122,6 +122,66 @@ function toggleUnit(unitNumber) {
     }
     unitsInp.value = unitsInp.value + unitNumber;
   }
+  rebuildDataUnits();
+}
+
+function findColumnIndices() {
+  var dataTable = document.getElementById("dataTable");
+  var headers = dataTable.tHead.rows[0].cells;
+  for (var i=0; i < headers.length; i++) {
+    if (headers[i].textContent == unitCol["col"]) {
+      unitCol["index"] = i;
+    } else if (headers[i].textContent == tempCol["col"]) {
+      tempCol["index"] = i;
+    } else if (headers[i].textContent == humCol["col"]) {
+      humCol["index"] = i;
+    } else if (headers[i].textContent == pm1Col["col"]) {
+      pm1Col["index"] = i;
+    } else if (headers[i].textContent == pm25Col["col"]) {
+      pm25Col["index"] = i;
+    } else if (headers[i].textContent == pm10Col["col"]) {
+      pm10Col["index"] = i;
+    } else if (headers[i].textContent == dateCol["col"]) {
+      dateCol["index"] = i;
+    }
+  }
+}
+
+function rebuildDataUnits() {
+  var unitsStr = document.getElementById("units").value;
+  var dataTable = document.getElementById("dataTable");
+  var rows = dataTable.tBodies[0].rows;
+
+  if (unitsStr.length == 0) {
+    // Display all units
+    for (var i=0; i < rows.length; i++) {
+      var uSel = "#" + rows[i].getAttribute("id");
+      if ($(uSel).hasClass("d-none")) {
+        $(uSel).removeClass("d-none");
+      }
+    }
+  } else {
+    var unitsArr = unitsStr.split(",");
+    if (unitCol["index"] == -1) {
+      findColumnIndices();
+    }
+
+    for (var i=0; i < rows.length; i++) {
+      var unit = rows[i].cells[unitCol["index"]].textContent;
+      var uSel = "#" + rows[i].getAttribute("id");
+      if (unitsArr.indexOf(unit) > -1) {
+        // Unit is selected. Display it if hidden
+        if ($(uSel).hasClass("d-none")) {
+          $(uSel).removeClass("d-none");
+        }
+      } else {
+        // Unit not selected. Hide it if not already hidden
+        if (!($(uSel).hasClass("d-none"))) {
+          $(uSel).addClass("d-none");
+        }
+      }
+    }
+  }
 }
 
 // Update the data table after thresholds are changed
@@ -140,24 +200,7 @@ function rebuildDataThresholds() {
   var dataTable = document.getElementById("dataTable");
   // If we don't already know column indices find them now
   if (unitCol["index"] == -1) {
-    var headers = dataTable.tHead.rows[0].cells;
-    for (var i=0; i < headers.length; i++) {
-      if (headers[i].textContent == unitCol["col"]) {
-        unitCol["index"] = i;
-      } else if (headers[i].textContent == tempCol["col"]) {
-        tempCol["index"] = i;
-      } else if (headers[i].textContent == humCol["col"]) {
-        humCol["index"] = i;
-      } else if (headers[i].textContent == pm1Col["col"]) {
-        pm1Col["index"] = i;
-      } else if (headers[i].textContent == pm25Col["col"]) {
-        pm25Col["index"] = i;
-      } else if (headers[i].textContent == pm10Col["col"]) {
-        pm10Col["index"] = i;
-      } else if (headers[i].textContent == dateCol["col"]) {
-        dateCol["index"] = i;
-      }
-    }
+    findColumnIndices();
   }
 
   // Go through all rows of the datatable and set the colour class appropriately
