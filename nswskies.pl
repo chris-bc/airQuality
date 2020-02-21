@@ -503,6 +503,6 @@ print<<EOF;
       Feel free to develop them further and send me a pull request.</p>
       <p><font size=-1>Built by <a href='mailto:chris\@bennettscash.id.au'>Chris
       Bennetts-Cash</a>, 2020. <a href='http://www.bennettscash.id.au' target='_blank'>http://www.bennettscash.id.au</a></font></p>
-</div></div></div><script async defer src='https://maps.googleapis.com/maps/api/js?key=AIzaSyBd0HO6_-s90Qv0b601sxCH20YYEW5Mf3c&callback=initMap'></script></body></html>
+</div></div></div><script async defer src='https://maps.googleapis.com/maps/api/js?key=KEY&callback=initMap'></script></body></html>
 
 EOF
