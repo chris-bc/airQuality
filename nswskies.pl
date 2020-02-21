@@ -427,6 +427,20 @@ print<<EOF;
     </table></div>
   </div>
   <div id='navChart' class='container' style='padding-top:75px;'>
+  <div class='row mt-sm-3'><button class='btn btn-info btn-block mb-3' type='button' data-toggle='collapse' data-target='#chartInfo' aria-expanded='false' aria-controls='chartInfo'>
+    About the charts</button></div>
+  <div class='collapse' id='chartInfo'><div class='card card-body mb-3'>
+    <p>Two charts are shown below, the first charting air quality observations
+    (PM1, PM2.5 and PM10 data) and the second charting temperature and humidity.</p>
+    <p>The data displayed is based on the filters selected above, covering the
+    selected timeframe for the selected units. As with the data table, if no
+    units are selected all units are displayed.</p>
+    <p>If fewer than three observations are available for any unit the charts
+    will be shown as bar charts, otherwise they will be shown as line charts.
+    With a small number of observations a line chart is difficult to read and
+    interpret, but for larger numbers of observations is ideal for identifying
+    patterns and trends. Because of that I felt this was the best behaviour.</p>
+  </div></div>
     <div class='row justify-content-center'><h4 class='text-center'>Air Quality</h4></div>
     <div class='row mb-3'><canvas id='pmChart'></canvas></div>
     <div class='row justify-content-center'><h4 class='text-center'>Temperature &amp; Humidity</h4></div>
