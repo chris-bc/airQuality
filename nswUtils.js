@@ -1,3 +1,12 @@
+// Define some constants so we know column names
+var unitCol = { "col": "UnitNumber", "index": -1 };
+var tempCol = { "col": "TempDegC", "index": -1 };
+var humCol = { "col": "Humidity", "index": -1 };
+var pm1Col = { "col": "PM1", "index": -1 };
+var pm25Col = { "col": "PM2", "index": -1 };
+var pm10Col = { "col": "PM10", "index": -1 };
+var dateCol = { "col": "SensingDate", "index": -1 };
+
 // Set the unit listing to be the same height as the sort column listing
 $( document ).ready(function() {
   $("#unitContainer").css("height", $("#sortContainer").css("height"));
@@ -112,5 +121,72 @@ function toggleUnit(unitNumber) {
       unitsInp.value = unitsInp.value + ",";
     }
     unitsInp.value = unitsInp.value + unitNumber;
+  }
+}
+
+// Update the data table after thresholds are changed
+function rebuildDataThresholds() {
+  var pm1Med = parseInt(document.getElementById("pm1MedSlider").value);
+  var pm1High = parseInt(document.getElementById("pm1HighSlider").value);
+  var pm25Med = parseInt(document.getElementById("pm25MedSlider").value);
+  var pm25High = parseInt(document.getElementById("pm25HighSlider").value);
+  var pm10Med = parseInt(document.getElementById("pm10MedSlider").value);
+  var pm10High = parseInt(document.getElementById("pm10HighSlider").value);
+  var tempMed = parseInt(document.getElementById("tempMedSlider").value);
+  var tempHigh = parseInt(document.getElementById("tempHighSlider").value);
+  var humMed = parseInt(document.getElementById("humMedSlider").value);
+  var humHigh = parseInt(document.getElementById("humHighSlider").value);
+
+  var dataTable = document.getElementById("dataTable");
+  // If we don't already know column indices find them now
+  if (unitCol["index"] == -1) {
+    var headers = dataTable.tHead.rows[0].cells;
+    for (var i=0; i < headers.length; i++) {
+      if (headers[i].textContent == unitCol["col"]) {
+        unitCol["index"] = i;
+      } else if (headers[i].textContent == tempCol["col"]) {
+        tempCol["index"] = i;
+      } else if (headers[i].textContent == humCol["col"]) {
+        humCol["index"] = i;
+      } else if (headers[i].textContent == pm1Col["col"]) {
+        pm1Col["index"] = i;
+      } else if (headers[i].textContent == pm25Col["col"]) {
+        pm25Col["index"] = i;
+      } else if (headers[i].textContent == pm10Col["col"]) {
+        pm10Col["index"] = i;
+      } else if (headers[i].textContent == dateCol["col"]) {
+        dateCol["index"] = i;
+      }
+    }
+  }
+
+  // Go through all rows of the datatable and set the colour class appropriately
+  var rows = dataTable.tBodies[0].rows;
+  for (var i=0; i < rows.length; i++) {
+    var rowSel = "#" + rows[i].getAttribute("id");
+    var hum = Number(rows[i].cells[humCol["index"]].textContent);
+    var temp = Number(rows[i].cells[tempCol["index"]].textContent);
+    var pm1 = Number(rows[i].cells[pm1Col["index"]].textContent);
+    var pm25 = Number(rows[i].cells[pm25Col["index"]].textContent);
+    var pm10 = Number(rows[i].cells[pm10Col["index"]].textContent);
+
+    // Remove colour classes
+    if ($(rowSel).hasClass("table-success")) {
+      $(rowSel).removeClass("table-success");
+    }
+    if ($(rowSel).hasClass("table-warning")) {
+      $(rowSel).removeClass("table-warning");
+    }
+    if ($(rowSel).hasClass("table-danger")) {
+      $(rowSel).removeClass("table-danger");
+    }
+
+    if (hum < humMed && temp < tempMed && pm1 < pm1Med && pm25 < pm25Med && pm10 < pm10Med) {
+      $(rowSel).addClass("table-success");
+    } else if (hum < humHigh && temp < tempHigh && pm1 < pm1High && pm25 < pm25High && pm10 < pm10High) {
+      $(rowSel).addClass("table-warning");
+    } else {
+      $(rowSel).addClass("table-danger");
+    }
   }
 }
