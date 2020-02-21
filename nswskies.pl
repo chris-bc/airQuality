@@ -216,7 +216,7 @@ print<<EOF;
         <li class='nav-item'><a class='nav-link' href='#navFilter'>Data Filter</a></li>
         <li class='nav-item'><a class='nav-link' href='#navThreshold'>Observation Thresholds</a></li>
         <li class='nav-item'><a class='nav-link' href='#navData'>Sensor Data</a></li>
-        <li class='nav-item'><a class='nav-link' href='#navChart'>Sensor Chart</a></li>
+        <li class='nav-item'><a class='nav-link' href='#navChart'>Sensor Charts</a></li>
         <li class='nav-item'><a class='nav-link' href='#navAbout'>About</a></li>
         <li class='nav-item dropdown'>
           <a class='nav-link dropdown-toggle' href='#' id='navbarDropDown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
@@ -427,7 +427,9 @@ print<<EOF;
     </table></div>
   </div>
   <div id='navChart' class='container' style='padding-top:75px;'>
+    <div class='row justify-content-center'><h4 class='text-center'>Air Quality</h4></div>
     <div class='row mb-3'><canvas id='pmChart'></canvas></div>
+    <div class='row justify-content-center'><h4 class='text-center'>Temperature &amp; Humidity</h4></div>
     <div class='row mb-3'><canvas id='envChart'></canvas></div>
   </div>
   <div id='navAbout' class='container' style='padding-top:75px;'>
