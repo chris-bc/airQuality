@@ -17,6 +17,8 @@ my $timeCol = "SensingDate";
 my $pm25col = "PM2";
 my $pm1col = "PM1";
 my $pm10col = "PM10";
+my $tempCol = "TempDegC";
+my $humCol = "Humidity";
 my %timeHsh = ("hours", 23, "days", 30, "weeks", 51, "months", 11, "years", 5);
 my $selectedUnitsStr = "";
 my @selectedUnits;
@@ -66,7 +68,7 @@ if ($cgi->param('pm1med') && length $cgi->param('pm1med') > 0) {
   $pm1med = $cgi->param('pm1med');
 }
 if ($cgi->param('pm1high') && length $cgi->param('pm1high') > 0) {
-  $pm1high = $cgi->para('pm1high');
+  $pm1high = $cgi->param('pm1high');
 }
 if ($cgi->param('pm10med') && length $cgi->param('pm10med') > 0) {
   $pm10med = $cgi->param('pm10med');
@@ -227,7 +229,7 @@ print<<EOF;
   </div></nav>
   <div class='container'><h1>banner</h1>
   <h1 class='text-center mt-sm-2'>NSW Environmental Data</h1>
-  <div id='navMap' class='container' style='padding-top:75px;'>
+  <div id='navMap' class='container' style='padding-top:75px;'><h5 class='text-center'>Map</h5>
     <div id='map' class='container-fluid'>
     </div>
   </div>
@@ -345,7 +347,79 @@ print<<EOF;
     </div></div>
   </div>
   <div id='navData' class='container' style='padding-top:75px;'>
-    table
+    <div class='table-responsive'><table id='dataTable' class='table table-bordered table-striped'>
+      <thead><tr>
+
+EOF
+
+print "<th>$_</th>" for @allColumns;
+
+print "</tr></thead>";
+
+# Retrieve data
+# Mangle dates in @allColumns to format them nicely
+my @dateCols;
+for (@allColumns) {
+  if ((index($_, 'date') != -1) || (index($_, 'Date') != -1)) {
+    push (@dateCols, "strftime('%d-%m-%Y %H:%M:%S', $_, 'localtime')");
+  } else {
+    push (@dateCols, $_);
+  }
+}
+my $sqlSelectCols = join ',', @dateCols;
+# Build where clause based on units and time
+my $where = "";
+if ($selectedUnitsStr && length $selectedUnitsStr > 0) {
+  $where .= "$unitCol IN ($selectedUnitsStr)";
+}
+if ($limitTime == 1) {
+  if (length $where > 0) {
+    $where .= " AND ";
+  }
+  my $sqlTimeType = $timeType;
+  my $sqlTimeNum = $timeNum;
+  # SQLite doesn't support weeks, turn weeks into days
+  if ($timeType eq "weeks") {
+    $sqlTimeType = "days";
+    $sqlTimeNum = $timeNum * 7;
+  }
+  $where .= "datetime($timeCol) >= datetime(\"now\", \"-$sqlTimeNum $sqlTimeType\")";
+}
+$sql = "SELECT $sqlSelectCols FROM $dbTable";
+if ($where && length $where > 0) {
+  $sql .= " WHERE $where";
+}
+if ($sortColumnsStr && length $sortColumnsStr > 0) {
+  $sql .= " ORDER BY $sortColumnsStr";
+}
+$statement = $dbh->prepare($sql);
+$statement->execute();
+
+while (my $row = $statement->fetchrow_hashref) {
+  print "<tr";
+  # Colour code the row based on thresholds
+  if (exists($row->{$pm25col}) || exists($row->{$pm10col}) || exists($row->{$pm1col}) || exists($row->{$tempCol}) || exists($row->{$humCol})) {
+    print " class='table-";
+    my $pm25val = ((exists($row->{$pm25col}))?($row->{$pm25col}):0);
+    my $pm10val = ((exists($row->{$pm10col}))?($row->{$pm10col}):0);
+    my $pm1val = ((exists($row->{$pm1col}))?($row->{$pm1col}):0);
+    my $tempVal = ((exists($row->{$tempCol}))?($row->{$tempCol}):0);
+    my $humVal = ((exists($row->{$humCol}))?($row->{$humCol}):0);
+    if ($pm25val < $pm25med && $pm10val < $pm25med && $pm1val < $pm1med && $tempVal < $tempMed && $humVal < $humMed) {
+      print "success'";
+    } elsif ($pm25val < $pm25high && $pm10val < $pm10high && $pm1val < $pm1high && $tempVal < $tempHigh && $humVal < $humHigh) {
+      print "warning'";
+    } else {
+      print "danger'";
+    }
+  }
+  print ">\n";
+  print "<td>".((length $row->{$_} > 0)?$row->{$_}:"(null)")."</td>\n" for @dateCols;
+  print "</tr>\n";
+}
+
+print<<EOF;
+    </table></div>
   </div>
   <div id='navChart' class='container' style='padding-top:75px;'>
     chart
