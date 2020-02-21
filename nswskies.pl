@@ -468,12 +468,9 @@ print<<EOF;
       map-driven interface.</p>
       <p>Over coming weeks I expect this page to be rapidly updated, with the
       feature plan being approximately:
-      <ul><li>Providing options to filter the results based on time or specific units</li>
-        <li>Making thresholds for air quality, temperature and humidity adjustable</li>
-        <li>Displaying data in a table</li>
+      <ul>
         <li>Displaying a map plotting all sensors</li>
         <li>Linking marker selection on the map to drilling into that unit in the dataset</li>
-        <li>Charting selected data</li>
         <li>Reverse geocoding the data to obtain location information</li>
         <li>Allowing data to be filtered by location</li></ul></p>
       <p>For more information on the DPIE sensor data see <a href='https://www.dpie.nsw.gov.au/air-quality/current-air-quality'>https://www.dpie.nsw.gov.au/air-quality/current-air-quality</a></p>
