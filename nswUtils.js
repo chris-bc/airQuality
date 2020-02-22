@@ -472,8 +472,8 @@ function timeForSort(time) {
 }
 
 function infoWindowFor(unit, time, temp, humidity, pm1, pm25, pm10) {
-  var ret = "<div id='content'><div id='siteNotice'></div><h1 id='firstHeading' class='firstHeading'>";
-  ret += unit + "</h1><div id='bodyContent'><p><b>Observation:</b> " + time;
+  var ret = "<div id='content'><div id='siteNotice'></div><h5 id='firstHeading' class='firstHeading'>";
+  ret += unit + "</h5><div id='bodyContent'><p><b>Observation:</b> " + time;
   ret += "</p><p><b>Temperature:</b> " + temp + "<br/><b>Humidity:</b> " + humidity;
   ret += "<br/><b>PM 1:</b> " + pm1 + "<br/><b>PM 2.5:</b> " + pm25;
   ret += "<br/><b>PM 10:</b> " + pm10 + "</p></div></div>";
@@ -491,8 +491,8 @@ function initMap() {
   }
 
   var map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 6,
-    center: {lat: -34.397, lng: 150.644},
+    zoom: 4,
+    center: {lat: -25.4904429, lng:147.3062684},
   });
 
   mapMarkers = [];
