@@ -565,30 +565,7 @@ function initChartJs() {
 			bgCols.push(dataContainer[i]["bgCol"]);
 		}
 
-		new Chart(c, {
-			type: chartType,
-			data: {
-				labels: labels,
-				datasets: [
-					{
-						data: barData,
-						backgroundColor: bgCols
-					}
-				]
-			},
-			options: {
-				legend: {
-					display: false,
-				},
-				scales: {
-					yAxes: [{
-						ticks: {
-							beginAtZero: true
-						}
-					}],
-				}
-			}
-		});
+		drawBarChart(c, barData, labels, bgCols);
 	} else {
 
 		// If we're viewing hours or days of data display minutes, otherwise days
@@ -596,22 +573,11 @@ function initChartJs() {
 		if (document.getElementById("timeType").value == "hours" || document.getElementById("timeType").value == "days") {
 			timeUnit = "minute";
 		}
-		new Chart(c, {
-			type: chartType,
-			data: lineData,
-			options: {
-				scales: {
-					xAxes: [{
-						type: 'time',
-						distribution: 'linear',
-						time: {
-							parser: "DD-MM-YYYY HH:mm:ss",
-							unit: timeUnit,
-							displayFormats: {day: 'MMM D YYYY', minute: 'D MMM, h:mm a'}
-						}
-					}]
-				}
-			}
-		});
+		var leg = true;
+		// Hide the legend if more than 30 serios are shown to avoid legeds taking up the entire canvas
+		if (lineData.datasets.length > 30) {
+			leg = false;
+		}
+		drawLineChart(c, lineData, leg, timeUnit);
 	}
 }

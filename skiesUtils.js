@@ -65,3 +65,56 @@ function rndColour() {
 	var b = Math.floor(Math.random() * 255);
 	return "rgb(" + r + "," + g + "," + b + ")";
 }
+
+// Display a line chart with the specified attributes
+function drawLineChart(canvas, data, leg, timeUnit) {
+  new Chart(canvas, {
+    type: 'line',
+    data: data,
+    options: {
+      legend: {
+        display: leg,
+      },
+      scaleShowValues: true,
+      scales: {
+        xAxes: [{
+          type: 'time',
+          distribution: 'linear',
+          time: {
+            parser: "DD-MM-YYYY HH:mm:ss",
+            unit: timeUnit,
+            displayFormats: {day: 'MMM D YYYY', minute: 'D MMM, h:mm a'}
+          },
+        }]
+      }
+    }
+  });
+}
+
+// Display a bar chart with the specified attributes
+function drawBarChart(canvas, data, labels, colours) {
+  new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          data: data,
+          backgroundColor: colours
+        }
+      ]
+    },
+    options: {
+      legend: {
+        display: false,
+      },
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          }
+        }],
+      }
+    }
+  });
+}
