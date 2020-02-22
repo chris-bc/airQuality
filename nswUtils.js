@@ -168,7 +168,7 @@ function rebuildDataUnits() {
   if (unitsStr.length == 0) {
     // Display all units
     for (var i=0; i < rows.length; i++) {
-      var uSel = "#data-" + rows[i].getAttribute("id");
+      var uSel = "#" + rows[i].getAttribute("id");
       if ($(uSel).hasClass("d-none")) {
         $(uSel).removeClass("d-none");
       }
@@ -181,7 +181,7 @@ function rebuildDataUnits() {
 
     for (var i=0; i < rows.length; i++) {
       var unit = rows[i].cells[unitCol["index"]].textContent;
-      var uSel = "#data-" + rows[i].getAttribute("id");
+      var uSel = "#" + rows[i].getAttribute("id");
       if (unitsArr.indexOf(unit) > -1) {
         // Unit is selected. Display it if hidden
         if ($(uSel).hasClass("d-none")) {
@@ -223,7 +223,7 @@ function rebuildDataThresholds() {
   }
   var rows = dataTable.tBodies[0].rows;
   for (var i=0; i < rows.length; i++) {
-    var rowSel = "#data-" + rows[i].getAttribute("id");
+    var rowSel = "#" + rows[i].getAttribute("id");
     var hum = Number(rows[i].cells[humCol["index"]].textContent);
     var temp = Number(rows[i].cells[tempCol["index"]].textContent);
     var pm1 = Number(rows[i].cells[pm1Col["index"]].textContent);
@@ -265,7 +265,7 @@ function buildTableObjects() {
   var rows = table.tBodies[0].rows;
   for (var i=0; i < rows.length; i++) {
     // Only include the row if it is shown
-    var rowSel = "#data-" + rows[i].getAttribute("id");
+    var rowSel = "#" + rows[i].getAttribute("id");
     if (!($(rowSel).hasClass("d-none"))) {
       var unit = rows[i].cells[unitCol["index"]].innerText;
       var temp = Number(rows[i].cells[tempCol["index"]].innerText);
