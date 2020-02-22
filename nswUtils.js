@@ -388,51 +388,140 @@ function displayChartJs() {
     if (pmData.datasets.length > 10) {
       leg = false;
     }
-    new Chart(pmChart, {
-      type: 'line',
-      data: pmData,
-      options: {
-        legend: {
-          display: leg,
-        },
-        scaleShowValues: true,
-        scales: {
-          xAxes: [{
-            type: 'time',
-            distribution: 'linear',
-            time: {
-              parser: "DD-MM-YYYY HH:mm:ss",
-              unit: timeUnit,
-              displayFormats: {day: 'MMM D YYYY', minute: 'D MMM, h:mm a'}
-            },
-          }]
-        }
-      }
-    });
-    new Chart(envChart, {
-      type: 'line',
-      data: envData,
-      options: {
-        legend: {
-          display: leg,
-        },
-        scaleShowValue: true,
-        scales: {
-          xAxes: [{
-            type: 'time',
-            distribution: 'linear',
-            time: {
-              parser: "DD-MM-YYYY HH:mm:ss",
-              unit: timeUnit,
-              displayFormats: {day: 'MMM D YYYY', minute: 'D MMM, h:mm a'}
-            },
-          }]
-        }
-      }
-    });
+
+    drawLineChart(pmChart, pmData, leg, timeUnit);
+    drawLineChart(envChart, envData, leg, timeUnit);
   } else {
     // Prepare bar chart
+    var pmContainer = [];
+    var envContainer = [];
+    var displayTypes = {"pm1": "PM 1", "pm25": "PM 2.5", "pm10": "PM 10", "temp": "Temp", "hum": "Humidity"};
+    // Create a data item for each observation
+    for (var unitId in chartData) {
+      for (var time in chartData[unitId]) {
+        for (var type in displayTypes) {
+          var obs = {};
+          // Reformat time for sorting and display
+          var strTime = timeForDisplay(time);
+          var strTimeSort = timeForSort(time);
+          var labelPrefix = unitId + " - " + displayTypes[type];
+          obs["label"] = labelPrefix + " - " + strTime;
+          obs["sortLabel"] = labelPrefix + " - " + strTimeSort;
+          obs["bgCol"] = rndColour();
+          obs["data"] = chartData[unitId][time][type];
+          if (type == "temp" || type == "hum") {
+            envContainer.push(obs);
+          } else {
+            pmContainer.push(obs);
+          }
+        }
+      }
+    }
+    // Sort the data containers
+    pmContainer.sort(function (a, b) {
+      return a["sortLabel"] < b["sortLabel"];
+    });
+    envContainer.sort(function (a, b) {
+      return a["sortLabel"] < b["sortLabel"];
+    });
+
+    // Unroll the containers into arrays
+    var envData = [];
+    var pmData = [];
+    var envLabels = [];
+    var pmLabels = [];
+    var envCols = [];
+    var pmCols = [];
+
+    for (var i in pmContainer) {
+      pmData.push(pmContainer[i]["data"]);
+      pmLabels.push(pmContainer[i]["label"]);
+      pmCols.push(pmContainer[i]["bgCol"]);
+    }
+    for (var i in envContainer) {
+      envData.push(envContainer[i]["data"]);
+      envLabels.push(envContainer[i]["label"]);
+      envCols.push(envContainer[i]["bgCol"]);
+    }
+
+    drawBarChart(pmChart, pmData, pmLabels, pmCols);
+    drawBarChart(envChart, envData, envLabels, envCols);
   }
+}
+
+// Display a line chart with the specified attributes
+function drawLineChart(canvas, data, leg, timeUnit) {
+  new Chart(canvas, {
+    type: 'line',
+    data: data,
+    options: {
+      legend: {
+        display: leg,
+      },
+      scaleShowValues: true,
+      scales: {
+        xAxes: [{
+          type: 'time',
+          distribution: 'linear',
+          time: {
+            parser: "DD-MM-YYYY HH:mm:ss",
+            unit: timeUnit,
+            displayFormats: {day: 'MMM D YYYY', minute: 'D MMM, h:mm a'}
+          },
+        }]
+      }
+    }
+  });
+}
+
+// Display a bar chart with the specified attributes
+function drawBarChart(canvas, data, labels, colours) {
+  new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          data: data,
+          backgroundColor: colours
+        }
+      ]
+    },
+    options: {
+      legend: {
+        display: false,
+      },
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          }
+        }],
+      }
+    }
+  });
+}
+
+// Convert time from dd-mm-yyyy hh:mm:ss to d MMM, hh:mm a
+function timeForDisplay(time) {
+  var months = [undefined, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var ret = parseInt(time.substring(0, 2)) + " ";
+  ret += months[parseInt(time.substring(3, 5))] + ", ";
+  var h = parseInt(time.substring(11, 13));
+  var a = "AM";
+  if (h >= 12) {
+    a = "PM";
+  }
+  if (h > 12) {
+    h -= 12;
+  }
+  ret += h + ":" + time.substring(14, 16) + " " + a;
+  return ret;
+}
+
+// Convert time from dd-mm-yyyy hh:mm:ss to yyyy-mm-dd hh:mm:ss
+function timeForSort(time) {
+  return time.substring(6, 10) + time.substring(3, 5) + time.substring(0, 2) + time.substring(11, 19);
 }
 
 function infoWindowFor(unit, time, temp, humidity, pm1, pm25, pm10) {
