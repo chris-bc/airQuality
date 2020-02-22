@@ -532,17 +532,17 @@ function initChartJs() {
 				strTime += months[parseInt(time.substring(3,5))] + ", ";
 				var h = parseInt(time.substring(11,13));
 				var a = "AM";
-				if (h > 12) {
-					h -= 12;
-				}
 				if (h >= 12) {
 					a = "PM";
+				}
+				if (h > 12) {
+					h -= 12;
 				}
 				strTime += h + ":" + parseInt(time.substring(14,16)) + " " + a;
 
 				// Build a flat object array for the values
 				var o = {};
-				o["label"] = lineData.datasets[ds]["label"] + "-" + strTime;
+				o["label"] = lineData.datasets[ds]["label"] + " - " + strTime;
 				o["bgCol"] = rndColour();
 				o["data"] = lineData.datasets[ds].data[obs]["y"];
 				o["sortLabel"] = lineData.datasets[ds]["label"] + "-" + time.substring(6, 10) + time.substring(3, 5) + time.substring(0, 2) + time.substring(11, 16);
