@@ -383,10 +383,18 @@ function displayChartJs() {
     if (document.getElementById("timeType").value == "hours" || document.getElementById("timeType").value == "days") {
       timeUnit = "minute";
     }
+    var leg = true;
+    // Hide the legend if more than 10 units visible
+    if (pmData.datasets.length > 10) {
+      leg = false;
+    }
     new Chart(pmChart, {
       type: 'line',
       data: pmData,
       options: {
+        legend: {
+          display: leg,
+        },
         scaleShowValues: true,
         scales: {
           xAxes: [{
@@ -405,6 +413,9 @@ function displayChartJs() {
       type: 'line',
       data: envData,
       options: {
+        legend: {
+          display: leg,
+        },
         scaleShowValue: true,
         scales: {
           xAxes: [{
