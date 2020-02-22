@@ -21,6 +21,8 @@ my $timeCol = "lastsensingdate";
 my $pm25col = "pm25";
 my $pm10col = "pm10";
 my $pm1col = "pm1";
+my $latCol = "Latitude";
+my $longCol = "Longitude";
 my %timeHsh = ("hours", 23, "days", 30, "weeks", 51, "months", 11, "years", 5);
 my @keys = ();
 my %unitsByLoc;
@@ -233,12 +235,24 @@ my %k = map {$_ => 1} @keys;
 exists($k{$_}) or die "Select column $_ is not valid" for @columnsToShow;
 exists($k{(split ' ', $_)[0]}) or die "Sort column ".(split ' ',$_)[0]." is not valid\n" for @sortColumns;
 
+# Pre-render HTML for a hidden table containing latest observations for each unit
+$sql = "SELECT $unitCol, $areaCol, $locCol, strftime('%d-%m-%Y %H:%M:%S', MAX($timeCol), 'localtime'), $pm1col, $pm25col, $pm10col, $latCol, $longCol FROM $dbTable GROUP BY $unitCol";
+$statement = $dbh->prepare($sql);
+$statement->execute();
+my $latestTable = "<table id='latestData' class='d-none'>\n";
+while (my @row = $statement->fetchrow_array) {
+  $latestTable .= "<tr><td>$row[0]</td><td>$row[1]</td><td>$row[2]</td><td>$row[3]</td><td>$row[4]</td><td>$row[5]</td><td>$row[6]</td><td>$row[7]</td><td>$row[8]</td></tr>\n";
+}
+$latestTable .= "</table>\n";
+$statement->finish;
+
 # Finally render the HTML
 print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1'>
   <link rel='stylesheet' href='bootstrap.min.css'>
   <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
   <script src='bootstrap.min.js'></script><script src='addRemove.js'></script>
   <script src='skiesUtils.js'></script><script src='Chart.bundle.min.js'></script>
+  <script src='https://unpkg.com/\@google/markerclustererplus\@4.0.1/dist/markerclustererplus.min.js'></script>
   </head><body onload='initChartJs()' data-spy='scroll' data-target='#myNav' data-offset='70' style='position:relative; padding-top:75px;'>
 <nav id='myNav' class='navbar navbar-light bg-light navbar-expand-md fixed-top'>
 <div class='navbar-header'>
@@ -247,6 +261,7 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
     <a class='navbar-brand mr-sm-2' href='#'>blueSKIES</a></div>
 <div class='collapse navbar-collapse' id='myNavBar'>
   <ul class='navbar-nav'>
+    <li class='nav-item'><a class='nav-link' href='#navMap'>Sensor Map</a></li>
     <li class='nav-item'><a class='nav-link' href='#filter'>Data Filters</a></li>
     <li class='nav-item'><a class='nav-link' href='#threshold'>Air Quality Thresholds</a></li>
     <li class='nav-item'><a class='nav-link' href='#sensorData'>Sensor Data</a></li>
@@ -257,7 +272,7 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
       <a class='nav-link dropdown-toggle' href='#' id='navbarDropDown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
         Other Pages
       </a><div class='dropdown-menu' aria-labelledBy='navbarDropDown' id='navbarDropLinks' name='navbarDropLinks'>
-        <a class='dropdown-item' href='nswksies.pl' target='_blank'>nswSKIES</a>
+        <a class='dropdown-item' href='ozskies.pl' target='_blank'>ozSKIES</a>
         <div class='dropdown-divider'></div>
         <a class='dropdown-item' target='_blank' href='http://www.bennettscash.id.au'>bennettscash</a>
       </div></li></ul>
@@ -265,6 +280,11 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
 <div class='container'>
 <img src='blueskies-banner.jpg' class='img-fluid' alt='Site Banner'/>
 <h1 class='text-center mt-sm-2'>Air Quality Data</h1>
+<div id='navMap' class='container' style='padding-top:75px;height:600px;'><h5 class='text-center'>Map</h5>
+  $latestTable
+  <div id='map' class='container-fluid' style='height:100%;'>
+  </div>
+</div>
 <div id='filter' class='container' style='padding-top:75px;'>
 <div class='row'><div class='col'><h3 class='text-center'>Limit Results to the following locations and/or units</h3></div></div>
 <div class='row mb-3'>
@@ -651,4 +671,4 @@ requests please <a href='mailto:chris\@bennettscash.id.au'>contact me</a>.</p>
 <p>For more information on the KOALAS project see <a href='http://bluemountains.sensors.net.au/' target='_blank'>http://bluemountains.sensors.net.au/</a></p>
 <p>blueSKIES is <a href='https://github.com/chris-bc/airQuality'>hosted on GitHub</a>. Feel free to develop it further and send me a pull request</p>
 <p><font size=-1>Built by <a href='mailto:chris\@bennettscash.id.au'>Chris Bennetts-Cash</a>, 2020. <a href='http://www.bennettscash.id.au' target='_blank'>http://www.bennettscash.id.au</a></font></p>
-</div></div></body></html>";
+</div></div><script async defer src='https://maps.googleapis.com/maps/api/js?key=AIzaSyBd0HO6_-s90Qv0b601sxCH20YYEW5Mf3c&callback=initMap'></script></body></html>";

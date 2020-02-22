@@ -581,3 +581,43 @@ function initChartJs() {
 		drawLineChart(c, lineData, leg, timeUnit);
 	}
 }
+
+function initMap() {
+	var obs = document.getElementById("latestData");
+	if (obs.tBodies[0] === undefined) {
+		// No data
+		return;
+	}
+	var map = new google.maps.Map(document.getElementById("map"), {
+		zoom: 5,
+		center: {lat: -33.6226741, lng:150.424154},
+	});
+	var mapMarkers = [];
+	var rows = obs.tBodies[0].rows;
+	// Rows in latestTable are unit, area, loc, time, pm1, pm25, pm10, lat, long
+	for (var i=0; i < rows.length; i++) {
+		var u = rows[i].cells[0].innerText;
+		var a = rows[i].cells[1].innerText;
+		var l = rows[i].cells[2].innerText;
+		var t = rows[i].cells[3].innerText;
+		var pm1 = rows[i].cells[4].innerText;
+		var pm25 = rows[i].cells[5].innerText;
+		var pm10 = rows[i].cells[6].innerText;
+		var lati = Number(rows[i].cells[7].innerText);
+		var long = Number(rows[i].cells[8].innerText);
+
+		var infoText = infoWindowFor(u + " - " + a + " - " + l, t, "", "", pm1, pm25, pm10);
+
+		mapMarkers[i] = new google.maps.Marker({
+			position: {lat: lati, lng: long},
+			map: map,
+			title: u + " - " + l,
+		});
+		mapMarkers[i].info = new google.maps.InfoWindow({content: infoText});
+		mapMarkers[i].addListener('click', function() {
+			this.info.open(map, this);
+		});
+	}
+	var markerClusterer = new MarkerClusterer(map, mapMarkers,
+		{imagePath: "/markers/m"});
+}

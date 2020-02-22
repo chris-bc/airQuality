@@ -118,3 +118,27 @@ function drawBarChart(canvas, data, labels, colours) {
     }
   });
 }
+
+function infoWindowFor(unit, time, temp, humidity, pm1, pm25, pm10) {
+  var ret = "<div id='content'><div id='siteNotice'></div><p>";
+	if (unit.length < 20) {
+		ret += "<h5";
+	} else {
+		ret += "<b";
+	}
+	ret += " id='firstHeading' class='firstHeading'>";
+  ret += unit + "</";
+	if (unit.length < 20) {
+		ret += "h5";
+	} else {
+		ret += "b";
+	}
+	ret += "></p><div id='bodyContent'><p><b>Observation:</b> " + time + "</p><p>";
+	// Temp and humidity will either both be provided or both be absent
+	if (temp.length > 0) {
+  	ret += "<b>Temperature:</b> " + temp + "<br/><b>Humidity:</b> " + humidity;
+	}
+  ret += "<br/><b>PM 1:</b> " + pm1 + "<br/><b>PM 2.5:</b> " + pm25;
+  ret += "<br/><b>PM 10:</b> " + pm10 + "</p></div></div>";
+  return ret;
+}

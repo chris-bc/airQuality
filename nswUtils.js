@@ -471,15 +471,6 @@ function timeForSort(time) {
   return time.substring(6, 10) + time.substring(3, 5) + time.substring(0, 2) + time.substring(11, 19);
 }
 
-function infoWindowFor(unit, time, temp, humidity, pm1, pm25, pm10) {
-  var ret = "<div id='content'><div id='siteNotice'></div><h5 id='firstHeading' class='firstHeading'>";
-  ret += unit + "</h5><div id='bodyContent'><p><b>Observation:</b> " + time;
-  ret += "</p><p><b>Temperature:</b> " + temp + "<br/><b>Humidity:</b> " + humidity;
-  ret += "<br/><b>PM 1:</b> " + pm1 + "<br/><b>PM 2.5:</b> " + pm25;
-  ret += "<br/><b>PM 10:</b> " + pm10 + "</p></div></div>";
-  return ret;
-}
-
 function initMap() {
   var obs = document.getElementById("latestData");
   if (obs.tBodies[0] === undefined) {
