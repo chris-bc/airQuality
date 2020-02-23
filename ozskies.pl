@@ -250,7 +250,7 @@ print<<EOF;
     <div class='navbar-header'>
       <button type='button' class='navbar-toggler mr-sm-2' data-toggle='collapse' data-target='#myNavBar' aria-controls='myNavBar' aria-expanded='false' aria-label='Toggle Navigation'>
         <span class='navbar-toggler-icon'></span></button>
-      <a class='navbar-brand mr-sm-2' href='#'>nswSKIES</a></div>
+      <a class='navbar-brand mr-sm-2' href='#'>ozSKIES</a></div>
     <div class='collapse navbar-collapse' id='myNavBar'>
       <ul class='navbar-nav'><li class='nav-item'><a class='nav-link' href='#navMap'>Sensor Map</a></li>
         <li class='nav-item'><a class='nav-link' href='#navFilter'>Data Filter</a></li>
@@ -268,7 +268,7 @@ print<<EOF;
       </div></li></ul>
   </div></nav>
   <div class='container'><img src='nswskies-banner.jpg' class='img-fluid mb-3' alt='Site Banner'/>
-  <h1 class='text-center mt-sm-2'>NSW Environmental Data</h1>
+  <h1 class='text-center mt-sm-2'>Australian Environmental Data</h1>
   <div id='navMap' class='container' style='padding-top:75px;height:600px;'><h5 class='text-center'>Map</h5>
     $latestTable
     <div id='map' class='container-fluid' style='height:100%;'>
@@ -471,7 +471,7 @@ print<<EOF;
   </div>
   <div id='navAbout' class='container' style='padding-top:75px;'>
     <div class='row text-center'><h3>About</h3></div>
-    <div class='row'><p>nswSKIES (Sensor Knowledge Ingestion and Extraction
+    <div class='row'><p>ozSKIES (Sensor Knowledge Ingestion and Extraction
       System) is a sister project to blueSKIES, which you can find a link to
       on the 'other pages' section of the navigation bar. That project was
       inspired by the excellent sensor and other environmental data
@@ -482,13 +482,13 @@ print<<EOF;
       not the ability to produce timeseries to analyse data over time and
       identify patterns or trends, such as seasonal effects on air quality.</p>
       <p>While looking into the KOALA dataset I inadvertently stumbled on the
-      dataset this page is dedicated to, which appears to provide a dataset
-      covering all sensors throughout New South Wales, Australia, whose
-      latest readings are available from the DPIE website. Unlike the KOALA
-      dataset this data lacks any descriptive location information, providing
-      only latitude and longitude for each sensor. This has led me to take a
-      different approach with this page than for blueSKIES, focusing on a
-      map-driven interface.</p>
+      dataset this page is dedicated to, which provides a dataset
+      covering sensors throughout New South Wales, South-East Queensland and
+      South Australia, Australia, in addition to some South-East Asian
+      locations. Unlike the KOALA dataset this data lacks any descriptive
+      location information, providing only latitude and longitude for each
+      sensor. This has led me to take a different approach with this page than
+      for blueSKIES, focusing on a map-driven interface.</p>
       <p>Over coming weeks I expect this page to be rapidly updated, with the
       feature plan being approximately:
       <ul>
