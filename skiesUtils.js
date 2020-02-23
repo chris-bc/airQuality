@@ -1,3 +1,12 @@
+// Global thresholds used in calculation of AQI.
+// Made global for convenience - Used in creating markers & info windows
+// - seems best to define them here than peculiarly with mapping functionality
+var pm25thresholds = [0, 12.0, 35.4, 55.4, 150.4, 250.4, 500.4];
+var pm1thresholds = [0, 12.0, 35.4, 55.4, 150.4, 250.4, 500.4];
+var pm10thresholds = [0, 54, 154, 254, 354, 424, 604];
+var aqithresholds = [0, 50, 100, 150, 200, 300, 500];
+
+
 function timeEnableDisable() {
 	var c = document.getElementById("limitTime");
 	var n = document.getElementById("timeNum");
@@ -134,11 +143,54 @@ function infoWindowFor(unit, time, temp, humidity, pm1, pm25, pm10) {
 		ret += "b";
 	}
 	ret += "></p><div id='bodyContent'><p><b>Observation:</b> " + time + "</p><p>";
+	ret += "<div class='container'>";
 	// Temp and humidity will either both be provided or both be absent
 	if (temp.length > 0) {
-  	ret += "<b>Temperature:</b> " + temp + "<br/><b>Humidity:</b> " + humidity;
+  	ret += "<div class='row'><div class='col-3'><b>Temperature:</b></div><div class='col-3'>" + temp +
+						"</div></div><div class='row'><div class='col-3'><b>Humidity:</b></div><div class='col-3'>" + humidity + "</div></div>";
 	}
-  ret += "<br/><b>PM 1:</b> " + pm1 + "<br/><b>PM 2.5:</b> " + pm25;
-  ret += "<br/><b>PM 10:</b> " + pm10 + "</p></div></div>";
+  ret += "<div class='row'><div class='col-3'><b>PM&nbsp;1:</b></div><div class='col-3'>" + pm1 +
+					"</div><div class='col-3'><b>AQI<sub>PM1</sub>:</b></div><div class='col-3'>" +
+					Math.round(calculateSingleAqi(pm1, pm1thresholds, aqithresholds)) +
+					"</div></div><div class='row'><div class='col-3'><b>PM&nbsp;2.5:</b></div><div class='col-3'>" + pm25 +
+					"</div><div class='col-3'><b>AQI<sub>PM2.5</sub>:</b></div><div class='col-3'>" +
+					Math.round(calculateSingleAqi(pm25, pm25thresholds, aqithresholds)) +
+  				"</div></div><div class='row'><div class='col-3'><b>PM&nbsp;10:</b></div><div class='col-3'>" +
+					pm10 + "</div><div class='col-3'><b>AQI<sub>PM10</sub>:</b></div><div class='col-3'>" +
+					Math.round(calculateSingleAqi(pm10, pm10thresholds, aqithresholds)) + "</div></div></div></p></div></div>";
   return ret;
+}
+
+function calculateAQIFor(pm1, pm25, pm10) {
+	// Calculate AQI for each PM value. Return the highest of the three
+	var pm1 = calculateSingleAqi(pm1, pm1thresholds, aqithresholds);
+	var pm25 = calculateSingleAqi(pm25, pm25thresholds, aqithresholds);
+	var pm10 = calculateSingleAqi(pm10, pm10thresholds, aqithresholds);
+	var max = pm1;
+	if (pm25 > pm1) {
+		max = pm25;
+	}
+	if (pm10 > max) {
+		pm10 = max;
+	}
+	return max;
+}
+
+function calculateSingleAqi(pmVal, pmThresholds, aqiThresholds) {
+	var i;
+	if (pmVal <= 0) {
+		return 0;
+	}
+	for (i=0; i < pmThresholds.length && Number(pmVal) > pmThresholds[i]; i++) {}
+	// i will now be pmThresholds.length if something has gone wrong or
+	// pmVal exceeds measurement
+	if (i == pmThresholds.length) {
+		return 999;
+	}
+	// In most cases it will index the threshold above the one pmVal falls in
+	var aqi = Number(pmVal) - Number(pmThresholds[i-1]);
+	aqi *= (Number(aqiThresholds[i]) - Number(aqiThresholds[i-1]));
+	aqi /= (Number(pmThresholds[i]) - Number(pmThresholds[i-1]));
+	aqi = Number(aqi) + Number(aqiThresholds[i-1]);
+	return aqi;
 }

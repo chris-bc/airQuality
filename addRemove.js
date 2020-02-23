@@ -607,11 +607,12 @@ function initMap() {
 		var long = Number(rows[i].cells[8].innerText);
 
 		var infoText = infoWindowFor(u + " - " + a + " - " + l, t, "", "", pm1, pm25, pm10);
-
+		var aqi = Math.round(calculateAQIFor(pm1, pm25, pm10)).toString();
 		mapMarkers[i] = new google.maps.Marker({
 			position: {lat: lati, lng: long},
 			map: map,
 			title: u + " - " + l,
+			label: aqi,
 		});
 		mapMarkers[i].info = new google.maps.InfoWindow({content: infoText});
 		mapMarkers[i].addListener('click', function() {
