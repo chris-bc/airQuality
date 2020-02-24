@@ -6,10 +6,15 @@ use strict;
 use warnings;
 use lib qw(..);
 use Data::Dumper;
+use vars qw($apiKey);
 
 print CGI::header();
 
+# Import apiKey
+do './apiKey.pl';
+
 # Initialise variables
+my $unsafeCharRegEx = "[ \"|\(|\)|\/\:]";
 my $dbFile = "koala.sqlite";
 my $dbTable = "kSensor";
 my $dsn = "DBI:SQLite:$dbFile";
@@ -135,7 +140,8 @@ while (my @data = $statement->fetchrow_array()) {
 $statement->finish;
 
 # Get a hash of locaions and their units for column validation and later use
-$sql = "SELECT DISTINCT $areaCol, $locCol,$unitCol from $dbTable ORDER BY $areaCol,$locCol,$unitCol";
+# Updated SQL to account for units changing locations (or locations changing names) over time - retrieve only latest
+$sql = "SELECT $areaCol, $locCol, $unitCol FROM $dbTable GROUP BY $unitCol HAVING $timeCol = MAX($timeCol)";
 $statement = $dbh->prepare($sql);
 $statement->execute();
 
@@ -287,9 +293,10 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
 </div>
 <div id='filter' class='container' style='padding-top:75px;'>
 <div class='row'><div class='col'><h3 class='text-center'>Limit Results to the following locations and/or units</h3></div></div>
-<div class='row mb-3'>
+<div class='row mb-3 align-items-center justify-content-center'>
 <div class='col-sm-4'>
-  <select id='limitArea' size='10' class='custom-select' multiple onChange=locsChanged()>\n";
+  <h5 class='text-center'>Areas</h5>
+  <div id='areaContainer' style='overflow-y:auto;'><div class='list-group' id='limitArea'>\n";
 
 # Two approaches for options that should not be visible:
 # hidden='hidden' will hide the options on Chrome and Firefox
@@ -297,32 +304,40 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
 
 # Display all areas, selecting any that are specified in $areas
 my @selectedAreas = split ',', $areas;
-print "<option value='all'".((length $areas > 0)?"":" selected").">All</option>\n";
+print "<button type='button' id='area-btn-all' kArea='all' onClick='toggleArea(\"all\")' class='py-1 list-group-item list-group-item-action".((length $areas>0)?"":" active")."'>All</button>\n";
 for my $iArea (sort keys %unitsByLoc) {
-  my $strOpt = "<option value='$iArea'";
+  # Remove special chars for id
+  my $safeArea = $iArea;
+#  $safeArea =~ s/[ \"|\(|\)|\/|:]//g;
+$safeArea =~ s/$unsafeCharRegEx//g;
+  my $strOpt = "<button type='button' id='area-btn-$safeArea' kArea='$safeArea' onClick='toggleArea(\"$safeArea\")' class='py-1 list-group-item list-group-item-action";
   # Is this area selected?
   for (@selectedAreas) {
-    $strOpt .= " selected" if ($iArea eq $_);
+    $strOpt .= " active" if ($iArea eq $_);
   }
-  $strOpt .= ">$iArea</option>\n";
+  $strOpt .= "'>$iArea</button>\n";
   print $strOpt;
 }
 
 print "
-  </select>
+  </div></div>
 </div>
 <div class='col-sm-4'>
-  <select id='limitLoc' size='10' class='custom-select' multiple onChange=locsChanged()>\n";
+  <h5 class='text-center'>Locations</h5>
+  <div id='locationContainer' style='overflow-y:auto;'><div class='list-group' id='limitLoc'>\n";
 
 my @selectedLocs = split ',', $locations;
-print "<option value='all'".((length $locations > 0)?"":" selected").">All</option>\n";
+print "<button type='button' id='loc-btn-all' kLoc='all' onClick='toggleLoc(\"all\")' class='py-1 list-group-item list-group-item-action".((length $locations >0)?"":" active")."'>All</button>\n";
 # Loop through @allLocs. For each loc, select if is in @selectedLocs,
 # hide unless in @visibleLocs, custom attribute kArea finding their area from hash
 for my $iLoc (sort @allLocs) {
-  my $strOpt = "<option value ='$iLoc'";
+  # Remove special chars for id
+  my $safeLoc = $iLoc;
+  $safeLoc =~ s/$unsafeCharRegEx//g;
+  my $strOpt = "<button type='button' id='loc-btn-$safeLoc' kLoc='$safeLoc' onClick='toggleLoc(\"$safeLoc\")' class='py-1 list-group-item list-group-item-action";
   my $visible = 0;
   $visible = (($_ eq $iLoc)?1:$visible) for @visibleLocs;
-  $strOpt .= " hidden='hidden' disabled='true'" if ($visible == 0);
+  $strOpt .= " d-none" if ($visible == 0);
   for (@selectedLocs) {
     $strOpt .= " selected" if ($iLoc eq $_);
   }
@@ -338,14 +353,16 @@ for my $iLoc (sort @allLocs) {
       $locArea .= $_;
     }
   }
-  $strOpt .= " kArea='$locArea'>$iLoc</option>\n";
+  $locArea =~ s/$unsafeCharRegEx//g;
+  $strOpt .= "' kArea='$locArea'>$iLoc</button>\n";
   print $strOpt;
 }
 
 print "
-  </select>
+  </div></div>
 </div><div class='col-sm-4'>
-  <select id='limitUnit' size='10' class='custom-select' multiple onChange=unitsChanged()>\n";
+  <h5 class='text-center'>Units</h5>
+  <div id='unitContainer' style='overflow-y:auto;'><div class='list-group' id='limitUnit'>\n";
 
 # Because location is not unique to an array we'll need to use the hash, at
 # minimum to identify area and location for each unit. Given that, it *would*
@@ -356,23 +373,27 @@ print "
 my @unitOptions;
 my %selectedUnits = map {$_ => 1} (split ',', $units);
 my %visibleUnitsHash = map {$_ => 1} @visibleUnits;
-print "<option value='all' ".((length $units > 0)?"":" selected").">All</option>\n";
+print "<button type='button' id='unit-btn-all' onClick='toggleUnit(\"all\")' class='py-1 list-group-item list-group-item-action".((length $units >0)?"":" active")."'>All</button>\n";
 
 # Loop through the hash down to the units level
 for my $areaKey (keys %unitsByLoc) {
   for my $locKey (keys %unitsByLoc->{$areaKey}) {
+    my $safeArea = $areaKey;
+    $safeArea =~ s/$unsafeCharRegEx//g;
+    my $safeLoc = $locKey;
+    $safeLoc =~ s/$unsafeCharRegEx//g;
     for my $iUnit (@{%unitsByLoc->{$areaKey}->{$locKey}}) {
-      my $thisUnit = "<option value='$iUnit' kArea='$areaKey' kLoc='$locKey'";
-      $thisUnit .= " selected" if (exists($selectedUnits{$iUnit}));
-      $thisUnit .= " hidden='hidden' disabled='true'" unless (exists($visibleUnitsHash{$iUnit}));
-      $thisUnit .= ">$iUnit</option>\n";
+      my $thisUnit = "<button type='button' id='unit-btn-$iUnit' onClick='toggleUnit(\"$iUnit\")' kArea='$safeArea' kLoc='$safeLoc' class='py-1 list-group-item list-group-item-action";
+      $thisUnit .= " active" if (exists($selectedUnits{$iUnit}));
+      $thisUnit .= " d-none" unless (exists($visibleUnitsHash{$iUnit}));
+      $thisUnit .= "'>$iUnit</button>\n";
       push(@unitOptions, $thisUnit);
     }
   }
 }
 
 print "$_\n" for sort @unitOptions;
-print "  </select>
+print "  </div></div>
 </div></div>
 <form method='post' id='pageForm'><div class='row mb-3'><div class='col'>
 <div class='custom-control custom-checkbox'>
@@ -671,4 +692,4 @@ requests please <a href='mailto:chris\@bennettscash.id.au'>contact me</a>.</p>
 <p>For more information on the KOALAS project see <a href='http://bluemountains.sensors.net.au/' target='_blank'>http://bluemountains.sensors.net.au/</a></p>
 <p>blueSKIES is <a href='https://github.com/chris-bc/airQuality'>hosted on GitHub</a>. Feel free to develop it further and send me a pull request</p>
 <p><font size=-1>Built by <a href='mailto:chris\@bennettscash.id.au'>Chris Bennetts-Cash</a>, 2020. <a href='http://www.bennettscash.id.au' target='_blank'>http://www.bennettscash.id.au</a></font></p>
-</div></div><script async defer src='https://maps.googleapis.com/maps/api/js?key=KEY&callback=initMap'></script></body></html>";
+</div></div><script async defer src='https://maps.googleapis.com/maps/api/js?key=$apiKey&callback=initMap'></script></body></html>";

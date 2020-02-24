@@ -1,6 +1,13 @@
 var chartData = [];
 var bMeans = false;
 
+// Set the unit filters to 300px height
+$( document ).ready(function() {
+  $("#unitContainer").css("height", "300px");
+	$("#locationContainer").css("height", "300px");
+	$("#areaContainer").css("height", "300px");
+})
+
 function rmAll() {
 	var sel = document.getElementById("selCols");
 	var avail = document.getElementById("allcols");
@@ -98,68 +105,210 @@ function updateSort() {
 	sort.value = str;
 }
 
+function listGroupSelectedItems(lgId) {
+	var retVal = [];
+	var itemSel;
+	var lg = document.getElementById(lgId);
+	for (var i=0; i < lg.childElementCount; i++) {
+		itemSel = "#" + lg.children[i].getAttribute("id");
+		if ($(itemSel).hasClass("active")) {
+			retVal.push(lg.children[i]);
+		}
+	}
+	return retVal;
+}
+
+function listGroupNumVisible(lgId) {
+	var count = 1;
+	var itemSel;
+	var lg = document.getElementById(lgId);
+	for (var i=0; i < lg.childElementCount; i++) {
+		itemSel = "#" + lg.children[i].getAttribute("id");
+		if (!($(itemSel).hasClass("d-none"))) {
+			count++;
+		}
+	}
+	return count;
+}
+
+function listGroupNumSelected(lgId) {
+	var count = 0;
+	var itemSel;
+	var lg = document.getElementById(lgId);
+	for (var i=0; i < lg.childElementCount; i++) {
+		itemSel = "#" + lg.children[i].getAttribute("id");
+		if ($(itemSel).hasClass("active")) {
+			count++;
+		}
+	}
+	return count;
+}
+
+function toggleArea(area) {
+	toggleFilter("area", area);
+}
+
+function toggleLoc(loc) {
+	toggleFilter("loc", loc);
+}
+
+function toggleUnit(unit) {
+	toggleFilter("unit", unit);
+}
+
+// Handle clicking on an arbitrary filter item (area, loc or unit)
+// Expected values for filter: area, loc, unit
+function toggleFilter(filter, value) {
+	var listGroups = {"area": "limitArea", "loc": "limitLoc", "unit": "limitUnit"};
+	var inputFields = {"area": "areas", "loc": "locs", "unit": "units"};
+	var removing;
+	// Flag used during form param rebuild to determine whether we rejected this request
+	var complete = true;
+	var btnVal = document.getElementById(filter + "-btn-" + value);
+	var filterSel = "#" + filter + "-btn-" + value;
+	if ($(filterSel).hasClass("active")) {
+		// It was selected, we're deselecting it
+		removing = true;
+	} else {
+		// It was deselected, we're selecting it
+		removing = false;
+	}
+	// Special case 1: If 'all' has been selected deselect everything else
+	if (!removing && value == "all") {
+		var listGroup = document.getElementById(listGroups[filter]);
+		for (var i=0; i < listGroup.childElementCount; i++) {
+			var iSel = "#" + listGroup.children[i].getAttribute("id");
+			// Don't deactivate this one
+			if (iSel != filterSel && ($(iSel).hasClass("active"))) {
+				$(iSel).removeClass("active");
+			}
+		}
+		// Finally activate 'all'
+		$(filterSel).addClass("active");
+	} else if (value == "all" && removing) {
+		// Special case 2: 'all' was selected and we tried to deselect it
+		// Do nothing - We'll automatically handle deselecting 'all', you can't do it
+		complete = false;
+	} else {
+		// Get some additional info to determine other cases
+		// Is 'all' currently selected?
+		var allSel = "#" + filter + "-btn-all";
+		var allSelected = ($(allSel).hasClass("active"));
+		var numSelected = listGroupNumSelected(listGroups[filter]);
+		// Special case 3: 'all' was selected and we're selecting something
+		if (allSelected && !removing) {
+			$(allSel).removeClass("active");
+			$(filterSel).addClass("active");
+		} else if (numSelected == 1 && removing) {
+				// Special case 4: we deselected the only selected thing => select 'all'
+				$(allSel).addClass("active");
+				$(filterSel).removeClass("active");
+		} else if (removing) {
+			// Simple case - removing
+			$(filterSel).removeClass("active");
+		} else {
+			// Simple case - adding
+			$(filterSel).addClass("active");
+		}
+	}
+
+	// Rebuild the relevant input field
+	// Case 1: Several (or all) selected, adding one => append
+	// Case 2: Several selected, removing one => splice
+	// Case 3: Several selected, selecting all => erase
+	var strInput = document.getElementById(inputFields[filter]);
+	var strInputArr = strInput.value.split(',');
+	if ((!removing && value == "all") || (removing && strInputArr.length == 1)) {
+		// Removing the only element or selecting all
+		strInput.value = "";
+	} else if (!removing) {
+		// Append the selected element
+		if (strInput.value.length > 0) {
+			strInput.value += ",";
+		}
+		strInput.value += value;
+	} else {
+		// Remove element from the array
+		var i = strInputArr.indexOf(value);
+		if (i > -1) {
+			strInputArr.splice(i, 1);
+			strInput.value = strInputArr.join(',');
+		} else {
+			// Unable to find the specified area for removal
+			alert("Attempt to remove " + filter + " " + area + " from input field failed - Unable to find it in the field");
+		}
+	}
+
+	// Process subsequent changes - hide, show, deselect fields as appropriate
+	locsChanged();
+
+	// TODO: Update table, redraw chart
+}
+
 function locsChanged() {
-	var aSel = document.getElementById("limitArea");
-	var lSel = document.getElementById("limitLoc");
-	var uSel = document.getElementById("limitUnit");
+	var aLG = document.getElementById("limitArea");
+	var lLG = document.getElementById("limitLoc");
+	var uLG = document.getElementById("limitUnit");
 	var areaParam = document.getElementById("areas");
 	var locParam = document.getElementById("locs");
-
-	areaParam.value = "";
-	locParam.value = "";
-
+	var unitParam = document.getElementById("units");
+	var iSel;
 	// Hide all locations and units then selectively show them
 	// While annoying this is necessary because of the lack of
 	// uniqueness
-	for (var i=1; i < lSel.options.length; i++) {
-		if (!lSel.options[i].hasAttribute("hidden")) {
-			lSel.options[i].setAttribute("hidden", "hidden");
-			lSel.options[i].setAttribute("disabled", "true");
+	for (var i=1; i < lLG.childElementCount; i++) {
+		iSel = "#" + lLG.children[i].getAttribute("id");
+		if (!($(iSel).hasClass("d-none"))) {
+			$(iSel).addClass("d-none");
 		}
 	}
-	for (var i=1; i < uSel.options.length; i++) {
-		if (!uSel.options[i].hasAttribute("hidden")) {
-			uSel.options[i].setAttribute("hidden", "hidden");
-			uSel.options[i].setAttribute("disabled", "true");
+	for (var i=1; i < uLG.childElementCount; i++) {
+		iSel = "#" + uLG.children[i].getAttribute("id");
+		if (!($(iSel).hasClass("d-none"))) {
+			$(iSel).addClass("d-none");
 		}
 	}
 
-	// Bulid post params
-	var selectedAreas = aSel.selectedOptions;
-	var selectedLocs = lSel.selectedOptions;
-
+	// Some useful varibles
+	var selectedAreas = listGroupSelectedItems("limitArea");
+	var selectedLocs = listGroupSelectedItems("limitLoc");
+	var allAreasSel = "#area-btn-all";
+	var allLocsSel = "#loc-btn-all";
+	var allUnitsSel = "#unit-btn-all";
 
 	// Show locations for selected areas
 	for (var i=0; i < selectedAreas.length; i++) {
-		for (var j=1; j < lSel.options.length; j++) {
+		for (var j=1; j < lLG.childElementCount; j++) {
 			// Should the selected location be hidden?
 			var hidden = 1;
-			if (aSel.options[0].selected) {
+			if ($(allAreasSel).hasClass("active")) {
 				hidden = 0;
 			}
 			// Locations may have multiple areas
-			var kArea = lSel.options[j].getAttribute("kArea").split(",");
+			var kArea = lLG.children[j].getAttribute("kArea").split(",");
 			for (var k=0; ((k < kArea.length) && (hidden == 1)) ; k++) {
-				if (selectedAreas[i].value == kArea[k]) {
+				if (selectedAreas[i].getAttribute("kArea") == kArea[k]) {
 					hidden = 0;
 				}
 			}
 			// Show the option
-			if ((hidden == 0) && (lSel.options[j].hasAttribute("hidden"))) {
-				lSel.options[j].removeAttribute("hidden");
-				lSel.options[j].removeAttribute("disabled");
+			if (hidden == 0) {
+				iSel = "#" + lLG.children[j].getAttribute("id");
+				if ($(iSel).hasClass("d-none")) {
+					$(iSel).removeClass("d-none");
+				}
 			}
 		}
 		for (var j=0; j < selectedLocs.length; j++) {
 			// Check units for area i and loc j
-			for (var n=1; n < uSel.options.length; n++) {
-				var kLoc = uSel.options[n].getAttribute("kLoc");
-				kArea = uSel.options[n].getAttribute("kArea");
-				if ((aSel.options[0].selected || kArea == selectedAreas[i].value) &&
-						(lSel.options[0].selected || kLoc == selectedLocs[j].value)) {
-							if (uSel.options[n].hasAttribute("hidden")) {
-								uSel.options[n].removeAttribute("hidden");
-								uSel.options[n].removeAttribute("disabled");
+			for (var n=1; n < uLG.childElementCount; n++) {
+				var kLoc = uLG.children[n].getAttribute("kLoc");
+				kArea = uLG.children[n].getAttribute("kArea");
+				if ((($(allAreasSel).hasClass("active")) || kArea == selectedAreas[i].getAttribute("kArea")) &&
+						(($(allLocsSel).hasClass("active")) || kLoc == selectedLocs[j].getAttribute("kLoc"))) {
+							iSel = "#" + uLG.children[n].getAttribute("id");
+							if ($(iSel).hasClass("d-none")) {
+								$(iSel).removeClass("d-none");
 							}
 				}
 			}
@@ -167,52 +316,46 @@ function locsChanged() {
 	}
 
 	// Finally, if selected locs or units are no longer visible
-	// Select 'all' options and rebuild post parameters
-	for (var i=1; i < lSel.options.length; i++) {
-		if (lSel.options[i].selected && lSel.options[i].hasAttribute("hidden")) {
-			lSel.options[i].selected = false;
+	// Select 'all' options and rebuild post parameters as needed
+	for (var i=1; i < lLG.childElementCount; i++) {
+		iSel = "#" + lLG.children[i].getAttribute("id");
+		if (($(iSel).hasClass("active")) && ($(iSel).hasClass("d-none"))) {
+			$(iSel).removeClass("active");
+			// remove from locs param
+			var locArr = locParam.value.split(',');
+			var locIdx = locArr.indexOf(lLG.children[i].getAttribute("kLoc"));
+			if (locIdx > -1) {
+				locArr.splice(locIdx, 1);
+				locParam.value = locArr.join(',');
+			} else {
+				// This loc not found in locs param
+				alert("Unable to remove " + iSel + " from locs input field - Not found");
+			}
 		}
 	}
-	for (var i=1; i < uSel.options.length; i++) {
-		if (uSel.options[i].selected && uSel.options[i].hasAttribute("hidden")) {
-			uSel.options[i].selected = false;
+	for (var i=1; i < uLG.childElementCount; i++) {
+		iSel = "#" + uLG.children[i].getAttribute("id");
+		if (($(iSel).hasClass("active")) && ($(iSel).hasClass("d-none"))) {
+			$(iSel).removeClass("active");
+			// remove from units param
+			var unitArr = unitParam.value.split(',');
+			var unitIdx = unitArr.indexOf(uLG.children[i].innerText);
+			if (unitIdx > -1) {
+				unitArr.splice(unitIdx, 1);
+				unitParam.value = unitArr.join(',');
+			} else {
+				// This unit not found in units param
+				alert("Unable to remove " + iSel + " from units input field - Not found");
+			}
 		}
 	}
-	if (lSel.selectedOptions.length == 0) {
-		lSel.options[0].selected = true;
+	if (listGroupNumSelected("limitLoc") == 0) {
+		$(allLocsSel).addClass("active");
+		locParam.value = "";
 	}
-	if (uSel.selectedOptions.length == 0) {
-		uSel.options[0].selected = true;
-	}
-
-	// Finally rebuild post params
-	selectedAreas = aSel.selectedOptions;
-	selectedLocs = lSel.selectedOptions;
-	for (var i=0; i < selectedAreas.length; i++) {
-		if (areaParam.value.length > 0) {
-			areaParam.value = areaParam.value + ",";
-		}
-		areaParam.value = areaParam.value + selectedAreas[i].value;
-	}
-	for (var i=0; i < selectedLocs.length; i++) {
-		if (locParam.value.length > 0) {
-			locParam.value = locParam.value + ",";
-		}
-		locParam.value = locParam.value + selectedLocs[i].value;
-	}
-	unitsChanged();
-}
-
-function unitsChanged() {
-	var uSel = document.getElementById("limitUnit");
-	var uParam = document.getElementById("units");
-	uParam.value = "";
-
-	for (var i=0; i<uSel.selectedOptions.length; i++) {
-		if (uParam.value.length > 0) {
-			uParam.value = uParam.value + ",";
-		}
-		uParam.value = uParam.value + uSel.selectedOptions[i].value;
+	if (listGroupNumSelected("limitUnit") == 0) {
+		$(allUnitsSel).addClass("active");
+		unitParam.value = "";
 	}
 }
 
@@ -238,19 +381,22 @@ function prepareChartData() {
 	var unitColText = "UnitNumber";
 	var timeColText = "lastsensingdate";
 
+	var allLocsSel = "#loc-btn-all";
+	var allUnitsSel = "#unit-btn-all";
 
 	// Are we doing means or all values?
-	var lSel = document.getElementById("limitLoc");
-	var uSel = document.getElementById("limitUnit");
+	var lLG = document.getElementById("limitLoc");
+	var uLG = document.getElementById("limitUnit");
 
 	// If 'any' location is selected and more than 1 location is available
 	// and more than 1 unit is available with 'any' unit selected, use means
 	// Or if multiple locations are selected and multiple units are available and 'any' unit is selected
-	if (((lSel.options[0].selected && lSel.options.length > 2) || (lSel.selectedOptions.length > 1))
-	 			&& uSel.options.length > 1 && uSel.options[0].selected) {
+	if (((($(allLocsSel).hasClass("active")) && listGroupNumVisible("limitLoc") > 2) || (listGroupNumSelected("limitLoc") > 1))
+				&& listGroupNumVisible("limitUnit") > 1 && ($(allUnitsSel).hasClass("active"))) {
 		bMeans = true;
 	}
 
+	// TODO: Split this out into a function initialising an object mapping cols to indices
 	// Loop through table headers to identify column indices
 	var sTable = document.getElementById("dataTable");
 	var headers = sTable.tHead.rows[0].cells;
@@ -619,6 +765,7 @@ function initMap() {
 			this.info.open(map, this);
 		});
 	}
-	var markerClusterer = new MarkerClusterer(map, mapMarkers,
-		{imagePath: "/markers/m"});
+	var markerClusterer = new MarkerClusterer(map, mapMarkers, {
+		imagePath: "/markers/m",
+		maxZoom: 11,});
 }
