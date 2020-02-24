@@ -1,3 +1,14 @@
+// Define some constants so we know column names
+var unitCol = { "col": "UnitNumber", "index": -1 };
+var areaCol = { "col": "locationstring", "index": -1 };
+var locCol = { "col": "locationdescription", "index": -1 };
+var pm1Col = { "col": "pm1", "index": -1 };
+var pm25Col = { "col": "pm25", "index": -1 };
+var pm10Col = { "col": "pm10", "index": -1 };
+var dateCol = { "col": "lastsensingdate", "index": -1 };
+var latCol = { "col": "Latitude", "index": -1 };
+var longCol = { "col": "Longitude", "index": -1 };
+
 var chartData = [];
 var bMeans = false;
 
@@ -7,6 +18,33 @@ $( document ).ready(function() {
 	$("#locationContainer").css("height", "300px");
 	$("#areaContainer").css("height", "300px");
 })
+
+function findColumnIndices() {
+	// Loop through table headers to identify column indices
+	var sTable = document.getElementById("dataTable");
+	var headers = sTable.tHead.rows[0].cells;
+	for (var i = 0; i < headers.length; i++) {
+		if (headers[i].textContent == pm1Col["col"]) {
+			pm1Col["index"] = i;
+		} else if (headers[i].textContent == pm25Col["col"]) {
+			pm25Col["index"] = i;
+		} else if (headers[i].textContent == pm10Col["col"]) {
+			pm10Col["index"] = i;
+		} else if (headers[i].textContent == areaCol["col"]) {
+			areaCol["index"] = i;
+		} else if (headers[i].textContent == locCol["col"]) {
+			locCol["index"] = i;
+		} else if (headers[i].textContent == unitCol["col"]) {
+			unitCol["index"] = i;
+		} else if (headers[i].textContent == dateCol["col"]) {
+			dateCol["index"] = i;
+		} else if (headers[i].textContent == latCol["col"]) {
+			latCol["index"] = i;
+		} else if (headers[i].textContent == longCol["col"]) {
+			longCol["index"] = i;
+		}
+	}
+}
 
 function rmAll() {
 	var sel = document.getElementById("selCols");
@@ -243,6 +281,9 @@ function toggleFilter(filter, value) {
 	locsChanged();
 
 	// TODO: Update table, redraw chart
+	//updateTableData();
+	//prepareChartData();
+	//initChartJs();
 }
 
 function locsChanged() {
@@ -367,20 +408,7 @@ function prepareChartData() {
 	// If multiple locations and 'any' unit then generate 4-hourly means
 	//   for each location. Otherwise (single location or subset of units)
 	//	 just use each observation
-
-	var pm1col = -1;
-	var pm25col = -1;
-	var pm10col = -1;
-	var locCol = -1;
-	var unitCol = -1;
-	var timeCol = -1;
-	var pm1colText = "pm1";
-	var pm25colText = "pm25";
-	var pm10colText = "pm10";
-	var locColText = "locationdescription";
-	var unitColText = "UnitNumber";
-	var timeColText = "lastsensingdate";
-
+	var sTable = document.getElementById("dataTable");
 	var allLocsSel = "#loc-btn-all";
 	var allUnitsSel = "#unit-btn-all";
 
@@ -396,30 +424,14 @@ function prepareChartData() {
 		bMeans = true;
 	}
 
-	// TODO: Split this out into a function initialising an object mapping cols to indices
-	// Loop through table headers to identify column indices
-	var sTable = document.getElementById("dataTable");
-	var headers = sTable.tHead.rows[0].cells;
-	for (var i = 0; i < headers.length; i++) {
-		if (headers[i].textContent == pm1colText) {
-			pm1col = i;
-		} else if (headers[i].textContent == pm25colText) {
-			pm25col = i;
-		} else if (headers[i].textContent == pm10colText) {
-			pm10col = i;
-		} else if (headers[i].textContent == locColText) {
-			locCol = i;
-		} else if (headers[i].textContent == unitColText) {
-			unitCol = i;
-		} else if (headers[i].textContent == timeColText) {
-			timeCol = i;
-		}
+	if (unitCol["index"] == -1) {
+		findColumnIndices();
 	}
 
 	// Bail if we don't have required columns
-	if ( (pm1col == -1 && pm25col == -1 && pm10col == -1) ||
-				(bMeans && locCol == -1) || (!bMeans && unitCol == -1) ||
-				(timeCol == -1) ) {
+	if ( (pm1Col["index"] == -1 && pm25Col["index"] == -1 && pm10Col["index"] == -1) ||
+				(bMeans && locCol["index"] == -1) || (!bMeans && unitCol["index"] == -1) ||
+				(dateCol["index"] == -1) ) {
 		// Nothing to chart
 		return;
 	}
@@ -440,19 +452,19 @@ function prepareChartData() {
 	var rowPm10;
 	for (var i=0; i < tableRows.length; i++) {
 		// Fetch time and PM values regardless of the approach
-		rowTime = tableRows[i].cells[timeCol].textContent;
-		if (pm1col >= 0) {
-			rowPm1 = tableRows[i].cells[pm1col].textContent;
+		rowTime = tableRows[i].cells[dateCol["index"]].textContent;
+		if (pm1Col["index"] >= 0) {
+			rowPm1 = tableRows[i].cells[pm1Col["index"]].textContent;
 		}
-		if (pm25col >= 0) {
-			rowPm25 = tableRows[i].cells[pm25col].textContent;
+		if (pm25Col["index"] >= 0) {
+			rowPm25 = tableRows[i].cells[pm25Col["index"]].textContent;
 		}
-		if (pm10col >= 0) {
-			rowPm10 = tableRows[i].cells[pm10col].textContent;
+		if (pm10Col["index"] >= 0) {
+			rowPm10 = tableRows[i].cells[pm10Col["index"]].textContent;
 		}
 
 		if (bMeans) {
-			rowId = tableRows[i].cells[locCol].textContent;
+			rowId = tableRows[i].cells[locCol["index"]].textContent;
 			// TODO: Manipulate the time so it's rounded to the nearest 4 hours
 			var oldDate = new Date();
 			oldDate.setFullYear(rowTime.substring(6, 10));
@@ -502,7 +514,7 @@ function prepareChartData() {
 			}
 			rowTime += oldDate.getSeconds();
 		} else {
-			rowId = tableRows[i].cells[unitCol].textContent;
+			rowId = tableRows[i].cells[unitCol["index"]].textContent;
 		}
 		// Create row object if doesn't exist
 		if (!(rowId in chartData)) {
@@ -515,7 +527,7 @@ function prepareChartData() {
 
 		if (bMeans) {
 			// track values and number of entries before finally calculating means
-			if (pm1col >= 0) {
+			if (pm1Col["index"] >= 0) {
 				if ("pm1" in chartData[rowId][rowTime]) {
 					chartData[rowId][rowTime]["pm1"] = Number(chartData[rowId][rowTime]["pm1"]) + Number(rowPm1);
 					chartData[rowId][rowTime]["pm1Count"] ++;
@@ -524,7 +536,7 @@ function prepareChartData() {
 					chartData[rowId][rowTime]["pm1Count"] = 1;
 				}
 			}
-			if (pm25col >= 0) {
+			if (pm25Col["index"] >= 0) {
 				if ("pm25" in chartData[rowId][rowTime]) {
 					chartData[rowId][rowTime]["pm25"] = Number(chartData[rowId][rowTime]["pm25"]) + Number(rowPm25);
 					chartData[rowId][rowTime]["pm25Count"] ++;
@@ -533,7 +545,7 @@ function prepareChartData() {
 					chartData[rowId][rowTime]["pm25Count"] = 1;
 				}
 			}
-			if (pm10col >= 0) {
+			if (pm10Col["index"] >= 0) {
 				if ("pm10" in chartData[rowId][rowTime]) {
 					chartData[rowId][rowTime]["pm10"] = Number(chartData[rowId][rowTime]["pm10"]) + Number(rowPm10);
 					chartData[rowId][rowTime]["pm10Count"] ++;
@@ -543,13 +555,13 @@ function prepareChartData() {
 				}
 			}
 		} else {
-			if (pm1col >= 0) {
+			if (pm1Col["index"] >= 0) {
 				chartData[rowId][rowTime]["pm1"] = rowPm1;
 			}
-			if (pm25col >= 0) {
+			if (pm25Col["index"] >= 0) {
 				chartData[rowId][rowTime]["pm25"] = rowPm25;
 			}
-			if (pm10col >= 0) {
+			if (pm10Col["index"] >= 0) {
 				chartData[rowId][rowTime]["pm10"] = rowPm10;
 			}
 		}
