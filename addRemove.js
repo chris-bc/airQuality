@@ -96,37 +96,22 @@ function rebuildTable() {
 
 	for (var i=0; i < rows.length; i++) {
 		// Can only test based on selected columns
-		// Initially assume true for any non-selected columns
-		// TODO: Later come back to this - loc and area are in units LG
+		// Assume true for any non-selected columns - finding them through buttons
+		// causes exponentially worse performance
 		if (unitCol["index"] > -1) {
 			rowUnit = rows[i].cells[unitCol["index"]].textContent;
 		} else {
 			rowUnit = "";
 		}
-		// With the Unit ID the unit listGroup can be used to retrieve location and area
-		// This removes the dependence on location and area being present in displayed
-		// columns, but won't work if unit isn't a displayed column
-		// Try to get location and area from units listGroup, otherwise fall back to table columns
-		if (rowUnit == "") {
-			if (locCol["index"] > -1) {
-				rowLoc = rows[i].cells[locCol["index"]].textContent;
-			} else {
-				rowLoc = "";
-			}
-			if (areaCol["index"] > -1) {
-				rowArea = rows[i].cells[areaCol["index"]].textContent;
-			} else {
-				rowArea = "";
-			}
+		if (locCol["index"] > -1) {
+			rowLoc = rows[i].cells[locCol["index"]].textContent;
 		} else {
-			var unitBtn = document.getElementById("unit-btn-" + rowUnit);
-			var kLoc = unitBtn.getAttribute("kLoc");
-			var kArea = unitBtn.getAttribute("kArea");
-			// kLoc and kArea have been modified to remove special chars
-			// Find them in the locations and areas list groups to get their
-			// original text
-			rowLoc = document.getElementById("loc-btn-" + kLoc).innerText;
-			rowArea = document.getElementById("area-btn-" + kArea).innerText;
+			rowLoc = "";
+		}
+		if (areaCol["index"] > -1) {
+			rowArea = rows[i].cells[areaCol["index"]].textContent;
+		} else {
+			rowArea = "";
 		}
 		if (pm1Col["index"] > -1) {
 			rowPm1 = Number(rows[i].cells[pm1Col["index"]].textContent);
@@ -439,8 +424,8 @@ function toggleFilter(filter, value) {
 
 	// TODO: Update table, redraw chart
 	rebuildTable();
-	//prepareChartData();
-	//initChartJs();
+	prepareChartData();
+	initChartJs();
 }
 
 function locsChanged() {
@@ -607,119 +592,124 @@ function prepareChartData() {
 	var rowPm1;
 	var rowPm25;
 	var rowPm10;
+	var rowSel;
 	for (var i=0; i < tableRows.length; i++) {
-		// Fetch time and PM values regardless of the approach
-		rowTime = tableRows[i].cells[dateCol["index"]].textContent;
-		if (pm1Col["index"] >= 0) {
-			rowPm1 = tableRows[i].cells[pm1Col["index"]].textContent;
-		}
-		if (pm25Col["index"] >= 0) {
-			rowPm25 = tableRows[i].cells[pm25Col["index"]].textContent;
-		}
-		if (pm10Col["index"] >= 0) {
-			rowPm10 = tableRows[i].cells[pm10Col["index"]].textContent;
-		}
+		// Skip the row if it's hidden
+		rowSel = "#" + tableRows[i].getAttribute("id");
+		if (!($(rowSel).hasClass("d-none"))) {
+			// Fetch time and PM values regardless of the approach
+			rowTime = tableRows[i].cells[dateCol["index"]].textContent;
+			if (pm1Col["index"] >= 0) {
+				rowPm1 = tableRows[i].cells[pm1Col["index"]].textContent;
+			}
+			if (pm25Col["index"] >= 0) {
+				rowPm25 = tableRows[i].cells[pm25Col["index"]].textContent;
+			}
+			if (pm10Col["index"] >= 0) {
+				rowPm10 = tableRows[i].cells[pm10Col["index"]].textContent;
+			}
 
-		if (bMeans) {
-			rowId = tableRows[i].cells[locCol["index"]].textContent;
-			// TODO: Manipulate the time so it's rounded to the nearest 4 hours
-			var oldDate = new Date();
-			oldDate.setFullYear(rowTime.substring(6, 10));
-			oldDate.setMonth((rowTime.substring(3, 5) - 1));
-			oldDate.setDate(rowTime.substring(0, 2));
-			oldDate.setSeconds(0);
-			oldDate.setMinutes(0);
-			var oldHour = rowTime.substring(11, 13);
-			if (oldHour >= 22) {
-				oldDate.setHours(0);
-				oldDate.setDate((oldDate.getDate() + 1));
-			} else if (oldHour >= 18) {
-				oldDate.setHours(20);
-			} else if (oldHour >= 14) {
-				oldDate.setHours(16);
-			} else if (oldHour >= 10) {
-				oldDate.setHours(12);
-			} else if (oldHour >= 6) {
-				oldDate.setHours(8);
-			} else if (oldHour >= 2) {
-				oldDate.setHours(4);
+			if (bMeans) {
+				rowId = tableRows[i].cells[locCol["index"]].textContent;
+				// TODO: Manipulate the time so it's rounded to the nearest 4 hours
+				var oldDate = new Date();
+				oldDate.setFullYear(rowTime.substring(6, 10));
+				oldDate.setMonth((rowTime.substring(3, 5) - 1));
+				oldDate.setDate(rowTime.substring(0, 2));
+				oldDate.setSeconds(0);
+				oldDate.setMinutes(0);
+				var oldHour = rowTime.substring(11, 13);
+				if (oldHour >= 22) {
+					oldDate.setHours(0);
+					oldDate.setDate((oldDate.getDate() + 1));
+				} else if (oldHour >= 18) {
+					oldDate.setHours(20);
+				} else if (oldHour >= 14) {
+					oldDate.setHours(16);
+				} else if (oldHour >= 10) {
+					oldDate.setHours(12);
+				} else if (oldHour >= 6) {
+					oldDate.setHours(8);
+				} else if (oldHour >= 2) {
+					oldDate.setHours(4);
+				} else {
+					oldDate.setHours(0);
+				}
+
+				// Rebuild rowTime
+				// TODO: Do this better
+				rowTime = "";
+				if (oldDate.getDate() < 10) {
+					rowTime += "0";
+				}
+				rowTime += oldDate.getDate() + "-";
+				if (oldDate.getMonth() < 10) {
+					rowTime += "0";
+				}
+				rowTime += (oldDate.getMonth() + 1) + "-" + oldDate.getFullYear() + " ";
+				if (oldDate.getHours() < 10) {
+					rowTime += "0";
+				}
+				rowTime += oldDate.getHours() + ":";
+				if (oldDate.getMinutes() < 10) {
+					rowTime += "0";
+				}
+				rowTime += oldDate.getMinutes() + ":";
+				if (oldDate.getSeconds() < 10) {
+					rowTime += "0";
+				}
+				rowTime += oldDate.getSeconds();
 			} else {
-				oldDate.setHours(0);
+				rowId = tableRows[i].cells[unitCol["index"]].textContent;
+			}
+			// Create row object if doesn't exist
+			if (!(rowId in chartData)) {
+				chartData[rowId] = [];
+			}
+			// Create time object if doesn't exist
+			if (!(rowTime in chartData[rowId])) {
+				chartData[rowId][rowTime] = [];
 			}
 
-			// Rebuild rowTime
-			// TODO: Do this better
-			rowTime = "";
-			if (oldDate.getDate() < 10) {
-				rowTime += "0";
-			}
-			rowTime += oldDate.getDate() + "-";
-			if (oldDate.getMonth() < 10) {
-				rowTime += "0";
-			}
-			rowTime += (oldDate.getMonth() + 1) + "-" + oldDate.getFullYear() + " ";
-			if (oldDate.getHours() < 10) {
-				rowTime += "0";
-			}
-			rowTime += oldDate.getHours() + ":";
-			if (oldDate.getMinutes() < 10) {
-				rowTime += "0";
-			}
-			rowTime += oldDate.getMinutes() + ":";
-			if (oldDate.getSeconds() < 10) {
-				rowTime += "0";
-			}
-			rowTime += oldDate.getSeconds();
-		} else {
-			rowId = tableRows[i].cells[unitCol["index"]].textContent;
-		}
-		// Create row object if doesn't exist
-		if (!(rowId in chartData)) {
-			chartData[rowId] = [];
-		}
-		// Create time object if doesn't exist
-		if (!(rowTime in chartData[rowId])) {
-			chartData[rowId][rowTime] = [];
-		}
-
-		if (bMeans) {
-			// track values and number of entries before finally calculating means
-			if (pm1Col["index"] >= 0) {
-				if ("pm1" in chartData[rowId][rowTime]) {
-					chartData[rowId][rowTime]["pm1"] = Number(chartData[rowId][rowTime]["pm1"]) + Number(rowPm1);
-					chartData[rowId][rowTime]["pm1Count"] ++;
-				} else {
+			if (bMeans) {
+				// track values and number of entries before finally calculating means
+				if (pm1Col["index"] >= 0) {
+					if ("pm1" in chartData[rowId][rowTime]) {
+						chartData[rowId][rowTime]["pm1"] = Number(chartData[rowId][rowTime]["pm1"]) + Number(rowPm1);
+						chartData[rowId][rowTime]["pm1Count"] ++;
+					} else {
+						chartData[rowId][rowTime]["pm1"] = rowPm1;
+						chartData[rowId][rowTime]["pm1Count"] = 1;
+					}
+				}
+				if (pm25Col["index"] >= 0) {
+					if ("pm25" in chartData[rowId][rowTime]) {
+						chartData[rowId][rowTime]["pm25"] = Number(chartData[rowId][rowTime]["pm25"]) + Number(rowPm25);
+						chartData[rowId][rowTime]["pm25Count"] ++;
+					} else {
+						chartData[rowId][rowTime]["pm25"] = rowPm25;
+						chartData[rowId][rowTime]["pm25Count"] = 1;
+					}
+				}
+				if (pm10Col["index"] >= 0) {
+					if ("pm10" in chartData[rowId][rowTime]) {
+						chartData[rowId][rowTime]["pm10"] = Number(chartData[rowId][rowTime]["pm10"]) + Number(rowPm10);
+						chartData[rowId][rowTime]["pm10Count"] ++;
+					} else {
+						chartData[rowId][rowTime]["pm10"] = rowPm10;
+						chartData[rowId][rowTime]["pm10Count"] = 1;
+					}
+				}
+			} else {
+				if (pm1Col["index"] >= 0) {
 					chartData[rowId][rowTime]["pm1"] = rowPm1;
-					chartData[rowId][rowTime]["pm1Count"] = 1;
 				}
-			}
-			if (pm25Col["index"] >= 0) {
-				if ("pm25" in chartData[rowId][rowTime]) {
-					chartData[rowId][rowTime]["pm25"] = Number(chartData[rowId][rowTime]["pm25"]) + Number(rowPm25);
-					chartData[rowId][rowTime]["pm25Count"] ++;
-				} else {
+				if (pm25Col["index"] >= 0) {
 					chartData[rowId][rowTime]["pm25"] = rowPm25;
-					chartData[rowId][rowTime]["pm25Count"] = 1;
 				}
-			}
-			if (pm10Col["index"] >= 0) {
-				if ("pm10" in chartData[rowId][rowTime]) {
-					chartData[rowId][rowTime]["pm10"] = Number(chartData[rowId][rowTime]["pm10"]) + Number(rowPm10);
-					chartData[rowId][rowTime]["pm10Count"] ++;
-				} else {
+				if (pm10Col["index"] >= 0) {
 					chartData[rowId][rowTime]["pm10"] = rowPm10;
-					chartData[rowId][rowTime]["pm10Count"] = 1;
 				}
-			}
-		} else {
-			if (pm1Col["index"] >= 0) {
-				chartData[rowId][rowTime]["pm1"] = rowPm1;
-			}
-			if (pm25Col["index"] >= 0) {
-				chartData[rowId][rowTime]["pm25"] = rowPm25;
-			}
-			if (pm10Col["index"] >= 0) {
-				chartData[rowId][rowTime]["pm10"] = rowPm10;
 			}
 		}
 	}
