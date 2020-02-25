@@ -9,10 +9,10 @@ deploy-remote: all
 directory:
 	mkdir -p deploy
 
-blueskies: directory
+blueskies: directory blueskies.pl addRemove.js skiesUtils.js blueskies-banner.jpg
 	cp -r blueskies* Chart* addRemove.js apiKey.pl bootstrap* markers skiesUtils.js deploy/
 
-ozskies: directory
+ozskies: directory ozskies.pl nswUtils.js skiesUtils.js nswskies-banner.jpg
 	cp -r nswUtils.js nswskies-banner.jpg Chart* ozskies.pl skiesUtils.js apiKey.pl bootstrap* markers deploy/
 
 all: blueskies ozskies
