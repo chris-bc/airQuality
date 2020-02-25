@@ -103,15 +103,30 @@ function rebuildTable() {
 		} else {
 			rowUnit = "";
 		}
-		if (locCol["index"] > -1) {
-			rowLoc = rows[i].cells[locCol["index"]].textContent;
+		// With the Unit ID the unit listGroup can be used to retrieve location and area
+		// This removes the dependence on location and area being present in displayed
+		// columns, but won't work if unit isn't a displayed column
+		// Try to get location and area from units listGroup, otherwise fall back to table columns
+		if (rowUnit == "") {
+			if (locCol["index"] > -1) {
+				rowLoc = rows[i].cells[locCol["index"]].textContent;
+			} else {
+				rowLoc = "";
+			}
+			if (areaCol["index"] > -1) {
+				rowArea = rows[i].cells[areaCol["index"]].textContent;
+			} else {
+				rowArea = "";
+			}
 		} else {
-			rowLoc = "";
-		}
-		if (areaCol["index"] > -1) {
-			rowArea = rows[i].cells[areaCol["index"]].textContent;
-		} else {
-			rowArea = "";
+			var unitBtn = document.getElementById("unit-btn-" + rowUnit);
+			var kLoc = unitBtn.getAttribute("kLoc");
+			var kArea = unitBtn.getAttribute("kArea");
+			// kLoc and kArea have been modified to remove special chars
+			// Find them in the locations and areas list groups to get their
+			// original text
+			rowLoc = document.getElementById("loc-btn-" + kLoc).innerText;
+			rowArea = document.getElementById("area-btn-" + kArea).innerText;
 		}
 		if (pm1Col["index"] > -1) {
 			rowPm1 = Number(rows[i].cells[pm1Col["index"]].textContent);
