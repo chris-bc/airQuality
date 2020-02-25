@@ -538,8 +538,10 @@ $sql = "SELECT $sqlSelectColumns FROM $dbTable $where ORDER BY $sortColumns";
 $statement = $dbh->prepare($sql);
 $statement->execute();
 
+my $rowCounter = 1;
 while (my $row = $statement->fetchrow_hashref) {
-	print "<tr";
+	print "<tr id='data-row-$rowCounter'";
+  $rowCounter++;
   # Colour code the row based on PM data
   if (exists($row->{$pm25col}) || exists($row->{$pm10col}) || exists($row->{$pm1col})) {
     print " class='table-";

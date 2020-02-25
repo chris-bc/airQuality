@@ -46,6 +46,80 @@ function findColumnIndices() {
 	}
 }
 
+// Redraw the table dynamically after making changes to row filters
+function rebuildTable() {
+	var sTable = document.getElementById("dataTable");
+	if (unitCol["index"] == -1) {
+		findColumnIndices();
+	}
+	if (sTable.tBodies === undefined || sTable.tBodies[0] === undefined) {
+		// No rows
+		return;
+	}
+	var rows = sTable.tBodies[0].rows;
+	var selectedUnits = listGroupSelectedItems("limitUnit");
+	var selectedLocs = listGroupSelectedItems("limitLoc");
+	var selectedAreas = listGroupSelectedItems("limitArea");
+	var unitsArr = [];
+	var locsArr = [];
+	var areasArr = [];
+	var iSel;
+	var rowUnit;
+	var rowLoc;
+	var rowArea;
+
+	// Booleans to check whether all items are selected
+	var allAreas = ($("#area-btn-all").hasClass("active"));
+	var allLocs = ($("#loc-btn-all").hasClass("active"));
+	var allUnits = ($("#unit-btn-all").hasClass("active"));
+
+	// Convert selected items into arrays of strings
+	for (var i=0; i < selectedUnits.length; i++) {
+		unitsArr.push(selectedUnits[i].innerText);
+	}
+	for (var i=0; i < selectedLocs.length; i++) {
+		locsArr.push(selectedLocs[i].innerText);
+	}
+	for (var i=0; i < selectedAreas.length; i++) {
+		areasArr.push(selectedAreas[i].innerText);
+	}
+
+	for (var i=0; i < rows.length; i++) {
+		// Can only test based on selected columns
+		// Initially assume true for any non-selected columns
+		// TODO: Later come back to this - loc and area are in units LG
+		if (unitCol["index"] > -1) {
+			rowUnit = rows[i].cells[unitCol["index"]].textContent;
+		} else {
+			rowUnit = "";
+		}
+		if (locCol["index"] > -1) {
+			rowLoc = rows[i].cells[locCol["index"]].textContent;
+		} else {
+			rowLoc = "";
+		}
+		if (areaCol["index"] > -1) {
+			rowArea = rows[i].cells[areaCol["index"]].textContent;
+		} else {
+			rowArea = "";
+		}
+		iSel = "#" + rows[i].getAttribute("id");
+
+		// Should the current row be visible?
+		if ( ( allAreas || (rowArea == "" || (areasArr.indexOf(rowArea) > -1)) ) &&
+				( allLocs || (rowLoc == "" || (locsArr.indexOf(rowLoc) > -1)) ) &&
+				( allUnits || (rowUnit == "" || (unitsArr.indexOf(rowUnit) > -1)) ) ) {
+			if ($(iSel).hasClass("d-none")) {
+				$(iSel).removeClass("d-none");
+			}
+		} else {
+			if (!($(iSel).hasClass("d-none"))) {
+				$(iSel).addClass("d-none");
+			}
+		}
+	}
+}
+
 function rmAll() {
 	var sel = document.getElementById("selCols");
 	var avail = document.getElementById("allcols");
@@ -281,7 +355,7 @@ function toggleFilter(filter, value) {
 	locsChanged();
 
 	// TODO: Update table, redraw chart
-	//updateTableData();
+	rebuildTable();
 	//prepareChartData();
 	//initChartJs();
 }
