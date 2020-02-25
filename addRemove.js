@@ -67,6 +67,16 @@ function rebuildTable() {
 	var rowUnit;
 	var rowLoc;
 	var rowArea;
+	var rowPm1;
+	var rowPm25;
+	var rowPm10;
+
+	var pm1Med = parseInt(document.getElementById("pm1MedSlider").value);
+	var pm1High = parseInt(document.getElementById("pm1HighSlider").value);
+	var pm25Med = parseInt(document.getElementById("pm25MedSlider").value);
+	var pm25High = parseInt(document.getElementById("pm25HighSlider").value);
+	var pm10Med = parseInt(document.getElementById("pm10MedSlider").value);
+	var pm10High = parseInt(document.getElementById("pm10HighSlider").value);
 
 	// Booleans to check whether all items are selected
 	var allAreas = ($("#area-btn-all").hasClass("active"));
@@ -103,6 +113,16 @@ function rebuildTable() {
 		} else {
 			rowArea = "";
 		}
+		if (pm1Col["index"] > -1) {
+			rowPm1 = Number(rows[i].cells[pm1Col["index"]].textContent);
+		}
+		if (pm25Col["index"] > -1) {
+			rowPm25 = Number(rows[i].cells[pm25Col["index"]].textContent);
+		}
+		if (pm10Col["index"] > -1) {
+			rowPm10 = Number(rows[i].cells[pm10Col["index"]].textContent);
+		}
+
 		iSel = "#" + rows[i].getAttribute("id");
 
 		// Should the current row be visible?
@@ -115,6 +135,54 @@ function rebuildTable() {
 		} else {
 			if (!($(iSel).hasClass("d-none"))) {
 				$(iSel).addClass("d-none");
+			}
+		}
+
+		// Determine the appropriate row colour based on PM thresholds
+		if (pm1Col["index"] == -1 && pm25Col["index"] == -1 && pm10Col["index"] == -1) {
+			// No Colour - Remove any currently assigned
+			if ($(iSel).hasClass("table-success")) {
+				$(iSel).removeClass("table-success");
+			}
+			if ($(iSel).hasClass("table-warning")) {
+				$(iSel).removeClass("table-warning");
+			}
+			if ($(iSel).hasClass("table-danger")) {
+				$(iSel).removeClass("table-danger");
+			}
+		} else if ( ( pm1Col["index"] == -1 || rowPm1 < pm1Med ) &&
+					( pm25Col["index"] == -1 || rowPm25 < pm25Med ) &&
+					( pm10Col["index"] == -1 || rowPm10 < pm10Med ) ) {
+			// Color it success
+			if ($(iSel).hasClass("table-warning")) {
+				$(iSel).removeClass("table-warning");
+			} else if ($(iSel).hasClass("table-danger")) {
+				$(iSel).removeClass("table-danger");
+			}
+			if (!($(iSel).hasClass("table-success"))) {
+				$(iSel).addClass("table-success");
+			}
+		} else if ( ( pm1Col["index"] == -1 || rowPm1 < pm1High ) &&
+					( pm25Col["index"] == -1 || rowPm25 < pm25High ) &&
+					( pm10Col["index"] == -1 || rowPm10 < pm10High ) ) {
+			// Colour it warning
+			if ($(iSel).hasClass("table-success")) {
+				$(iSel).removeClass("table-success");
+			} else if ($(iSel).hasClass("table-danger")) {
+				$(iSel).removeClass("table-danger");
+			}
+			if (!($(iSel).hasClass("table-warning"))) {
+				$(iSel).addClass("table-warning");
+			}
+		} else {
+			// Colour it danger
+			if ($(iSel).hasClass("table-success")) {
+				$(iSel).removeClass("table-success");
+			} else if ($(iSel).hasClass("table-warning")) {
+				$(iSel).removeClass("table-warning");
+			}
+			if (!($(iSel).hasClass("table-danger"))) {
+				$(iSel).addClass("table-danger");
 			}
 		}
 	}

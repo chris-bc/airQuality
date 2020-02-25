@@ -431,33 +431,33 @@ print "</select>
       <div class='row align-items-center'>
         <div class='col badge badge-warning'>Warning Threshold</div>
         <div class='col'><div class='row justify-content-center'><span id='pm1MedVal' class='badge badge-pill badge-warning text-center'>$pm1med</span></div>
-        <div class='row justify-content-center'><input id='pm1MedSlider' name='pm1MedSlider' type='range' min='1' max='100' value='$pm1med' onInput='updateThreshold(\"pm1MedVal\", \"pm1med\", \"pm1MedSlider\")'/></div></div>
+        <div class='row justify-content-center'><input id='pm1MedSlider' name='pm1MedSlider' type='range' min='1' max='100' value='$pm1med' onChange='rebuildTable()' onInput='updateThreshold(\"pm1MedVal\", \"pm1med\", \"pm1MedSlider\")'/></div></div>
       </div><div class='row align-items-center'>
         <div class='col badge badge-danger'>Danger Threshold</div>
         <div class='col'><div class='row justify-content-center'><span id='pm1HighVal' class='badge badge-pill badge-danger text-center'>$pm1high</span></div>
-        <div class='row justify-content-center'><input id='pm1HighSlider' name='pm1HighSlider' type='range' min='1' max='100' value='$pm1high' onInput='updateThreshold(\"pm1HighVal\", \"pm1high\", \"pm1HighSlider\")'/></div></div>
+        <div class='row justify-content-center'><input id='pm1HighSlider' name='pm1HighSlider' type='range' min='1' max='100' value='$pm1high' onChange='rebuildTable()' onInput='updateThreshold(\"pm1HighVal\", \"pm1high\", \"pm1HighSlider\")'/></div></div>
       </div>
     </div><div class='col-sm-4'>
       <h4 class='text-center'>PM 2.5</h4>
       <div class='row align-items-center'>
         <div class='col badge badge-warning'>Warning Threshold</div>
         <div class='col'><div class='row justify-content-center'><span id='pm25MedVal' class='badge badge-pill badge-warning text-center'>$pm25med</span></div>
-        <div class='row justify-content-center'><input id='pm25MedSlider' name='pm25MedSlider' type='range' min='1' max='100' value='$pm25med' onInput='updateThreshold(\"pm25MedVal\", \"pm25med\", \"pm25MedSlider\")'/></div></div>
+        <div class='row justify-content-center'><input id='pm25MedSlider' name='pm25MedSlider' type='range' min='1' max='100' value='$pm25med' onChange='rebuildTable()' onInput='updateThreshold(\"pm25MedVal\", \"pm25med\", \"pm25MedSlider\")'/></div></div>
       </div><div class='row align-items-center'>
         <div class='col badge badge-danger'>Danger Threshold</div>
         <div class='col'><div class='row justify-content-center'><span id='pm25HighVal' class='badge badge-pill badge-danger text-center'>$pm25high</span></div>
-        <div class='row justify-content-center'><input id='pm25HighSlider' name='pm25HighSlider' type='range' min='1' max='100' value='$pm25high' onInput='updateThreshold(\"pm25HighVal\", \"pm25high\", \"pm25HighSlider\")'/></div></div>
+        <div class='row justify-content-center'><input id='pm25HighSlider' name='pm25HighSlider' type='range' min='1' max='100' value='$pm25high' onChange='rebuildTable()' onInput='updateThreshold(\"pm25HighVal\", \"pm25high\", \"pm25HighSlider\")'/></div></div>
       </div>
     </div><div class='col-sm-4'>
       <h4 class='text-center'>PM 10</h4>
       <div class='row align-items-center'>
         <div class='col badge badge-warning'>Warning Threshold</div>
         <div class='col'><div class='row justify-content-center'><span id='pm10MedVal' class='badge badge-pill badge-warning text-center'>$pm10med</span></div>
-        <div class='row justify-content-center'><input id='pm10MedSlider' name='pm10MedSlider' type='range' min='1' max='100' value='$pm10med' onInput='updateThreshold(\"pm10MedVal\", \"pm10med\", \"pm10MedSlider\")'/></div></div>
+        <div class='row justify-content-center'><input id='pm10MedSlider' name='pm10MedSlider' type='range' min='1' max='100' value='$pm10med' onChange='rebuildTable() onInput='updateThreshold(\"pm10MedVal\", \"pm10med\", \"pm10MedSlider\")'/></div></div>
       </div><div class='row align-items-center'>
         <div class='col badge badge-danger'>Danger Threshold</div>
         <div class='col'><div class='row justify-content-center'><span id='pm10HighVal' class='badge badge-pill badge-danger text-center'>$pm10high</span></div>
-        <div class='row justify-content-center'><input id='pm10HighSlider' name='pm10HighSlider' type='range' min='1' max='100' value='$pm10high' onInput='updateThreshold(\"pm10HighVal\", \"pm10high\", \"pm10HighSlider\")'/></div></div>
+        <div class='row justify-content-center'><input id='pm10HighSlider' name='pm10HighSlider' type='range' min='1' max='100' value='$pm10high' onChange='rebuildTable()' onInput='updateThreshold(\"pm10HighVal\", \"pm10high\", \"pm10HighSlider\")'/></div></div>
       </div>
   </div></div>
   <div class='row mt-sm-3'><button class='btn btn-info btn-block mb-3' type='button' data-toggle='collapse' data-target='#thresholdInfo' aria-expanded='false' aria-controls='thresholdInfo'>
