@@ -898,6 +898,7 @@ function initMap() {
 		center: {lat: -33.6226741, lng:150.424154},
 	});
 	var mapMarkers = [];
+	var heatmapData = [];
 	var rows = obs.tBodies[0].rows;
 	// Rows in latestTable are unit, area, loc, time, pm1, pm25, pm10, lat, long
 	for (var i=0; i < rows.length; i++) {
@@ -923,8 +924,37 @@ function initMap() {
 		mapMarkers[i].addListener('click', function() {
 			this.info.open(map, this);
 		});
+
+		// Calculate average AQI for heatmap
+		var aqiTotal = 0;
+		var aqiCount = 0;
+		if (pm1) {
+			aqi += Number(calculateSingleAqi(pm1, pm1thresholds, aqithresholds));
+			aqiCount++;
+		} 
+		if (pm25) {
+			aqiTotal += Number(calculateSingleAqi(pm25, pm25thresholds, aqithresholds));
+			aqiCount++;
+		}
+		if (pm10) {
+			aqiTotal += Number(calculateSingleAqi(pm10, pm10thresholds, aqithresholds));
+			aqiCount++;
+		}
+		aqiTotal = Math.round(aqiTotal / aqiCount);
+		var latLng = new google.maps.LatLng(lati, long);
+		heatmapData[i] = {
+			location: latLng,
+			weight: aqiTotal,
+		};
 	}
 	var markerClusterer = new MarkerClusterer(map, mapMarkers, {
 		imagePath: "/markers/m",
 		maxZoom: 11,});
+	
+	var heatMap = new google.maps.visualization.HeatmapLayer({
+		data: heatmapData,
+		dissipating: false,
+		maxIntensity: 100,
+		map: map,
+	});
 }

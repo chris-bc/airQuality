@@ -185,7 +185,12 @@ function calculateSingleAqi(pmVal, pmThresholds, aqiThresholds) {
 	// i will now be pmThresholds.length if something has gone wrong or
 	// pmVal exceeds measurement
 	if (i == pmThresholds.length) {
-		return 999;
+		// Is it a sane measurement?
+		if (pmVal < 1000) {
+			return 999;
+		} else {
+			return 0;
+		}
 	}
 	// In most cases it will index the threshold above the one pmVal falls in
 	var aqi = Number(pmVal) - Number(pmThresholds[i-1]);

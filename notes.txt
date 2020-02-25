@@ -1,7 +1,7 @@
 blueSKIES features
 DONE -> Convert area, loc, unit select boxes to list groups
 DONE -> Including 'all' option - onClick=updatexxx(selectedVal) - can nicely handle moving from/to 'any'
--> Update table and chart when area/location/unit changed
+DONE -> Update table and chart when area/location/unit changed
 -> Click marker selects unit? (updates table & chart)
 -> Heatmap of AQIs
 
