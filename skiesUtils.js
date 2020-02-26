@@ -75,6 +75,80 @@ function rndColour() {
 	return "rgb(" + r + "," + g + "," + b + ")";
 }
 
+// Convert time from dd-mm-yyyy hh:mm:ss to d MMM, hh:mm a
+function timeForDisplay(time) {
+	var months = [undefined, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+	var ret = parseInt(time.substring(0, 2)) + " ";
+	ret += months[parseInt(time.substring(3, 5))] + ", ";
+	var h = parseInt(time.substring(11, 13));
+	var a = "AM";
+	if (h >= 12) {
+	  a = "PM";
+	}
+	if (h > 12) {
+	  h -= 12;
+	}
+	ret += h + ":" + time.substring(14, 16) + " " + a;
+	return ret;
+  }
+  
+  // Convert time from dd-mm-yyyy hh:mm:ss to yyyy-mm-dd hh:mm:ss
+  function timeForSort(time) {
+	return time.substring(6, 10) + time.substring(3, 5) + time.substring(0, 2) + time.substring(11, 19);
+  }
+  
+  // Take a time in dd-mm-yyyy hh:mm:ss, round to nearest 4 hours and return it
+  function timeRoundToFourHours(time) {
+	var oldDate = new Date();
+	oldDate.setFullYear(time.substring(6, 10));
+	oldDate.setMonth((time.substring(3, 5) - 1));
+	oldDate.setDate(time.substring(0, 2));
+	oldDate.setSeconds(0);
+	oldDate.setMinutes(0);
+	var oldHour = time.substring(11, 13);
+	if (oldHour >= 22) {
+		oldDate.setHours(0);
+		oldDate.setDate((oldDate.getDate() + 1));
+	} else if (oldHour >= 18) {
+		oldDate.setHours(20);
+	} else if (oldHour >= 14) {
+		oldDate.setHours(16);
+	} else if (oldHour >= 10) {
+		oldDate.setHours(12);
+	} else if (oldHour >= 6) {
+		oldDate.setHours(8);
+	} else if (oldHour >= 2) {
+		oldDate.setHours(4);
+	} else {
+		oldDate.setHours(0);
+	}
+
+	// Rebuild time in original format
+	var ret = "";
+	if (oldDate.getDate() < 10) {
+		ret += "0";
+	}
+	ret += oldDate.getDate() + "-";
+	if (oldDate.getMonth() < 10) {
+		ret += "0";
+	}
+	ret += (oldDate.getMonth() + 1) + "-" + oldDate.getFullYear() + " ";
+	if (oldDate.getHours() < 10) {
+		ret += "0";
+	}
+	ret += oldDate.getHours() + ":";
+	if (oldDate.getMinutes() < 10) {
+		ret += "0";
+	}
+	ret += oldDate.getMinutes() + ":";
+	if (oldDate.getSeconds() < 10) {
+		ret += "0";
+	}
+	ret += oldDate.getSeconds();
+
+	return ret;
+  }
+
 // Display a line chart with the specified attributes
 function drawLineChart(canvas, data, leg, timeUnit) {
   new Chart(canvas, {

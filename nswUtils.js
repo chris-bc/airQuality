@@ -288,6 +288,17 @@ function buildTableObjects() {
   }
 }
 
+function initChartDs(ds, unit, obsType) {
+  var pointRadius = 3;
+  var showLine = true;
+  ds["label"] = unit + " - " + obsType;
+  ds["pointRadius"] = pointRadius;
+  ds["showLine"] = showLine;
+  var col = rndColour();
+  ds["pointBackgroundColor"] = col;
+  ds["backgroundColor"] = col;
+}
+
 function displayChartJs() {
   // If any row has fewer than 3 observations display a bar chart, otherwise line
   var pmChart = document.getElementById("pmChart");
@@ -332,36 +343,11 @@ function displayChartJs() {
       tempDs.data = [];
       humDs.data = [];
 
-      pm1ds["label"] = unitId + " - PM1";
-      pm1ds["pointRadius"] = pointRadius;
-      pm1ds["showLine"] = showLine;
-      var col = rndColour();
-      pm1ds["pointBackgroundColor"] = col;
-      pm1ds["backgroundColor"] = col;
-      pm25ds["label"] = unitId + " - PM2.5";
-      pm25ds["pointRadius"] = pointRadius;
-      pm25ds["showLine"] = showLine;
-      col = rndColour();
-      pm25ds["pointBackgroundColor"] = col;
-      pm25ds["backgroundColor"] = col;
-      pm10ds["label"] = unitId + " - PM10";
-      pm10ds["pointRadius"] = pointRadius;
-      pm10ds["showLine"] = showLine;
-      col = rndColour();
-      pm10ds["pointBackgroundColor"] = col;
-      pm10ds["backgroundColor"] = col;
-      tempDs["label"] = unitId + " - Temp";
-      tempDs["pointRadius"] = pointRadius;
-      tempDs["showLine"] = showLine;
-      col = rndColour();
-      tempDs["pointBackgroundColor"] = col;
-      tempDs["backgroundColor"] = col;
-      humDs["label"] = unitId + " - Humidity";
-      humDs["pointRadius"] = pointRadius;
-      humDs["showLine"] = showLine;
-      col = rndColour();
-      humDs["pointBackgroundColor"] = col;
-      humDs["backgroundColor"] = col;
+      initChartDs(pm1ds, unitId, "PM1");
+      initChartDs(pm25ds, unitId, "PM2.5");
+      initChartDs(pm10ds, unitId, "PM10");
+      initChartDs(tempDs, unitId, "Temp");
+      initChartDs(humDs, unitId, "Humidity");
 
       for (var time in chartData[unitId]) {
         pm1ds.data.push({x: time, y: chartData[unitId][time]["pm1"]});
@@ -447,28 +433,6 @@ function displayChartJs() {
     drawBarChart(pmChart, pmData, pmLabels, pmCols);
     drawBarChart(envChart, envData, envLabels, envCols);
   }
-}
-
-// Convert time from dd-mm-yyyy hh:mm:ss to d MMM, hh:mm a
-function timeForDisplay(time) {
-  var months = [undefined, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  var ret = parseInt(time.substring(0, 2)) + " ";
-  ret += months[parseInt(time.substring(3, 5))] + ", ";
-  var h = parseInt(time.substring(11, 13));
-  var a = "AM";
-  if (h >= 12) {
-    a = "PM";
-  }
-  if (h > 12) {
-    h -= 12;
-  }
-  ret += h + ":" + time.substring(14, 16) + " " + a;
-  return ret;
-}
-
-// Convert time from dd-mm-yyyy hh:mm:ss to yyyy-mm-dd hh:mm:ss
-function timeForSort(time) {
-  return time.substring(6, 10) + time.substring(3, 5) + time.substring(0, 2) + time.substring(11, 19);
 }
 
 function initMap() {

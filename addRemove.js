@@ -611,54 +611,8 @@ function prepareChartData() {
 
 			if (bMeans) {
 				rowId = tableRows[i].cells[locCol["index"]].textContent;
-				// TODO: Manipulate the time so it's rounded to the nearest 4 hours
-				var oldDate = new Date();
-				oldDate.setFullYear(rowTime.substring(6, 10));
-				oldDate.setMonth((rowTime.substring(3, 5) - 1));
-				oldDate.setDate(rowTime.substring(0, 2));
-				oldDate.setSeconds(0);
-				oldDate.setMinutes(0);
-				var oldHour = rowTime.substring(11, 13);
-				if (oldHour >= 22) {
-					oldDate.setHours(0);
-					oldDate.setDate((oldDate.getDate() + 1));
-				} else if (oldHour >= 18) {
-					oldDate.setHours(20);
-				} else if (oldHour >= 14) {
-					oldDate.setHours(16);
-				} else if (oldHour >= 10) {
-					oldDate.setHours(12);
-				} else if (oldHour >= 6) {
-					oldDate.setHours(8);
-				} else if (oldHour >= 2) {
-					oldDate.setHours(4);
-				} else {
-					oldDate.setHours(0);
-				}
-
-				// Rebuild rowTime
-				// TODO: Do this better
-				rowTime = "";
-				if (oldDate.getDate() < 10) {
-					rowTime += "0";
-				}
-				rowTime += oldDate.getDate() + "-";
-				if (oldDate.getMonth() < 10) {
-					rowTime += "0";
-				}
-				rowTime += (oldDate.getMonth() + 1) + "-" + oldDate.getFullYear() + " ";
-				if (oldDate.getHours() < 10) {
-					rowTime += "0";
-				}
-				rowTime += oldDate.getHours() + ":";
-				if (oldDate.getMinutes() < 10) {
-					rowTime += "0";
-				}
-				rowTime += oldDate.getMinutes() + ":";
-				if (oldDate.getSeconds() < 10) {
-					rowTime += "0";
-				}
-				rowTime += oldDate.getSeconds();
+				// Manipulate the time so it's rounded to the nearest 4 hours
+				rowTime = timeRoundToFourHours(rowTime);
 			} else {
 				rowId = tableRows[i].cells[unitCol["index"]].textContent;
 			}
@@ -830,27 +784,14 @@ function initChartJs() {
 
 		for (var ds in lineData.datasets) {
 			for (var obs in lineData.datasets[ds].data) {
-				// Format time for display D MMM, H:mm a
-				var months = [undefined, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-				var time = lineData.datasets[ds].data[obs]["x"];
-				var strTime = parseInt(time.substring(0,2)) + " ";
-				strTime += months[parseInt(time.substring(3,5))] + ", ";
-				var h = parseInt(time.substring(11,13));
-				var a = "AM";
-				if (h >= 12) {
-					a = "PM";
-				}
-				if (h > 12) {
-					h -= 12;
-				}
-				strTime += h + ":" + parseInt(time.substring(14,16)) + " " + a;
+				var strTime = timeForDisplay(lineData.datasets[ds].data[obs]["x"]);
 
 				// Build a flat object array for the values
 				var o = {};
 				o["label"] = lineData.datasets[ds]["label"] + " - " + strTime;
 				o["bgCol"] = rndColour();
 				o["data"] = lineData.datasets[ds].data[obs]["y"];
-				o["sortLabel"] = lineData.datasets[ds]["label"] + "-" + time.substring(6, 10) + time.substring(3, 5) + time.substring(0, 2) + time.substring(11, 16);
+				o["sortLabel"] = lineData.datasets[ds]["label"] + "-" + timeForSort(lineData.datasets[ds].data[obs]["x"]);;
 				dataContainer.push(o);
 			}
 		}
