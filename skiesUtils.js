@@ -219,9 +219,9 @@ function infoWindowFor(unit, time, temp, humidity, pm1, pm25, pm10) {
 	ret += "></p><div id='bodyContent'><p><b>Observation:</b> " + time + "</p><p>";
 	ret += "<div class='container'>";
 	// Temp and humidity will either both be provided or both be absent
-	if (temp.length > 0) {
-  	ret += "<div class='row'><div class='col-3'><b>Temperature:</b></div><div class='col-3'>" + temp +
-						"</div></div><div class='row'><div class='col-3'><b>Humidity:</b></div><div class='col-3'>" + humidity + "</div></div>";
+	if (temp !== undefined && temp != "") {
+  	ret += "<div class='row'><div class='col-6'><b>Temperature:</b></div><div class='col-6'>" + temp +
+						"</div></div><div class='row'><div class='col-6'><b>Humidity:</b></div><div class='col-6'>" + humidity + "</div></div>";
 	}
   ret += "<div class='row'><div class='col-3'><b>PM&nbsp;1:</b></div><div class='col-3'>" + pm1 +
 					"</div><div class='col-3'><b>AQI<sub>PM1</sub>:</b></div><div class='col-3'>" +
@@ -272,4 +272,108 @@ function calculateSingleAqi(pmVal, pmThresholds, aqiThresholds) {
 	aqi /= (Number(pmThresholds[i]) - Number(pmThresholds[i-1]));
 	aqi = Number(aqi) + Number(aqiThresholds[i-1]);
 	return aqi;
+}
+
+function showMap(table, columnIndices, zoom, centreLatLng) {
+	var obs = document.getElementById(table);
+	if (obs.tBodies === undefined || obs.tBodies[0] === undefined) {
+		// No data
+		return;
+	}
+	var map = new google.maps.Map(document.getElementById("map"), {
+		zoom: zoom,
+		center: centreLatLng,
+	});
+	var mapMarkers = [];
+	var heatmapData = [];
+	var rows = obs.tBodies[0].rows;
+
+	for (var i=0; i < rows.length; i++) {
+		var unit = rows[i].cells[columnIndices["unit"]].innerText;
+		var time = rows[i].cells[columnIndices["time"]].innerText;
+		var lati = Number(rows[i].cells[columnIndices["lat"]].innerText);
+		var long = Number(rows[i].cells[columnIndices["long"]].innerText);
+		var area = "";
+		if (columnIndices["area"] != -1) {
+			area = rows[i].cells[columnIndices["area"]].innerText;
+		}
+		var loc = "";
+		if (columnIndices["loc"] != -1) {
+			loc = rows[i].cells[columnIndices["loc"]].innerText;
+		}
+		var temp = "";
+		if (columnIndices["temp"] != -1) {
+			temp = Number(rows[i].cells[columnIndices["temp"]].innerText);
+		}
+		var humidity = "";
+		if (columnIndices["hum"] != -1) {
+			humidity = Number(rows[i].cells[columnIndices["hum"]].innerText);
+		}
+		var pm1 = "";
+		if (columnIndices["pm1"] != -1) {
+			pm1 = Number(rows[i].cells[columnIndices["pm1"]].innerText);
+		}
+		var pm25 = "";
+		if (columnIndices["pm25"] != -1) {
+			pm25 = Number(rows[i].cells[columnIndices["pm25"]].innerText);
+		}
+		var pm10 = "";
+		if (columnIndices["pm10"] != -1) {
+			pm10 = Number(rows[i].cells[columnIndices["pm10"]].innerText);
+		}
+
+		var infoStr = unit;
+		var markerTitle = unit;
+		if (area != "") {
+			infoStr += " - " + area;
+		}
+		if (loc != "") {
+			infoStr += " - " + loc;
+			markerTitle += " - " + loc;
+		}
+		var infoText = infoWindowFor(infoStr, time, temp, humidity, pm1, pm25, pm10);
+		var aqi = Math.round(calculateAQIFor(pm1, pm25, pm10)).toString();
+		mapMarkers[i] = new google.maps.Marker({
+			position: {lat: lati, lng: long},
+			map: map,
+			title: markerTitle,
+			label: aqi,
+		});
+		mapMarkers[i].info = new google.maps.InfoWindow({content: infoText});
+		mapMarkers[i].addListener('click', function() {
+			this.info.open(map, this);
+		});
+
+		// Calculate average AQI for heatmap
+		var aqiTotal = 0;
+		var aqiCount = 0;
+		if (pm1 != "") {
+			aqiTotal += Number(calculateSingleAqi(pm1, pm1thresholds, aqithresholds));
+			aqiCount++;
+		}
+		if (pm25 != "") {
+			aqiTotal += Number(calculateSingleAqi(pm25, pm25thresholds, aqithresholds));
+			aqiCount++;
+		}
+		if (pm10 != "") {
+			aqiTotal += Number(calculateSingleAqi(pm10, pm10thresholds, aqithresholds));
+			aqiCount++
+		}
+		aqiTotal = Math.round(aqiTotal / aqiCount);
+		var latLng = new google.maps.LatLng(lati, long);
+		heatmapData[i] = {
+			location: latLng,
+			weight: aqiTotal,
+		};
+	}
+	var markerClusterer = new MarkerClusterer(map, mapMarkers, {
+		imagePath: "/markers/m",
+		maxZoom: 11,});
+	
+	var heatMap = new google.maps.visualization.HeatmapLayer({
+		data: heatmapData,
+		dissipating: false,
+		maxIntensity: 100,
+		map: map,
+	});
 }

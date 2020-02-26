@@ -225,11 +225,7 @@ if ($limitTime == 1) {
 
 # Fetch latest observation for each unit into a hidden table to pass it to javascript
 my $latestTable = "<table id='latestData' class='d-none'>";
-$sql = "SELECT $unitCol, strftime('%d-%m-%Y %H:%M:%S',MAX($timeCol),'localtime'), $tempCol, $humCol, $pm1col, $pm25col, $pm10col, $latCol, $longCol FROM $dbTable";
-if (length $where > 0) {
-  $sql .= " WHERE $where";
-}
-$sql .= " GROUP BY $unitCol";
+$sql = "SELECT $unitCol, strftime('%d-%m-%Y %H:%M:%S',MAX($timeCol),'localtime'), $tempCol, $humCol, $pm1col, $pm25col, $pm10col, $latCol, $longCol FROM $dbTable GROUP BY $unitCol";
 $statement = $dbh->prepare($sql);
 $statement->execute();
 
@@ -507,6 +503,6 @@ print<<EOF;
       Feel free to develop them further and send me a pull request.</p>
       <p><font size=-1>Built by <a href='mailto:chris\@bennettscash.id.au'>Chris
       Bennetts-Cash</a>, 2020. <a href='http://www.bennettscash.id.au' target='_blank'>http://www.bennettscash.id.au</a></font></p>
-</div></div></div><script async defer src='https://maps.googleapis.com/maps/api/js?key=$apiKey&callback=initMap'></script></body></html>
+</div></div></div><script async defer src='https://maps.googleapis.com/maps/api/js?key=$apiKey&libraries=visualization&callback=initMap'></script></body></html>
 
 EOF

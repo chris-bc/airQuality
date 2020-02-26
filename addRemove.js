@@ -422,7 +422,7 @@ function toggleFilter(filter, value) {
 	// Process subsequent changes - hide, show, deselect fields as appropriate
 	locsChanged();
 
-	// TODO: Update table, redraw chart
+	// Update table, redraw chart
 	rebuildTable();
 	prepareChartData();
 	initChartJs();
@@ -829,73 +829,20 @@ function initChartJs() {
 }
 
 function initMap() {
-	var obs = document.getElementById("latestData");
-	if (obs.tBodies[0] === undefined) {
-		// No data
-		return;
-	}
-	var map = new google.maps.Map(document.getElementById("map"), {
-		zoom: 5,
-		center: {lat: -33.6226741, lng:150.424154},
-	});
-	var mapMarkers = [];
-	var heatmapData = [];
-	var rows = obs.tBodies[0].rows;
-	// Rows in latestTable are unit, area, loc, time, pm1, pm25, pm10, lat, long
-	for (var i=0; i < rows.length; i++) {
-		var u = rows[i].cells[0].innerText;
-		var a = rows[i].cells[1].innerText;
-		var l = rows[i].cells[2].innerText;
-		var t = rows[i].cells[3].innerText;
-		var pm1 = rows[i].cells[4].innerText;
-		var pm25 = rows[i].cells[5].innerText;
-		var pm10 = rows[i].cells[6].innerText;
-		var lati = Number(rows[i].cells[7].innerText);
-		var long = Number(rows[i].cells[8].innerText);
-
-		var infoText = infoWindowFor(u + " - " + a + " - " + l, t, "", "", pm1, pm25, pm10);
-		var aqi = Math.round(calculateAQIFor(pm1, pm25, pm10)).toString();
-		mapMarkers[i] = new google.maps.Marker({
-			position: {lat: lati, lng: long},
-			map: map,
-			title: u + " - " + l,
-			label: aqi,
-		});
-		mapMarkers[i].info = new google.maps.InfoWindow({content: infoText});
-		mapMarkers[i].addListener('click', function() {
-			this.info.open(map, this);
-		});
-
-		// Calculate average AQI for heatmap
-		var aqiTotal = 0;
-		var aqiCount = 0;
-		if (pm1) {
-			aqi += Number(calculateSingleAqi(pm1, pm1thresholds, aqithresholds));
-			aqiCount++;
-		} 
-		if (pm25) {
-			aqiTotal += Number(calculateSingleAqi(pm25, pm25thresholds, aqithresholds));
-			aqiCount++;
-		}
-		if (pm10) {
-			aqiTotal += Number(calculateSingleAqi(pm10, pm10thresholds, aqithresholds));
-			aqiCount++;
-		}
-		aqiTotal = Math.round(aqiTotal / aqiCount);
-		var latLng = new google.maps.LatLng(lati, long);
-		heatmapData[i] = {
-			location: latLng,
-			weight: aqiTotal,
-		};
-	}
-	var markerClusterer = new MarkerClusterer(map, mapMarkers, {
-		imagePath: "/markers/m",
-		maxZoom: 11,});
-	
-	var heatMap = new google.maps.visualization.HeatmapLayer({
-		data: heatmapData,
-		dissipating: false,
-		maxIntensity: 100,
-		map: map,
-	});
+	var centre = new google.maps.LatLng(-33.6226741, 150.424154);
+	var zoom = 5;
+	var columnIndices = {
+		"unit": 0,
+		"area": 1,
+		"loc": 2,
+		"time": 3,
+		"pm1": 4,
+		"pm25": 5,
+		"pm10": 6,
+		"lat": 7,
+		"long": 8,
+		"temp": -1,
+		"hum": -1,
+	};
+	showMap("latestData", columnIndices, zoom, centre);
 }

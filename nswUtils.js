@@ -436,45 +436,24 @@ function displayChartJs() {
 }
 
 function initMap() {
-  var obs = document.getElementById("latestData");
-  if (obs.tBodies[0] === undefined) {
-    // No data
-    return;
-  }
+  // Use the same columnIndices as the data table
   if (unitCol["index"] == -1) {
     findColumnIndices();
   }
-
-  var map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 4,
-    center: {lat: -25.4904429, lng:147.3062684},
-  });
-
-  mapMarkers = [];
-  var rows = obs.tBodies[0].rows;
-  for (var i=0; i < rows.length; i++) {
-    var u = rows[i].cells[unitCol["index"]].innerText;
-    var t = rows[i].cells[tempCol["index"]].innerText;
-    var h = rows[i].cells[humCol["index"]].innerText;
-    var d = rows[i].cells[dateCol["index"]].innerText;
-    var pm1 = rows[i].cells[pm1Col["index"]].innerText;
-    var pm25 = rows[i].cells[pm25Col["index"]].innerText;
-    var pm10 = rows[i].cells[pm10Col["index"]].innerText;
-    var lati = Number(rows[i].cells[latCol["index"]].innerText);
-    var long = Number(rows[i].cells[longCol["index"]].innerText);
-
-    var infoText = infoWindowFor(u, d, t, h, pm1, pm25, pm10);
-
-    mapMarkers[i] = new google.maps.Marker({
-      position: {lat: lati, lng: long},
-      map: map,
-      title: u
-    });
-    mapMarkers[i].info = new google.maps.InfoWindow({content: infoText});
-    mapMarkers[i].addListener('click', function() {
-      this.info.open(map, this);
-    });
-  }
-  var markerClusterer = new MarkerClusterer(map, mapMarkers,
-    {imagePath: "/markers/m"});
+	var centre = new google.maps.LatLng(-25.4904429, 147.3062684);
+	var zoom = 4;
+	var columnIndices = {
+		"unit": unitCol["index"],
+		"area": -1,
+		"loc": -1,
+		"time": dateCol["index"],
+		"pm1": pm1Col["index"],
+		"pm25": pm25Col["index"],
+		"pm10": pm10Col["index"],
+		"lat": latCol["index"],
+		"long": longCol["index"],
+		"temp": tempCol["index"],
+		"hum": humCol["index"],
+	};
+	showMap("latestData", columnIndices, zoom, centre);
 }
