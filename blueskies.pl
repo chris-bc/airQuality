@@ -37,6 +37,8 @@ my %tmpLocs;
 my %tmpUnits;
 my @visibleLocs;
 my @visibleUnits = ();
+my @faultyUnits = ("AQB0028", "AQB0036", "AQB0039", "AQB0091", "AQB0092", "AQB0100", "AQB0101", "AQB0102", "AQB0103", "AQB0104", "AQB0105", "AQB0106", "AQB0108", "AQB0109", "AQB0110", "AQB0112", "AQB0113", "AQB0114", "AQB0115", "AQB0116", "AQB0117", "AQB0118", "AQB0119", "AQB0120", "AQB0121", "AQB0122", "AQB0123", "AQB0126", "AQB0127", "AQB0128", "AQB0050", "AQB0063", "AQB0001", "AQB0002", "AQB0003", "AQB0004", "AQB0005", "AQB0006", "AQB0027", "AQB0038", "AQB0078", "AQB0081", "AQB0083", "AQB0084", "AQB0085", "AQB0086", "AQB0087", "AQB0088");
+$_ = "'$_'" for @faultyUnits;
 
 # Initialise parameters
 my $selectColumns = "UnitNumber,locationdescription,lastsensingdate,pm1,pm10,pm25,Longitude,Latitude";
@@ -242,7 +244,7 @@ exists($k{$_}) or die "Select column $_ is not valid" for @columnsToShow;
 exists($k{(split ' ', $_)[0]}) or die "Sort column ".(split ' ',$_)[0]." is not valid\n" for @sortColumns;
 
 # Pre-render HTML for a hidden table containing latest observations for each unit
-$sql = "SELECT $unitCol, $areaCol, $locCol, strftime('%d-%m-%Y %H:%M:%S', MAX($timeCol), 'localtime'), $pm1col, $pm25col, $pm10col, $latCol, $longCol FROM $dbTable GROUP BY $unitCol";
+$sql = "SELECT $unitCol, $areaCol, $locCol, strftime('%d-%m-%Y %H:%M:%S', MAX($timeCol), 'localtime'), $pm1col, $pm25col, $pm10col, $latCol, $longCol FROM $dbTable WHERE $unitCol NOT IN (" . (join ',', @faultyUnits) . ") GROUP BY $unitCol";
 $statement = $dbh->prepare($sql);
 $statement->execute();
 my $latestTable = "<table id='latestData' class='d-none'>\n";
@@ -339,7 +341,7 @@ for my $iLoc (sort @allLocs) {
   $visible = (($_ eq $iLoc)?1:$visible) for @visibleLocs;
   $strOpt .= " d-none" if ($visible == 0);
   for (@selectedLocs) {
-    $strOpt .= " selected" if ($iLoc eq $_);
+    $strOpt .= " active" if ($iLoc eq $_);
   }
   # Find the area $iLoc is in
   # This is fun - Some location names are duplicated across multiple areas
@@ -520,6 +522,13 @@ if (length $areas > 0 || length $locations > 0 || length $units > 0 || $limitTim
     $where .= "datetime($timeCol) >= datetime(\"now\", \"-$sqlTimeNum $sqlTimeType\")";
   }
 }
+# Ignore faulty units
+if (length $where > 0) {
+  $where .= " AND ";
+} else {
+  $where .= "WHERE ";
+}
+$where .= "$unitCol not in (" . (join ',', @faultyUnits) . ")";
 
 # Don't want to alter @columnsToShow because it's used in subsequent functionality
 # Take a copy of it, mangle date columns to do some formatting, and push  into
