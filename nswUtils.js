@@ -444,8 +444,6 @@ function initMap() {
 	var zoom = 4;
 	var columnIndices = {
 		"unit": unitCol["index"],
-		"area": -1,
-		"loc": -1,
 		"time": dateCol["index"],
 		"pm1": pm1Col["index"],
 		"pm25": pm25Col["index"],

@@ -275,6 +275,30 @@ function calculateSingleAqi(pmVal, pmThresholds, aqiThresholds) {
 }
 
 function showMap(table, columnIndices, zoom, centreLatLng) {
+	// Define colours for custom heatmap
+	var aqiColours = [];
+	aqiColours.push(['rgba(0,128,0,0)', 'rgba(0,128,0,0.7)']);
+	aqiColours.push(['rgba(255,255,0,0)', 'rgba(255,255,0,0.8)']);
+	aqiColours.push(['rgba(255,165,0,0)', 'rgba(255,165,0,0.7)']);
+	aqiColours.push(['rgba(255,0,0,0)', 'rgba(255,0,0,0.5)']);
+	aqiColours.push(['rgba(128,0,128,0)', 'rgba(128,0,128,0.6)']);
+	aqiColours.push(['rgba(128,0,0,0)', 'rgba(128,0,0,0.6)']);
+	aqiColours.push(['rgba(0,0,0,0)', 'rgba(0,0,0,0.6)']);
+
+	// Heatmap maxIntensity is ignored because values exceed it ... defeating the purpose.
+	// Add a bunch of additional gradient elements to push values to further opacity
+	for (var i=0; i < aqiColours.length; i++) {
+		for (var j=0; j < 10; j++) {
+			aqiColours[i].push(aqiColours[i][1]);
+		}
+	}
+
+	// Initialise an array of empty arrays for heatmap data
+	var heatmaps = new Array(aqiColours.length);
+	for (var i=0; i < heatmaps.length; i++) {
+		heatmaps[i] = [];
+	}
+
 	var obs = document.getElementById(table);
 	if (obs.tBodies === undefined || obs.tBodies[0] === undefined) {
 		// No data
@@ -285,7 +309,6 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 		center: centreLatLng,
 	});
 	var mapMarkers = [];
-	var heatmapData = [];
 	var rows = obs.tBodies[0].rows;
 
 	for (var i=0; i < rows.length; i++) {
@@ -294,31 +317,31 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 		var lati = Number(rows[i].cells[columnIndices["lat"]].innerText);
 		var long = Number(rows[i].cells[columnIndices["long"]].innerText);
 		var area = "";
-		if (columnIndices["area"] != -1) {
+		if (columnIndices["area"]) {
 			area = rows[i].cells[columnIndices["area"]].innerText;
 		}
 		var loc = "";
-		if (columnIndices["loc"] != -1) {
+		if (columnIndices["loc"]) {
 			loc = rows[i].cells[columnIndices["loc"]].innerText;
 		}
 		var temp = "";
-		if (columnIndices["temp"] != -1) {
+		if (columnIndices["temp"]) {
 			temp = Number(rows[i].cells[columnIndices["temp"]].innerText);
 		}
 		var humidity = "";
-		if (columnIndices["hum"] != -1) {
+		if (columnIndices["hum"]) {
 			humidity = Number(rows[i].cells[columnIndices["hum"]].innerText);
 		}
 		var pm1 = "";
-		if (columnIndices["pm1"] != -1) {
+		if (columnIndices["pm1"]) {
 			pm1 = Number(rows[i].cells[columnIndices["pm1"]].innerText);
 		}
 		var pm25 = "";
-		if (columnIndices["pm25"] != -1) {
+		if (columnIndices["pm25"]) {
 			pm25 = Number(rows[i].cells[columnIndices["pm25"]].innerText);
 		}
 		var pm10 = "";
-		if (columnIndices["pm10"] != -1) {
+		if (columnIndices["pm10"]) {
 			pm10 = Number(rows[i].cells[columnIndices["pm10"]].innerText);
 		}
 
@@ -333,8 +356,9 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 		}
 		var infoText = infoWindowFor(infoStr, time, temp, humidity, pm1, pm25, pm10);
 		var aqi = Math.round(calculateAQIFor(pm1, pm25, pm10)).toString();
+		var latLng = new google.maps.LatLng(lati, long);
 		mapMarkers[i] = new google.maps.Marker({
-			position: {lat: lati, lng: long},
+			position: latLng,
 			map: map,
 			title: markerTitle,
 			label: aqi,
@@ -344,36 +368,35 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 			this.info.open(map, this);
 		});
 
-		// Calculate average AQI for heatmap
-		var aqiTotal = 0;
-		var aqiCount = 0;
-		if (pm1 != "") {
-			aqiTotal += Number(calculateSingleAqi(pm1, pm1thresholds, aqithresholds));
-			aqiCount++;
+		// Figure out which heatmap array element this belongs in
+		var j;
+		for (j=(heatmaps.length-1); j>=0 && aqi < aqithresholds[j]; j--) {}
+		// j should never be == 0 (implies aqiTotal < 0)
+		if (j < 0) {
+			alert('Something is wrong with the world!');
+			return;
 		}
-		if (pm25 != "") {
-			aqiTotal += Number(calculateSingleAqi(pm25, pm25thresholds, aqithresholds));
-			aqiCount++;
-		}
-		if (pm10 != "") {
-			aqiTotal += Number(calculateSingleAqi(pm10, pm10thresholds, aqithresholds));
-			aqiCount++
-		}
-		aqiTotal = Math.round(aqiTotal / aqiCount);
-		var latLng = new google.maps.LatLng(lati, long);
-		heatmapData[i] = {
+		heatmaps[j].push({
 			location: latLng,
-			weight: aqiTotal,
-		};
+			weight: 100, // Use a weight of 100 so we get full opacity. Damn gmaps
+		});
 	}
 	var markerClusterer = new MarkerClusterer(map, mapMarkers, {
 		imagePath: "/markers/m",
 		maxZoom: 11,});
 	
-	var heatMap = new google.maps.visualization.HeatmapLayer({
-		data: heatmapData,
-		dissipating: false,
-		maxIntensity: 100,
-		map: map,
-	});
+	var hs=[];
+	for (var j=0; j < heatmaps.length; j++) {
+		var thisGrad = aqiColours[j];
+		var thisHeat = heatmaps[j];
+		if (thisHeat.length > 0) {
+			hs.push(new google.maps.visualization.HeatmapLayer({
+				data: thisHeat,
+				dissipating: false,
+				maxIntensity: 100,
+				map: map,
+				gradient: thisGrad,
+			}));
+		}
+	}
 }

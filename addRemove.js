@@ -841,8 +841,6 @@ function initMap() {
 		"pm10": 6,
 		"lat": 7,
 		"long": 8,
-		"temp": -1,
-		"hum": -1,
 	};
 	showMap("latestData", columnIndices, zoom, centre);
 }
