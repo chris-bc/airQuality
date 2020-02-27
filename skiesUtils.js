@@ -6,6 +6,7 @@ var pm1thresholds = [0, 12.0, 35.4, 55.4, 150.4, 250.4, 500.4];
 var pm10thresholds = [0, 54, 154, 254, 354, 424, 604];
 var aqithresholds = [0, 50, 100, 150, 200, 300, 500];
 
+var chart;
 
 function timeEnableDisable() {
 	var c = document.getElementById("limitTime");
@@ -151,55 +152,59 @@ function timeForDisplay(time) {
 
 // Display a line chart with the specified attributes
 function drawLineChart(canvas, data, leg, timeUnit) {
-  new Chart(canvas, {
-    type: 'line',
-    data: data,
-    options: {
-      legend: {
-        display: leg,
-      },
-      scaleShowValues: true,
-      scales: {
-        xAxes: [{
-          type: 'time',
-          distribution: 'linear',
-          time: {
-            parser: "DD-MM-YYYY HH:mm:ss",
-            unit: timeUnit,
-            displayFormats: {day: 'MMM D YYYY', minute: 'D MMM, h:mm a'}
-          },
-        }]
-      }
-    }
-  });
+	if (chart) {
+		chart.destroy();
+	}
+  	chart = new Chart(canvas, {
+	    type: 'line',
+    	data: data,
+	    options: {
+    		legend: {
+        		display: leg,
+	      	},
+    	  	scaleShowValues: true,
+	      	scales: {
+    	    	xAxes: [{
+        	  		type: 'time',
+		          distribution: 'linear',
+    		      time: {
+        		    parser: "DD-MM-YYYY HH:mm:ss",
+            		unit: timeUnit,
+	            	displayFormats: {day: 'MMM D YYYY', minute: 'D MMM, h:mm a'}
+	    	      },
+    	    	}]
+	    	}
+	   	}
+  	});
 }
 
 // Display a bar chart with the specified attributes
 function drawBarChart(canvas, data, labels, colours) {
-  new Chart(canvas, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          data: data,
-          backgroundColor: colours
-        }
-      ]
-    },
-    options: {
-      legend: {
-        display: false,
-      },
-      scales: {
-        yAxes: [{
-          ticks: {
-            beginAtZero: true
-          }
-        }],
-      }
-    }
-  });
+	if (chart) {
+		chart.destroy();
+	}
+	chart = new Chart(canvas, {
+    	type: 'bar',
+	    data: {
+    		labels: labels,
+    		datasets: [{
+        		data: data,
+        		backgroundColor: colours
+        	}]
+	    },
+    	options: {
+    		legend: {
+    			display: false,
+      		},
+      		scales: {
+        		yAxes: [{
+          			ticks: {
+            			beginAtZero: true
+          			}
+        		}],
+      		}
+    	}
+  	});
 }
 
 function infoWindowFor(unit, time, temp, humidity, pm1, pm25, pm10) {
@@ -363,9 +368,18 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 			title: markerTitle,
 			label: aqi,
 		});
+		mapMarkers[i]["kUnit"] = unit;
 		mapMarkers[i].info = new google.maps.InfoWindow({content: infoText});
 		mapMarkers[i].addListener('click', function() {
 			this.info.open(map, this);
+			// If the selected unit isn't selected, do that now
+			var unit = this["kUnit"];
+			if (unit) {
+				var unitSel = "#unit-btn-" + unit;
+				if (!($(unitSel).hasClass("active"))) {
+					toggleUnit(unit);
+				}
+			}
 		});
 
 		// Figure out which heatmap array element this belongs in

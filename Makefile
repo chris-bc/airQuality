@@ -2,9 +2,9 @@ deploy-local: all
 	sudo cp -r deploy/* /Library/WebServer/Documents/
 
 deploy-remote: all
-	scp -r deploy chris@192.168.1.4:~
-	ssh -t chris@192.168.1.4 sudo cp -r deploy/* /Library/WebServer/Documents/
-	ssh chris@192.168.1.4 rm -rf deploy
+	scp -r deploy chris@bennettscash.no-ip.org:~
+	ssh -t chris@bennettscash.no-ip.org sudo cp -r deploy/* /Library/WebServer/Documents/
+	ssh chris@bennettscash.no-ip.org rm -rf deploy
 
 directory:
 	mkdir -p deploy

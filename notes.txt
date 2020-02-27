@@ -3,7 +3,9 @@ DONE -> Convert area, loc, unit select boxes to list groups
 DONE -> Including 'all' option - onClick=updatexxx(selectedVal) - can nicely handle moving from/to 'any'
 DONE -> Update table and chart when area/location/unit changed
 -> Click marker selects unit? (updates table & chart)
--> Heatmap of AQIs
+DONE -> Heatmap of AQIs
+-> 24 hour AQIs
+-> hide faulty units
 
 scroll to view about chart div (or chart) when it's clicked (shown or hidden)
 migrate to html
