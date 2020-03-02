@@ -11,7 +11,15 @@ Option to show faulty units
 scroll to view about chart div (or chart) when it's clicked (shown or hidden)
 migrate to html
 user-selectable chart options
-CSV export
+DONE -> CSV export
+
+geoSKIES
+all js
+toolbar, map spanning full height 80% width for large screen or landscape tablet/phone, full width 70%? height for portrait tablet/phone
+use downloadUrL(somefile.pl) to retrieve data
+remaining screen shows sensors in map bounds - name, location if avail, temp & humid if avail, PM data
+onHover markers - highlight list item
+data table + chart
 
 JS-based sort
 list group of columns

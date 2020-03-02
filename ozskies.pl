@@ -225,6 +225,8 @@ if ($limitTime == 1) {
 
 # Fetch latest observation for each unit into a hidden table to pass it to javascript
 my $latestTable = "<table id='latestData' class='d-none'>";
+# Include table headers for CSV export
+$latestTable .= "<thead><th>$unitCol</th><th>$timeCol</th><th>$tempCol</th><th>$humCol</th><th>$pm1col</th><th>$pm25col</th><th>$pm10col</th><th>$latCol</th><th>$longCol</th></thead>\n";
 $sql = "SELECT $unitCol, strftime('%d-%m-%Y %H:%M:%S',MAX($timeCol),'localtime'), $tempCol, $humCol, $pm1col, $pm25col, $pm10col, $latCol, $longCol FROM $dbTable GROUP BY $unitCol";
 $statement = $dbh->prepare($sql);
 $statement->execute();
@@ -269,7 +271,8 @@ print<<EOF;
   </div></nav>
   <div class='container'><img src='nswskies-banner.jpg' class='img-fluid mb-3' alt='Site Banner'/>
   <h1 class='text-center mt-sm-2'>Australian Environmental Data</h1>
-  <div id='navMap' class='container' style='padding-top:75px;height:600px;'><h5 class='text-center'>Map</h5>
+  <div id='navMap' class='container' style='padding-top:75px;height:600px;'>
+  <p class='h5 text-center mb-2'>Map<button type='button' class='btn btn-info mb-2 float-right' onClick='exportTableCSV(\"latestData\", \"ozSKIES-sensorData-latest.csv\")'>Download Latest Data as CSV</button></p>
     $latestTable
     <div id='map' class='container-fluid' style='height:100%;'>
     </div>
@@ -388,7 +391,9 @@ print<<EOF;
     </div></div>
   </div>
   <div id='navData' class='container' style='padding-top:75px;'>
-    <div class='table-responsive'><table id='dataTable' class='table table-bordered table-striped'>
+    <div class='table-responsive'>
+    <button type='button' class='btn btn-info mb-2 float-right' onClick='exportTableCSV(\"dataTable\", \"ozSKIES-sensorData.csv\")'>Download Table as CSV</button>
+    <table id='dataTable' class='table table-bordered table-striped'>
       <thead><tr>
 
 EOF
@@ -489,11 +494,9 @@ print<<EOF;
       location information, providing only latitude and longitude for each
       sensor. This has led me to take a different approach with this page than
       for blueSKIES, focusing on a map-driven interface.</p>
-      <p>Over coming weeks I expect this page to be rapidly updated, with the
-      feature plan being approximately:
+      <p>Over coming weeks I expect this page to be further enhanced with the
+      following features:
       <ul>
-        <li>Displaying a map plotting all sensors</li>
-        <li>Linking marker selection on the map to drilling into that unit in the dataset</li>
         <li>Reverse geocoding the data to obtain location information</li>
         <li>Allowing data to be filtered by location</li></ul></p>
       <p>For more information on the DPIE sensor data see <a href='https://www.dpie.nsw.gov.au/air-quality/current-air-quality'>https://www.dpie.nsw.gov.au/air-quality/current-air-quality</a></p>

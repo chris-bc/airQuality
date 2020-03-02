@@ -414,3 +414,62 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 		}
 	}
 }
+
+function exportTableCSV(tableId, filename) {
+	var table = document.getElementById(tableId);
+	if (!table) {
+		return;
+	}
+	var csvData = "";
+	// Get column headers if they exist
+	if (table.tHead && table.tHead.rows && table.tHead.rows[0]) {
+		var headers = table.tHead.rows[0].cells;
+		for (var i=0; i < headers.length; i++) {
+			if (i > 0) {
+				csvData += ",";
+			}
+			csvData += headers[i].textContent;
+		}
+		csvData += "\n";
+	}
+	// Get table data
+	if (table.tBodies && table.tBodies[0]) {
+		var rows = table.tBodies[0].rows;
+		for (var i=0; i < rows.length; i++) {
+			for (var j=0; j < rows[i].cells.length; j++) {
+				if (j > 0) {
+					csvData += ",";
+				}
+				csvData += "\"" + rows[i].cells[j].textContent + "\"";
+			}
+			csvData += "\n";
+		}
+	}
+	if (!filename || filename.length == 0) {
+		filename = ((tableId=="latestData")?"SensorData-Latest.csv":"SensorData.csv");
+	}
+	downloadCSV(csvData, filename);
+}
+
+function downloadCSV(content, filename) {
+	var mime = "text/csv;encoding:utf-8";
+	var a = document.createElement("a");
+
+	// IE10 compatibility
+	if (navigator.msSaveBlob) {
+		navigator.msSaveBlob(new Blob([content], {
+			type: mime
+		}), filename);
+	} else if (URL && 'download' in a) {
+		// HTML5 a.download attribute
+		a.href = URL.createObjectURL(new Blob([content], {
+			type: mime
+		}));
+		a.setAttribute('download', filename);
+//		document.body.appendChild(a);
+		a.click();
+//		document.body.removeChild(a);
+	} else {
+		location.href = "data:application/octet-stream," + encodeURIComponent(content);
+	}
+}

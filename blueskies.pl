@@ -143,7 +143,7 @@ $statement->finish;
 
 # Get a hash of locaions and their units for column validation and later use
 # Updated SQL to account for units changing locations (or locations changing names) over time - retrieve only latest
-$sql = "SELECT $areaCol, $locCol, $unitCol FROM $dbTable GROUP BY $unitCol HAVING $timeCol = MAX($timeCol)";
+$sql = "SELECT $areaCol, $locCol, $unitCol FROM $dbTable WHERE $unitCol NOT IN (" . (join ',', @faultyUnits) . ") GROUP BY $unitCol HAVING $timeCol = MAX($timeCol)";
 $statement = $dbh->prepare($sql);
 $statement->execute();
 
@@ -248,6 +248,8 @@ $sql = "SELECT $unitCol, $areaCol, $locCol, strftime('%d-%m-%Y %H:%M:%S', MAX($t
 $statement = $dbh->prepare($sql);
 $statement->execute();
 my $latestTable = "<table id='latestData' class='d-none'>\n";
+# Include table headers for CSV download
+$latestTable .= "<thead><th>$unitCol</th><th>$areaCol</th><th>$locCol</th><th>$timeCol</th><th>$pm1col</th><th>$pm25col</th><th>$pm10col</th><th>$latCol</th><th>$longCol</th></thead>\n";
 while (my @row = $statement->fetchrow_array) {
   $latestTable .= "<tr><td>$row[0]</td><td>$row[1]</td><td>$row[2]</td><td>$row[3]</td><td>$row[4]</td><td>$row[5]</td><td>$row[6]</td><td>$row[7]</td><td>$row[8]</td></tr>\n";
 }
@@ -288,7 +290,8 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
 <div class='container'>
 <img src='blueskies-banner.jpg' class='img-fluid' alt='Site Banner'/>
 <h1 class='text-center mt-sm-2'>Air Quality Data</h1>
-<div id='navMap' class='container' style='padding-top:75px;height:600px;'><h5 class='text-center'>Map</h5>
+<div id='navMap' class='container' style='padding-top:75px;height:600px;'>
+<p class='h5 mb-2 text-center'>Map<button type='button' class='btn btn-info float-right mb-2' onClick='exportTableCSV(\"latestData\", \"blueSKIES-sensorData-latest.csv\")'>Download Latest Data as CSV</button></p>
   $latestTable
   <div id='map' class='container-fluid' style='height:100%;'>
   </div>
@@ -479,7 +482,9 @@ print "</select>
           have resulted in recommended safe levels, however some sources applied similar targets as PM2.5, which I also have done.</li></ul>
     </div></div>
   <div class='row mt-sm-3'><button class='btn btn-primary btn-block mb-3' value='Update' onClick='submitForm()'>Update</button></div></div>
-<div id='sensorData' class='table-responsive' style='padding-top:75px;'><table id='dataTable' class='table table-bordered table-striped'><thead><tr>";
+<div id='sensorData' class='table-responsive' style='padding-top:75px;'>
+<button type='button' class='btn btn-info float-right mb-2' onClick='exportTableCSV(\"dataTable\", \"blueSKIES-sensorData.csv\")'>Download Table as CSV</button>
+<table id='dataTable' class='table table-bordered table-striped'><thead><tr>";
 # Render the data table
 print "<th>$_</th>" for @columnsToShow;
 print "</tr></thead>";
@@ -699,7 +704,7 @@ rather than providing a fixed dataset that meets my needs. If you have any featu
 requests please <a href='mailto:chris\@bennettscash.id.au'>contact me</a>.</p>
 <p>I am currently working on adding the following features to the page:
 <ul>
-<li>Exporting selected data to CSV</li></ul></p>
+<li>A new, map-driven page integrating both data sources</li></ul></p>
 <p>For more information on the KOALAS project see <a href='http://bluemountains.sensors.net.au/' target='_blank'>http://bluemountains.sensors.net.au/</a></p>
 <p>blueSKIES is <a href='https://github.com/chris-bc/airQuality'>hosted on GitHub</a>. Feel free to develop it further and send me a pull request</p>
 <p><font size=-1>Built by <a href='mailto:chris\@bennettscash.id.au'>Chris Bennetts-Cash</a>, 2020. <a href='http://www.bennettscash.id.au' target='_blank'>http://www.bennettscash.id.au</a></font></p>
