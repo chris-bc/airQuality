@@ -304,15 +304,18 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 		heatmaps[i] = [];
 	}
 
-	var obs = document.getElementById(table);
-	if (obs.tBodies === undefined || obs.tBodies[0] === undefined) {
-		// No data
-		return;
-	}
+	// Display map before any processing so we have a map display even if no data to show on it
 	var map = new google.maps.Map(document.getElementById("map"), {
 		zoom: zoom,
 		center: centreLatLng,
 	});
+
+	var obs = document.getElementById(table);
+	if (obs === undefined || obs == null || obs.tBodies === undefined || obs.tBodies[0] === undefined) {
+		// No data
+		return;
+	}
+
 	var mapMarkers = [];
 	var rows = obs.tBodies[0].rows;
 
