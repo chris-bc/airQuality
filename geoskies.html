@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html><head>
+    <title>geoSKIES - Geospatial Air Quality Information</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="bootstrap.min.js"></script><script src="Chart.bundle.min.js"></script>
+    <script src="skiesUtils.js"></script><script src="geoUtils.js"></script>
+    <script src="https://unpkg.com/@google/markerclustererplus@4.0.1/dist/markerclustererplus.min.js"></script>
+</head>
+<body data-spy="scroll" data-target="#myNav" data-offset="70" style="position:relative; padding-top:75px;">
+    <nav id="myNav" class="navbar navbar-light bg-light navbar-expand-md fixed-top">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggler mr-sm-2" data-toggle="collapse" data-target="#myNavBar" aria-controls="myNavBar" aria-expanded="false" aria-label="Toggle Navigation">
+            <span class="navbar-toggler-icon"></span></button>
+            <a class="navbar-brand mr-sm-2" href="#">geoSKIES</a></div>
+        <div class="collapse navbar-collapse" id="myNavBar">
+            <ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="#navMap">Sensor Map</a></li>
+                <li class="nav-item"><a class="nav-link" href="#navData">Sensor Data</a></li>
+                <li class="nav-item"><a class="nav-link" href="#navChart">Sensor Charts</a></li>
+                <li class="nav-item"><a class="nav-link" href="#navAbout">About</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropDown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Other Pages
+                    </a><div class="dropdown-menu" area-labelledBy="navbarDropDown" id="navbarDropLinks" name="navbarDropLinks">
+                        <a class="dropdown-item" href="blueskies.pl" target="_blank">blueSKIES</a>
+                        <a class="dropdown-item" href="ozsjies.pl" target="_blank">ozSKIES</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" target="_blank" href="http://www.bennettscash.id.au">bennettscash</a>
+                </div></li></ul>
+        </div></nav>
+    <div class="container-responsive">
+        <div class="row" id="navMap" style="padding-top:75px;">
+            <div class="col-md-10" id="map">
+
+            </div>
+            <div class="col-md-2" id="mapSensors">
+
+            </div>
+        </div>
+        <div class="container" id="navData">
+
+        </div>
+        <div class="container" id="navChart" style="padding-top:75px;">
+            <div class="row justify-content-center"><h4 class="text-center">Air Quality</h4></div>
+            <div class="row mb-3"><canvas id="pmChart"></canvas></div>
+            <div class="row justify-content-center"><h4 class="text-center">Temperature &amp; Humidity</h4></div>
+            <div class="row mb-3"><canvas id="envChart"></canvas></div>        
+        </div>
+        <div class="container" id="navAbout" style="padding-top:75px;">
+            <div class="row text-center"><h3>About</h3></div>
+            <div class="row"><p>This page combines the data sources presented in blueSKIES and ozSKIES with a focus on
+                presenting data geospatially.
+                </p><p>From a technical perspective the development of these pages - blueSKIES, followed by ozSKIES, and finally 
+                geoSKIES - has included a transition from predominantly server-side functionality to an increased reliance on
+                client-side functionality. geoSKIES is being built entirely with HTML, JavaScript and CSS, with server components
+                used only as external modules to retrieve data from the underlying database. While this is largely an exercise in 
+                learning for me, I hope the resulting functionality will be of use. In the spirit of paying it forward - with these 
+                pages enabled by KOALA's exclusive use of client-side processing, this also makes the underlying data and APIs
+                available to other developers who would like to do more with the data.</p>
+                <p>blueSKIES, ozSKIES and geoSKIES are <a href="https://github.com/chris-bc/airQuality">hosted on GitHub</a>.
+                Feel free to develop them further and send me a pull request.</p>
+                <p><font size="-1">Built by <a href="mailto:chris@bennettscash.id.au">Chris Bennetts-Cash</a>, 2020.
+                <a href="http://www.bennettscash.id.au" target="_blank">http://www.bennettscash.id.au</a></font></p>
+            </div>
+        </div>
+    </div>
+    <script async defer src='https://maps.googleapis.com/maps/api/js?key=APIKEY&libraries=visualization&callback=initMap'></script>
+</body></html>

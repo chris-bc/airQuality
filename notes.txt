@@ -17,9 +17,14 @@ geoSKIES
 all js
 toolbar, map spanning full height 80% width for large screen or landscape tablet/phone, full width 70%? height for portrait tablet/phone
 use downloadUrL(somefile.pl) to retrieve data
-remaining screen shows sensors in map bounds - name, location if avail, temp & humid if avail, PM data
+remaining screen shows sensors in map bounds - name, location if avail, temp & humid if avail, PM data incl. 24 hour AQIs
 onHover markers - highlight list item
 data table + chart
+===
+document.ready -> set map div height to document.height - header.height, add window.onresize handler to do the same
+map col-md-10?
+sensor list a list group div with height fixed (auto from parent?) and overflow:auto
+marker click -> ensure list item is visible and select it
 
 JS-based sort
 list group of columns
