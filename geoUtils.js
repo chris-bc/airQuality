@@ -48,6 +48,21 @@ function initMap() {
             "long": columnIndices["Longitude"]};
         geoMap = showMap("latestData", dataCols, zoom, centre);
         geoMap.addListener('bounds_changed', updateUnitVisibility);
+
+        // Replace marker click info window listener
+        for (var i=0; i < mapMarkers.length; i++) {
+            google.maps.event.clearInstanceListeners(mapMarkers[i]);
+            mapMarkers[i].addListener('click', function() {
+                var unit = this["kUnit"];
+                listGroupSelectOnly("mapSensorList", "mapUnit-btn-" + unit);
+            });
+            // mapMarkers[i].addListener("mouseover", function() {
+            //     this.setAnimation(google.maps.Animation.BOUNCE);
+            // });
+            // mapMarkers[i].addListener("mouseout", function() {
+            //     this.setAnimation(null);
+            // });
+        }
 	}
 }
 
@@ -144,6 +159,12 @@ function processLatestData(jsonData) {
         btn.setAttribute("id", "mapUnit-btn-" + latestData[i][unitId]);
         btn.setAttribute("class", "py-1 list-group-item-action list-group-item");
         btn.innerHTML = buttonLayout(latestData[i]);
+        btn.onmouseenter = function() {
+            animateMarker(this.getAttribute("id").substring(12));
+        };
+        btn.onmouseleave = function() {
+            stopAnimateMarker(this.getAttribute("id").substring(12));
+        };
         listGroup.appendChild(btn);
 
         // Create the row in latestData
@@ -177,7 +198,7 @@ function buttonLayout(dataItem) {
         }
     }
     ret += "</strong></small><small><em>" + timeForDisplay(dataItem["time"]) + "</em></small></div>\n<small><div class='d-flex flex-row flex-wrap'>";
-    if (dataItem["temp"] !== undefined) {
+    if (dataItem["temp"] !== undefined && dataItem["temp"] != null) {
         ret += "<div class='d-flex flex-nowrap mr-2'><div class='mr-1'><small><strong>Temperature:</strong></small></div><div class='mr-1'><small>";
         ret += dataItem["temp"] + "</small></div></div>\n";
         ret += "<div class='d-flex flex-nowrap mr-2'><div class='mr-1'><small><strong>Humidity:</strong></small></div><div class='mr-1'><small>";
@@ -243,4 +264,29 @@ function downloadData(url, callback) {
             callback(request.responseText);
         }
     }
+}
+
+function animateMarker(unitId) {
+    if (mapMarkers === undefined) {
+        return;
+    }
+    var i;
+    for (i=0; i < mapMarkers.length && mapMarkers[i]["kUnit"] != unitId; i++) {}
+    if (i == mapMarkers.length) {
+        // No marker
+        return;
+    }
+    mapMarkers[i].setAnimation(google.maps.Animation.BOUNCE);
+}
+
+function stopAnimateMarker(unitId) {
+    if (mapMarkers === undefined) {
+        return;
+    }
+    var i;
+    for (i=0; i < mapMarkers.length && mapMarkers[i]["kUnit"] != unitId; i++) {}
+    if (i == mapMarkers.length) {
+        return;
+    }
+    mapMarkers[i].setAnimation(null);
 }

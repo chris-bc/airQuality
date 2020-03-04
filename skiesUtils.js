@@ -479,3 +479,25 @@ function downloadCSV(content, filename) {
 		location.href = "data:application/octet-stream," + encodeURIComponent(content);
 	}
 }
+
+// Iterate over the specified list group ensuring that only the specified item is selected
+function listGroupSelectOnly(listGroupId, itemId) {
+	var lg = document.getElementById(listGroupId);
+	var childCount = lg.childElementCount;
+	for (var i=0; i < childCount; i++) {
+		var thisId = lg.children[i].getAttribute("id");
+		var thisSel = "#" + thisId;
+		if (thisId == itemId) {
+			// Should be selected
+			if (!($(thisSel).hasClass("active"))) {
+				$(thisSel).addClass("active");
+				lg.children[i].scrollIntoViewIfNeeded();
+			}
+		} else {
+			// Should not be selected
+			if ($(thisSel).hasClass("active")) {
+				$(thisSel).removeClass("active");
+			}
+		}
+	}
+}
