@@ -3,6 +3,8 @@ var geoMap;
 var columnIndices;
 var latestDataUrl = "http://bennettscash.no-ip.org/geoLatest.pl";
 var unitId = "UnitNumber";
+// TODO: This is duplicated in skiesUtils.showMap(). This needs to be fixed
+var aqiLvlColours = ["rgb(0,128,0)", "rgb(255,255,0)", "rgb(255,165,0)", "rgb(255,0,0)", "rgb(128,0,128)", "rgb(128,0,0)", "rgb(0,0,0)"];
 
 // DEBUG
 latestDataUrl = "http://127.0.0.1/geoLatest.pl";
@@ -151,25 +153,72 @@ function buttonLayout(dataItem) {
             ret += dataItem["location"];
         }
     }
-    ret += "</strong></small><small>" + timeForDisplay(dataItem["time"]) + "</small></div>\n<small><div class='d-flex flex-row flex-wrap'>";
+    ret += "</strong></small><small><em>" + timeForDisplay(dataItem["time"]) + "</em></small></div>\n<small><div class='d-flex flex-row flex-wrap'>";
     if (dataItem["temp"] !== undefined) {
         ret += "<div class='d-flex flex-nowrap mr-2'><div class='mr-1'><small><strong>Temperature:</strong></small></div><div class='mr-1'><small>";
         ret += dataItem["temp"] + "</small></div></div>\n";
         ret += "<div class='d-flex flex-nowrap mr-2'><div class='mr-1'><small><strong>Humidity:</strong></small></div><div class='mr-1'><small>";
         ret += dataItem["humidity"] + "</small></div></div>\n";
     }
-    ret += "<div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>PM1:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
-    ret += dataItem["pm1"] + "</small></div></div><div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>AQI<sub>PM1</sub>:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
-    ret += Math.round(calculateSingleAqi(dataItem["pm1"], pm1thresholds, aqithresholds)) + "</small></div></div>";
-    ret += "<div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-2'><small><strong>PM2.5:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
-    ret += dataItem["pm25"] + "</small></div></div><div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>AQI<sub>PM2.5</sub>:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
-    ret += Math.round(calculateSingleAqi(dataItem["pm25"], pm25thresholds, aqithresholds)) + "</small></div></div>";
-    ret += "<div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>PM10:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
-    ret += dataItem["pm10"] + "</small></div></div><div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>AQI<sub>PM10</sub>:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
-    ret += Math.round(calculateSingleAqi(dataItem["pm10"], pm10thresholds, aqithresholds)) + "</small></div></div>";
-    ret += "<div class='row'></div>";
+    ret += flexDivWithLabelAndValue("PM1:", dataItem["pm1"]);
+    ret += flexDivWithLabelAndValue("PM2.5:", dataItem["pm25"]);
+    ret += flexDivWithLabelAndValue("PM10:", dataItem["pm10"]);
+    ret += "<div class='d-flex w-100 justify-content-between'>";
+
+    // Colourise AQI values
+    var aqiPm1 = Math.round(calculateSingleAqi(dataItem["pm1"], pm1thresholds, aqithresholds))
+    var aqiPm25 = Math.round(calculateSingleAqi(dataItem["pm25"], pm25thresholds, aqithresholds));
+    var aqiPm10 = Math.round(calculateSingleAqi(dataItem["pm10"], pm10thresholds, aqithresholds));
+    var pm1col = 0;
+    while (aqithresholds[pm1col+1] <= aqiPm1 && pm1col < (aqithresholds.length - 1)) { pm1col++; }
+    var pm25col = 0;
+    while (aqithresholds[pm25col+1] <= aqiPm25 && pm25col < (aqithresholds.length - 1)) { pm25col++; }
+    var pm10col = 0;
+    while (aqithresholds[pm10col+1] <= aqiPm10 && pm10col < (aqithresholds.length - 1)) { pm10col++; }
+    var style = "style = 'background-color:" + aqiLvlColours[pm1col];
+    if (pm1col == 1) { // Font colour white except for yellow background
+        style += ";color:black";
+    } else {
+        style += ";color:white";
+    }
+    style += ";' ";
+    ret += "<span class='badge badge-pill' " + style + ">" + flexDivWithLabelAndValue("AQI<sub>PM1</sub>:", aqiPm1);
+    style = "style = 'background-color:" + aqiLvlColours[pm25col];
+    if (pm25col == 1) { // Font colour white except for yellow background
+        style += ";color:black";
+    } else {
+        style += ";color:white";
+    }
+    style += ";' ";
+    ret += "</span><span class='badge badge-pill' " + style + ">" + flexDivWithLabelAndValue("AQI<sub>PM2.5</sub>:", aqiPm25);
+    style = "style = 'background-color:" + aqiLvlColours[pm10col];
+    if (pm10col == 1) { // Font colour white except for yellow background
+        style += ";color:black";
+    } else {
+        style += ";color:white";
+    }
+    style += ";' ";
+    ret += "</span><span class='badge badge-pill' " + style + ">" + flexDivWithLabelAndValue("AQI<sub>PM10</sub>:", aqiPm10);
+    ret += "</span></div>";
+    
+    // <div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>AQI<sub>PM1</sub>:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
+    // ret += Math.round(calculateSingleAqi(dataItem["pm1"], pm1thresholds, aqithresholds)) + "</small></div></div>";
+    // ret += "<div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-2'><small><strong>PM2.5:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
+    // ret += dataItem["pm25"] + "</small></div></div><div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>AQI<sub>PM2.5</sub>:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
+    // ret += Math.round(calculateSingleAqi(dataItem["pm25"], pm25thresholds, aqithresholds)) + "</small></div></div>";
+    // ret += "<div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>PM10:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
+    // ret += dataItem["pm10"] + "</small></div></div><div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>AQI<sub>PM10</sub>:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
+    // ret += Math.round(calculateSingleAqi(dataItem["pm10"], pm10thresholds, aqithresholds)) + "</small></div></div>";
+
+
     ret += "</div></small></div>";
 
+    return ret;
+}
+
+function flexDivWithLabelAndValue(label, value) {
+    var ret = "<div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>" + label +
+            "</strong></small></div><div class='d-flex flex-fill mr-1'><small>" + value + "</small></div></div>\n";
     return ret;
 }
 
