@@ -115,11 +115,11 @@ function processLatestData(jsonData) {
 
     for (var i=0; i < latestData.length; i++) {
         // Create the list group item
-        var btn = document.createElement("button");
-        btn.setAttribute("type", "button");
+        var btn = document.createElement("a");
+        btn.setAttribute("href", "#");
         btn.setAttribute("id", "mapUnit-btn-" + latestData[i][unitId]);
         btn.setAttribute("class", "py-1 list-group-item-action list-group-item");
-        btn.innerText = latestData[i][unitId];
+        btn.innerHTML = buttonLayout(latestData[i]);
         listGroup.appendChild(btn);
 
         // Create the row in latestData
@@ -132,6 +132,45 @@ function processLatestData(jsonData) {
         latestTable.tBodies[0].appendChild(tr);
     }
     initMap();
+}
+
+// Define the contents of the sensor list items
+function buttonLayout(dataItem) {
+    var ret = "<div class='d-flex flex-column'><div class='d-flex w-100 justify-content-between'><small><strong>" + parseInt(dataItem[unitId].substring(3));
+    if ((dataItem["area"] && dataItem["area"].length > 0) || (dataItem["location"] && dataItem["location"].length > 0)) {
+        ret += " - ";
+        var area = false;
+        if (dataItem["area"] && dataItem["area"].length > 0) {
+            area = true;
+            ret += dataItem["area"];
+        }
+        if (dataItem["location"] && dataItem["location"].length > 0) {
+            if (area) {
+                ret += " - ";
+            }
+            ret += dataItem["location"];
+        }
+    }
+    ret += "</strong></small><small>" + timeForDisplay(dataItem["time"]) + "</small></div>\n<small><div class='d-flex flex-row flex-wrap'>";
+    if (dataItem["temp"] !== undefined) {
+        ret += "<div class='d-flex flex-nowrap mr-2'><div class='mr-1'><small><strong>Temperature:</strong></small></div><div class='mr-1'><small>";
+        ret += dataItem["temp"] + "</small></div></div>\n";
+        ret += "<div class='d-flex flex-nowrap mr-2'><div class='mr-1'><small><strong>Humidity:</strong></small></div><div class='mr-1'><small>";
+        ret += dataItem["humidity"] + "</small></div></div>\n";
+    }
+    ret += "<div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>PM1:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
+    ret += dataItem["pm1"] + "</small></div></div><div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>AQI<sub>PM1</sub>:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
+    ret += Math.round(calculateSingleAqi(dataItem["pm1"], pm1thresholds, aqithresholds)) + "</small></div></div>";
+    ret += "<div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-2'><small><strong>PM2.5:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
+    ret += dataItem["pm25"] + "</small></div></div><div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>AQI<sub>PM2.5</sub>:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
+    ret += Math.round(calculateSingleAqi(dataItem["pm25"], pm25thresholds, aqithresholds)) + "</small></div></div>";
+    ret += "<div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>PM10:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
+    ret += dataItem["pm10"] + "</small></div></div><div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>AQI<sub>PM10</sub>:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
+    ret += Math.round(calculateSingleAqi(dataItem["pm10"], pm10thresholds, aqithresholds)) + "</small></div></div>";
+    ret += "<div class='row'></div>";
+    ret += "</div></small></div>";
+
+    return ret;
 }
 
 function downloadData(url, callback) {
