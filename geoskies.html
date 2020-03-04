@@ -31,9 +31,12 @@
         </div></nav>
     <div class="container-fluid">
         <div class="row" id="navMap">
-            <div class="col-md-9" id="map"></div>
-            <div class="col-md-3" id="mapSensors" style="overflow:auto;">
-                <div class="list-group" id="mapSensorList"></div>
+            <table id="latestData" class="d-none"></table>
+            <div class="d-flex w-100 flex-column flex-md-row">
+                <div class="w-100 h-100" id="map"></div>
+                <div id="mapSensors" style="overflow:auto;">
+                    <div class="list-group" id="mapSensorList"></div>
+                </div>
             </div>
         </div>
         <div class="container" id="navData">

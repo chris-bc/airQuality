@@ -311,9 +311,9 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 	});
 
 	var obs = document.getElementById(table);
-	if (obs === undefined || obs == null || obs.tBodies === undefined || obs.tBodies[0] === undefined) {
+	if (obs === undefined || obs == null || obs.tBodies === undefined || obs.tBodies[0] === undefined || columnIndices === undefined || Object.keys(columnIndices).length == 0) {
 		// No data
-		return;
+		return map;
 	}
 
 	var mapMarkers = [];
@@ -379,7 +379,8 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 			var unit = this["kUnit"];
 			if (unit) {
 				var unitSel = "#unit-btn-" + unit;
-				if (!($(unitSel).hasClass("active"))) {
+				// Make sure the button is a button
+				if (($(unitSel).hasClass("btn")) && !($(unitSel).hasClass("active"))) {
 					toggleUnit(unit);
 				}
 			}
@@ -391,7 +392,7 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 		// j should never be == 0 (implies aqiTotal < 0)
 		if (j < 0) {
 			alert('Something is wrong with the world!');
-			return;
+			return map;
 		}
 		heatmaps[j].push({
 			location: latLng,
@@ -416,6 +417,7 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 			}));
 		}
 	}
+	return map;
 }
 
 function exportTableCSV(tableId, filename) {
