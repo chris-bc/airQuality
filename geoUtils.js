@@ -165,6 +165,14 @@ function processLatestData(jsonData) {
         btn.onmouseleave = function() {
             stopAnimateMarker(this.getAttribute("id").substring(12));
         };
+        btn.onclick = function() {
+            var sel = "#" + this.getAttribute("id");
+            if ($(sel).hasClass("active")) {
+                $(sel).removeClass("active");
+            } else {
+                $(sel).addClass("active");
+            }
+        };
         listGroup.appendChild(btn);
 
         // Create the row in latestData
