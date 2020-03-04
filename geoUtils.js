@@ -47,7 +47,29 @@ function initMap() {
     		"lat": columnIndices["Latitude"],
             "long": columnIndices["Longitude"]};
         geoMap = showMap("latestData", dataCols, zoom, centre);
+        geoMap.addListener('bounds_changed', updateUnitVisibility);
 	}
+}
+
+function updateUnitVisibility() {
+    if (geoMap === undefined || mapMarkers === undefined || geoMap.getBounds() === undefined) {
+        return;
+    }
+    var bounds = geoMap.getBounds();
+    for (var i=0; i < mapMarkers.length; i++) {
+        var btnSel = "#mapUnit-btn-" + mapMarkers[i]["kUnit"];
+        if (bounds.contains(mapMarkers[i].getPosition())) {
+            // Show the list item for this sensor
+            if ($(btnSel).hasClass("d-none")) {
+                $(btnSel).removeClass("d-none");
+            }
+        } else {
+            // Hide it
+            if (!($(btnSel).hasClass("d-none"))) {
+                $(btnSel).addClass("d-none");
+            }
+        }
+    }
 }
 
 function loadLatestData() {
@@ -134,6 +156,7 @@ function processLatestData(jsonData) {
         latestTable.tBodies[0].appendChild(tr);
     }
     initMap();
+    updateUnitVisibility();
 }
 
 // Define the contents of the sensor list items
@@ -200,17 +223,6 @@ function buttonLayout(dataItem) {
     style += ";' ";
     ret += "</span><span class='badge badge-pill' " + style + ">" + flexDivWithLabelAndValue("AQI<sub>PM10</sub>:", aqiPm10);
     ret += "</span></div>";
-    
-    // <div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>AQI<sub>PM1</sub>:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
-    // ret += Math.round(calculateSingleAqi(dataItem["pm1"], pm1thresholds, aqithresholds)) + "</small></div></div>";
-    // ret += "<div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-2'><small><strong>PM2.5:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
-    // ret += dataItem["pm25"] + "</small></div></div><div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>AQI<sub>PM2.5</sub>:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
-    // ret += Math.round(calculateSingleAqi(dataItem["pm25"], pm25thresholds, aqithresholds)) + "</small></div></div>";
-    // ret += "<div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>PM10:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
-    // ret += dataItem["pm10"] + "</small></div></div><div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>AQI<sub>PM10</sub>:</strong></small></div><div class='d-flex flex-fill mr-1'><small>";
-    // ret += Math.round(calculateSingleAqi(dataItem["pm10"], pm10thresholds, aqithresholds)) + "</small></div></div>";
-
-
     ret += "</div></small></div>";
 
     return ret;

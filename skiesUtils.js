@@ -7,6 +7,7 @@ var pm10thresholds = [0, 54, 154, 254, 354, 424, 604];
 var aqithresholds = [0, 50, 100, 150, 200, 300, 500];
 
 var chart;
+var mapMarkers;
 
 function timeEnableDisable() {
 	var c = document.getElementById("limitTime");
@@ -316,7 +317,7 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 		return map;
 	}
 
-	var mapMarkers = [];
+	mapMarkers = [];
 	var rows = obs.tBodies[0].rows;
 
 	for (var i=0; i < rows.length; i++) {
