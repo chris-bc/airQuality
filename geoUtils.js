@@ -18,8 +18,9 @@ window.onresize = function(event) {
 }
 
 function setElementSize() {
-    $("#navMap").css("height", $(window).height() - parseInt($("#myNav").css("height")) );
-    $("#mapSensors").css("height", $(window).height() - parseInt($("#myNav").css("height")) );
+//  Looks like height includes space taken up by padding - Don't reduce max height for the map/sensor div by nav height
+    $("#navMap").css("height", $(window).height());
+    $("#mapSensors").css("max-height", $(window).height() - parseInt($("#myNav").css("height")) );
     $("#navMap").css("padding-top", $("#myNav").css("height"));
     $("#navData").css("padding-top", $("#myNav").css("height"));
     $("#navChart").css("padding-top", $("#myNav").css("height"));
