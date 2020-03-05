@@ -309,24 +309,23 @@ function updateMapTimeType() {
 
 function displayUnitWarningIfNeeded() {
     var type = document.getElementById("timeType").value;
-    if (type == "weeks" || type == "months" || type == "years") {
-        // Display a warning if lots of units are in scope
-        var dataScope;
-        if (document.getElementById("selected").checked) {
-            dataScope = "selected";
-        } else if (document.getElementById("visible").checked) {
-            dataScope = "visible";
-        } else {
-            dataScope = "all";
-        }
-        var selectedUnits = listGroupNumSelected("mapSensorList");
-        var visibleUnits = listGroupNumVisible("mapSensorList");
-        if (dataScope == "all" || (dataScope == "selected" && selectedUnits >= UNITS_WARN) || 
-                (dataScope == "visible" && visibleUnits >= UNITS_WARN)) {
+    // Display a warning if lots of units are in scope
+    var dataScope;
+    if (document.getElementById("selected").checked) {
+        dataScope = "selected";
+    } else if (document.getElementById("visible").checked) {
+        dataScope = "visible";
+    } else {
+        dataScope = "all";
+    }
+    var selectedUnits = listGroupNumSelected("mapSensorList");
+    var visibleUnits = listGroupNumVisible("mapSensorList");
+    if ((type == "weeks" || type == "months" || type == "years") &&
+            (dataScope == "all" || (dataScope == "selected" && selectedUnits >= UNITS_WARN) || 
+                (dataScope == "visible" && visibleUnits >= UNITS_WARN))) {
             // Display the alert
-            $("#timeWarn").removeClass("d-none").addClass("show");
-        } else {
-            $("#timeWarn").removeClass("show").addClass("d-none");
-        }
+        $("#timeWarn").removeClass("d-none").addClass("show");
+    } else {
+        $("#timeWarn").removeClass("show").addClass("d-none");
     }
 }
