@@ -341,7 +341,22 @@ function downloadData(url, callback) {
     request.send(null);
     request.onreadystatechange = function() {
         if (request.readyState === 4 && request.status === 200) {
-            callback(JSON.parse(request.responseText));
+            var content = JSON.parse(request.responseText);
+            // Sort the results on unitId and time
+            content.sort(function(a, b) {
+                if (a[unitId] == b[unitId]) {
+                    if (timeForSort(a["time"]) == timeForSort(b["time"])) {
+                        return 0;
+                    } else if (timeForSort(a["time"]) < timeForSort(b["time"])) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                } else {
+                    return ((a[unitId] < b[unitId])?-1:1);
+                }
+            });
+            callback(content);
         }
     }
 }
