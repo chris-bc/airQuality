@@ -5,6 +5,7 @@ var latestDataUrl = "http://bennettscash.no-ip.org/geoLatest.pl";
 var unitId = "UnitNumber";
 // TODO: This is duplicated in skiesUtils.showMap(). This needs to be fixed
 var aqiLvlColours = ["rgb(0,128,0)", "rgb(255,255,0)", "rgb(255,165,0)", "rgb(255,0,0)", "rgb(128,0,128)", "rgb(128,0,0)", "rgb(0,0,0)"];
+var UNITS_WARN = 20;
 
 // DEBUG
 latestDataUrl = "http://127.0.0.1/geoLatest.pl";
@@ -13,6 +14,8 @@ latestDataUrl = "http://127.0.0.1/geoLatest.pl";
 $( document ).ready(function() {
     setElementSize();
     loadLatestData();
+    // Populate the time number select box
+    updateTime();
   });
 
 window.onresize = function(event) {
@@ -297,4 +300,33 @@ function stopAnimateMarker(unitId) {
         return;
     }
     mapMarkers[i].setAnimation(null);
+}
+
+function updateMapTimeType() {
+    updateTime();
+    displayUnitWarningIfNeeded();
+}
+
+function displayUnitWarningIfNeeded() {
+    var type = document.getElementById("timeType").value;
+    if (type == "weeks" || type == "months" || type == "years") {
+        // Display a warning if lots of units are in scope
+        var dataScope;
+        if (document.getElementById("selected").checked) {
+            dataScope = "selected";
+        } else if (document.getElementById("visible").checked) {
+            dataScope = "visible";
+        } else {
+            dataScope = "all";
+        }
+        var selectedUnits = listGroupNumSelected("mapSensorList");
+        var visibleUnits = listGroupNumVisible("mapSensorList");
+        if (dataScope == "all" || (dataScope == "selected" && selectedUnits >= UNITS_WARN) || 
+                (dataScope == "visible" && visibleUnits >= UNITS_WARN)) {
+            // Display the alert
+            $("#timeWarn").removeClass("d-none").addClass("show");
+        } else {
+            $("#timeWarn").removeClass("show").addClass("d-none");
+        }
+    }
 }

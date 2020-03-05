@@ -32,49 +32,50 @@
     <div class="container-fluid">
         <div class="row" id="navMap">
             <table id="latestData" class="d-none"></table>
-            <div class="d-flex flex-column w-100">
-                <small><div class="d-flex flex-row w-100 flex-grow-1 justify-content-between px-1 align-items-center" style="background-color: #f8f9fa">
-                    <div class="form-check form-check-inline">
-                        <label class="form-check-label mr-1" for="hideFaulty">Hide faulty units</label>
-                        <input class="form-check-input" type="checkbox" id="hideFaulty" value="1" checked/>
-                    </div>
-                    <div>Show: </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="show" id="showLatest" value="latest" checked/>
-                        <label class="form-check-label" for="showLatest">Latest data</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="show" id="limitTime" value="historical"/>
-                        <label class="form-check-label" for="limitTime">Historical data</label>
-                    </div>
-                    <div><select class="custom-select custom-select-sm" id="timeNum">
-                        <option selected value="1">1</option>
-                    </select></div>
-                    <div><select class="custom-select custom-select-sm mr-1" id="timeType">
-                        <option selected value="hours">Hours</option>
-                        <option value="days">Days</option>
-                        <option value="weeks">Weeks</option>
-                        <option value="months">Months</option>
-                        <option value="years">Years</option>
-                    </select></div>
-                    <div>For: </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="dataSel" id="selected" value="selected"/>
-                        <label class="form-check-label" for="selected">Selected Units</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="dataSel" id="visible" value="visible"/>
-                        <label class="form-check-label" for="visible">Visible Units</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="dataSel" id="all" value="all" checked/>
-                        <label class="form-check-label" for="all">All Units</label>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-sm">Apply</button>
-                </div></small>
-                <!-- warning box here -->
                 <div class="d-flex w-100 flex-column flex-md-row">
-                    <div class="w-100 h-100" id="map"></div>
+                    <div class="d-flex flex-column w-100">
+                        <small><div class="d-flex flex-row w-100 flex-grow-1 justify-content-between px-1 align-items-center" style="background-color: #f8f9fa">
+                            <div class="form-check form-check-inline">
+                                <label class="form-check-label mr-1" for="hideFaulty">Hide faulty</label>
+                                <input class="form-check-input" type="checkbox" id="hideFaulty" value="1" checked/>
+                            </div>
+                            <div class="mr-1">Show:</div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="show" id="showLatest" value="latest" checked onchange="timeEnableDisable();"/>
+                                <label class="form-check-label" for="showLatest">Latest</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="show" id="limitTime" value="historical" onchange="timeEnableDisable();"/>
+                                <label class="form-check-label" for="limitTime">Historical</label>
+                            </div>
+                            <div><select class="custom-select custom-select-sm" id="timeNum" disabled onchange="updateTime();">
+                                <option selected value="1">1</option>
+                            </select></div>
+                            <div><select class="custom-select custom-select-sm mr-1" id="timeType" disabled onchange="updateMapTimeType();">
+                                <option selected value="hours">Hours</option>
+                                <option value="days">Days</option>
+                                <option value="weeks">Weeks</option>
+                                <option value="months">Months</option>
+                                <option value="years">Years</option>
+                            </select></div>
+                            <div>For: </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="dataSel" id="selected" value="selected" onclick="displayUnitWarningIfNeeded();"/>
+                                <label class="form-check-label" for="selected">Selected</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="dataSel" id="visible" value="visible" onclick="displayUnitWarningIfNeeded();"/>
+                                <label class="form-check-label" for="visible">Visible</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="dataSel" id="all" value="all" checked onclick="displayUnitWarningIfNeeded();"/>
+                                <label class="form-check-label" for="all">All</label>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm">Apply</button>
+                        </div></small>
+                        <!-- warning box here -->
+                        <div class="w-100 h-100" id="map"></div>
+                    </div>
                     <div id="mapSensors" style="overflow:auto;">
                         <div class="list-group flex-row flex-md-column" id="mapSensorList"></div>
                     </div>

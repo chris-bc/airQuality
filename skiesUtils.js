@@ -501,3 +501,42 @@ function listGroupSelectOnly(listGroupId, itemId) {
 		}
 	}
 }
+
+function listGroupSelectedItems(lgId) {
+	var retVal = [];
+	var itemSel;
+	var lg = document.getElementById(lgId);
+	for (var i=0; i < lg.childElementCount; i++) {
+		itemSel = "#" + lg.children[i].getAttribute("id");
+		if ($(itemSel).hasClass("active")) {
+			retVal.push(lg.children[i]);
+		}
+	}
+	return retVal;
+}
+
+function listGroupNumVisible(lgId) {
+	var count = 1;
+	var itemSel;
+	var lg = document.getElementById(lgId);
+	for (var i=0; i < lg.childElementCount; i++) {
+		itemSel = "#" + lg.children[i].getAttribute("id");
+		if (!($(itemSel).hasClass("d-none"))) {
+			count++;
+		}
+	}
+	return count;
+}
+
+function listGroupNumSelected(lgId) {
+	var count = 0;
+	var itemSel;
+	var lg = document.getElementById(lgId);
+	for (var i=0; i < lg.childElementCount; i++) {
+		itemSel = "#" + lg.children[i].getAttribute("id");
+		if ($(itemSel).hasClass("active")) {
+			count++;
+		}
+	}
+	return count;
+}
