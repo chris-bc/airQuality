@@ -33,10 +33,10 @@
         <div class="row" id="navMap">
             <table id="latestData" class="d-none"></table>
                 <div class="d-flex w-100 flex-column flex-md-row">
-                    <div class="d-flex flex-column w-100">
+                    <div class="d-flex flex-column w-100 h-100">
                         <small><div class="d-flex flex-row w-100 flex-grow-1 justify-content-between px-1 align-items-center" style="background-color: #f8f9fa">
                             <div class="form-check form-check-inline">
-                                <label class="form-check-label mr-1" for="hideFaulty">Hide faulty</label>
+                                <label class="form-check-label mr-1" for="hideFaulty">Hide&nbsp;faulty</label>
                                 <input class="form-check-input" type="checkbox" id="hideFaulty" value="1" checked/>
                             </div>
                             <div class="mr-1">Show:</div>
@@ -58,7 +58,7 @@
                                 <option value="months">Months</option>
                                 <option value="years">Years</option>
                             </select></div>
-                            <div>For: </div>
+                            <div class="mr-1">For:</div>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="dataSel" id="selected" value="selected" onclick="displayUnitWarningIfNeeded();"/>
                                 <label class="form-check-label" for="selected">Selected</label>
@@ -71,7 +71,7 @@
                                 <input class="form-check-input" type="radio" name="dataSel" id="all" value="all" checked onclick="displayUnitWarningIfNeeded();"/>
                                 <label class="form-check-label" for="all">All</label>
                             </div>
-                            <button type="button" class="btn btn-primary btn-sm">Apply</button>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="reloadData();">Apply</button>
                         </div></small>
                         <div id="timeWarn" class="alert alert-danger d-none mb-0" role="alert">
                             <strong>Caution!</strong> Disabling the time filter may result in a very

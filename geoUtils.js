@@ -26,6 +26,9 @@ function setElementSize() {
 //  Looks like height includes space taken up by padding - Don't reduce max height for the map/sensor div by nav height
     $("#navMap").css("height", $(window).height());
     $("#mapSensors").css("max-height", $(window).height() - parseInt($("#myNav").css("height")) );
+    // TODO: At a later point see if we get a continual resize event during resizing and make this programmatic
+    // Otherwise improve presentation on small screens and reduce it
+    $("#mapSensors").css("min-height", "112px");
     $("#navMap").css("padding-top", $("#myNav").css("height"));
     $("#navData").css("padding-top", $("#myNav").css("height"));
     $("#navChart").css("padding-top", $("#myNav").css("height"));
@@ -94,11 +97,92 @@ function loadLatestData() {
     downloadData(latestDataUrl, processLatestData);
 }
 
-function processLatestData(jsonData) {
-    var latestData = JSON.parse(jsonData);
+function reloadData() {
+    if (document.getElementById("showLatest").checked) {
+        loadLatestData();
+    } else {
+        // Build params
+    }
+}
+
+function processLatestData(latestData) {
+    loadDataDisplay(latestData);
+    processDataForMapping(latestData);
+}
+
+function processHistoricalData(latestData) {
+    loadDataDisplay(latestData);
+    // TODO: convert to averages then processDataForMapping
+}
+
+function loadDataDisplay(latestData) {
+    // Display data in table, update charts
+    var table = document.getElementById("dataTable");
+    var th;
+    if (!table.tHead) {
+        th = document.createElement("tHead");
+        table.appendChild(th);
+    }
+    // Regenerate headers in case they change
+    createTableHeaders(table, latestData[0]);
+
+    removeTableRows(table);
+    if (!table.tBodies || table.tBodies.length == 0) {
+        th = document.createElement("tbody");
+        table.appendChild(th);
+    }
+    for (var i=0; i < latestData.length; i++) {
+        createTableRowFor(table, latestData[i], true);
+    }
+}
+
+function createTableRowFor(table, dataItem, display) {
+    var cols = Object.keys(columnIndices);
+    var t = document.createElement("tr");
+    for (var i=0; i < cols.length; i++) {
+        var td = document.createElement("td");
+        if (display && (cols[i] == "Latitude" || cols[i] == "Longitude")) {
+            td.innerText = Number(dataItem[cols[i]]).toFixed(4);
+        } else if (display && cols[i] == "time") {
+            td.innerText = timeForDisplay(dataItem[cols[i]]);
+        } else {
+            td.innerText = dataItem[cols[i]];
+        }
+        t.appendChild(td);
+    }
+    table.tBodies[0].appendChild(t);
+}
+
+function removeTableRows(table) {
+    if (table.tBodies.length > 0 && table.tBodies[0].rows.length > 0) {
+        table.tBodies[0].remove(0);
+    }
+}
+
+function createTableHeaders(table, dataItem) {
+    var t;
+    columnIndices = {};
+    if (table.tHead && table.tHead.rows.length > 0) {
+        table.tHead.remove(0);
+    }
+    if (!table.tHead || !table.tHead[0]) {
+        t = document.createElement("tHead");
+        table.appendChild(t);
+    }
+    t = document.createElement("tr");
+    table.tHead.appendChild(t);
+    var cols = Object.keys(dataItem);
+    for (var i=0; i < cols.length; i++) {
+        t = document.createElement("th");
+        t.innerText = cols[i];
+        columnIndices[cols[i]] = i;
+        table.tHead.rows[0].appendChild(t);
+    }
+}
+
+function processDataForMapping(latestData) {
     var listGroup = document.getElementById("mapSensorList");
     var latestTable = document.getElementById("latestData");
-    columnIndices = {};
     // Sort the JSON data
     latestData = latestData.sort(function (a, b) {
         if (a[unitId] == b[unitId]) {
@@ -136,20 +220,11 @@ function processLatestData(jsonData) {
     }
 
     // Create table headers
+    createTableHeaders(latestTable, latestData[0]);
     var th;
-    if (!latestTable.tHead) {
-        th = document.createElement("thead");
-        latestTable.appendChild(th);
-    }
-    th = document.createElement("tr");
-    latestTable.tHead.appendChild(th);
-    var cols = Object.keys(latestData[0]);
-    for (var i=0; i < cols.length; i++) {
-        th = document.createElement("th");
-        th.innerText = cols[i];
-        latestTable.tHead.rows[0].appendChild(th);
-        columnIndices[cols[i]] = i;
-    }
+
+    removeTableRows(latestTable);
+
     if (!latestTable.tBodies || !latestTable.tBodies[0]) {
         th = document.createElement("tbody");
         latestTable.appendChild(th);
@@ -179,13 +254,7 @@ function processLatestData(jsonData) {
         listGroup.appendChild(btn);
 
         // Create the row in latestData
-        var tr = document.createElement("tr");
-        for (var j=0; j < cols.length; j++) {
-            var td = document.createElement("td");
-            td.innerText = latestData[i][cols[j]];
-            tr.appendChild(td);
-        }
-        latestTable.tBodies[0].appendChild(tr);
+        createTableRowFor(latestTable, latestData[i], false);
     }
     initMap();
     updateUnitVisibility();
@@ -272,7 +341,7 @@ function downloadData(url, callback) {
     request.send(null);
     request.onreadystatechange = function() {
         if (request.readyState === 4 && request.status === 200) {
-            callback(request.responseText);
+            callback(JSON.parse(request.responseText));
         }
     }
 }
