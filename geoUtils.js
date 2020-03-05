@@ -1,6 +1,6 @@
 // Global var for map so we can manipulate it along the way
 var geoMap;
-var columnIndices;
+var columns = ["dataset", "UnitNumber", "time", "area", "location", "pm1","pm25","pm10","temp","humidity","Latitude","Longitude"];
 var latestDataUrl = "http://bennettscash.no-ip.org/geoLatest.pl";
 var unitId = "UnitNumber";
 // TODO: This is duplicated in skiesUtils.showMap(). This needs to be fixed
@@ -39,19 +39,19 @@ function initMap() {
     var centre = new google.maps.LatLng(-25.4904429, 147.3062684);
     var zoom = 4;
     var dataCols = {};
-    if (columnIndices !== undefined) {
+    if (document.getElementById("latestData").tBodies && document.getElementById("latestData").tBodies.length > 0 && document.getElementById("latestData").tBodies[0].rows.length > 0) {
         dataCols = {
-    		"unit": columnIndices["UnitNumber"],
-	    	"area": columnIndices["area"],
-		    "loc": columnIndices["location"],
-    		"time": columnIndices["time"],
-	    	"pm1": columnIndices["pm1"],
-		    "pm25": columnIndices["pm25"],
-            "pm10": columnIndices["pm10"],
-            "temp": columnIndices["temp"],
-            "hum": columnIndices["humidity"],
-    		"lat": columnIndices["Latitude"],
-            "long": columnIndices["Longitude"]};
+    		"unit": columns.indexOf("UnitNumber"),
+	    	"area": columns.indexOf("area"),
+		    "loc": columns.indexOf("location"),
+    		"time": columns.indexOf("time"),
+	    	"pm1": columns.indexOf("pm1"),
+		    "pm25": columns.indexOf("pm25"),
+            "pm10": columns.indexOf("pm10"),
+            "temp": columns.indexOf("temp"),
+            "hum": columns.indexOf("humidity"),
+    		"lat": columns.indexOf("Latitude"),
+            "long": columns.indexOf("Longitude")};
         geoMap = showMap("latestData", dataCols, zoom, centre);
         geoMap.addListener('bounds_changed', updateUnitVisibility);
 
@@ -137,16 +137,16 @@ function loadDataDisplay(latestData) {
 }
 
 function createTableRowFor(table, dataItem, display) {
-    var cols = Object.keys(columnIndices);
     var t = document.createElement("tr");
-    for (var i=0; i < cols.length; i++) {
+    for (var i=0; i < columns.length; i++) {
         var td = document.createElement("td");
-        if (display && (cols[i] == "Latitude" || cols[i] == "Longitude")) {
-            td.innerText = Number(dataItem[cols[i]]).toFixed(4);
-        } else if (display && cols[i] == "time") {
-            td.innerText = timeForDisplay(dataItem[cols[i]]);
+        if (display && (columns[i] == "Latitude" || columns[i] == "Longitude")) {
+            td.innerText = Number(dataItem[columns[i]]).toFixed(4);
+        } else if (display && columns[i] == "time") {
+            td.innerText = timeForDisplay(dataItem[columns[i]]);
+            td.setAttribute("style", "white-space:nowrap;");
         } else {
-            td.innerText = dataItem[cols[i]];
+            td.innerText = dataItem[columns[i]];
         }
         t.appendChild(td);
     }
@@ -161,7 +161,6 @@ function removeTableRows(table) {
 
 function createTableHeaders(table, dataItem) {
     var t;
-    columnIndices = {};
     if (table.tHead && table.tHead.rows.length > 0) {
         table.tHead.remove(0);
     }
@@ -171,11 +170,9 @@ function createTableHeaders(table, dataItem) {
     }
     t = document.createElement("tr");
     table.tHead.appendChild(t);
-    var cols = Object.keys(dataItem);
-    for (var i=0; i < cols.length; i++) {
+    for (var i=0; i < columns.length; i++) {
         t = document.createElement("th");
-        t.innerText = cols[i];
-        columnIndices[cols[i]] = i;
+        t.innerText = columns[i];
         table.tHead.rows[0].appendChild(t);
     }
 }
@@ -348,9 +345,9 @@ function downloadData(url, callback) {
                     if (timeForSort(a["time"]) == timeForSort(b["time"])) {
                         return 0;
                     } else if (timeForSort(a["time"]) < timeForSort(b["time"])) {
-                        return -1;
-                    } else {
                         return 1;
+                    } else {
+                        return -1;
                     }
                 } else {
                     return ((a[unitId] < b[unitId])?-1:1);
