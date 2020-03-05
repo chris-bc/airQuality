@@ -94,9 +94,9 @@ function timeForDisplay(time) {
 	return ret;
   }
   
-  // Convert time from dd-mm-yyyy hh:mm:ss to yyyy-mm-dd hh:mm:ss
+  // Convert time from dd-mm-yyyy hh:mm:ss to yyyy-mm-ddhh:mm:ss
   function timeForSort(time) {
-	return time.substring(6, 10) + time.substring(3, 5) + time.substring(0, 2) + time.substring(11, 19);
+	return time.substring(6, 10) + time.substring(3, 5) + time.substring(0, 2) + time.substring(11, 13) + time.substring(14, 16) + time.substring(17);
   }
   
   // Take a time in dd-mm-yyyy hh:mm:ss, round to nearest 4 hours and return it
@@ -526,6 +526,19 @@ function listGroupNumVisible(lgId) {
 		}
 	}
 	return count;
+}
+
+function listGroupVisibleItems(lgId) {
+	var retVal = [];
+	var itemSel;
+	var lg = document.getElementById(lgId);
+	for (var i=0; i < lg.childElementCount; i++) {
+		itemSel = "#" + lg.children[i].getAttribute("id");
+		if (!($(itemSel).hasClass("d-none"))) {
+			retVal.push(lg.children[i]);
+		}
+	}
+	return retVal;
 }
 
 function listGroupNumSelected(lgId) {

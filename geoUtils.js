@@ -35,6 +35,39 @@ function setElementSize() {
     $("#navAbout").css("padding-top", $("#myNav").css("height"));
 }
 
+// Called when selected or visible is clicked, when a unit is clicked and when map bounds change
+function updateDataTable() {
+    var unitsToDisplay = [];
+    if (document.getElementById("selected").checked) {
+        unitsToDisplay = listGroupSelectedItems("mapSensorList");
+    } else if (document.getElementById("visible").checked) {
+        unitsToDisplay = listGroupVisibleItems("mapSensorList");
+    }
+    if (unitsToDisplay.length > 0) {
+        // Convert from objects to unitID strings
+        for (var i=0; i < unitsToDisplay.length; i++) {
+            unitsToDisplay[i] = unitsToDisplay[i].getAttribute("id").substring(12);
+        }
+        var table = document.getElementById("dataTable");
+        if (!table.tBodies || !table.tBodies[0] || table.tBodies[0].rows.length == 0) {
+            return;
+        }
+        var rows = table.tBodies[0].rows;
+        for (var i=0; i < rows.length; i++) {
+            if (unitsToDisplay.indexOf(rows[i].cells[columns.indexOf(unitId)].innerText) < 0) {
+                // Unit not found, hide it
+                if (!($(rows[i]).hasClass("d-none"))) {
+                    $(rows[i]).addClass("d-none");
+                }
+            } else {
+                if ($(rows[i]).hasClass("d-none")) {
+                    $(rows[i]).removeClass("d-none");
+                }
+            }
+        }
+    }
+}
+
 function initMap() {
     var centre = new google.maps.LatLng(-25.4904429, 147.3062684);
     var zoom = 4;
@@ -62,14 +95,13 @@ function initMap() {
                 var unit = this["kUnit"];
                 listGroupSelectOnly("mapSensorList", "mapUnit-btn-" + unit);
             });
-            // mapMarkers[i].addListener("mouseover", function() {
-            //     this.setAnimation(google.maps.Animation.BOUNCE);
-            // });
-            // mapMarkers[i].addListener("mouseout", function() {
-            //     this.setAnimation(null);
-            // });
         }
 	}
+}
+
+function changeSelectedData() {
+    displayUnitWarningIfNeeded();
+    updateDataTable();
 }
 
 function updateUnitVisibility() {
@@ -91,6 +123,7 @@ function updateUnitVisibility() {
             }
         }
     }
+    updateDataTable();
 }
 
 function loadLatestData() {
@@ -102,6 +135,38 @@ function reloadData() {
         loadLatestData();
     } else {
         // Build params
+        var includeFaulty = false;
+        if (!document.getElementById("hideFaulty").checked) {
+            includeFaulty = true;
+        }
+        var timeNum = document.getElementById("timeNum").value;
+        var timeType = document.getElementById("timeType").value;
+        var units = "";
+        var items;
+        if (document.getElementById("selected").checked) {
+            items = listGroupSelectedItems("mapSensorList");
+        } else if (document.getElementById("visible").checked) {
+            items = listGroupVisibleItems("mapSensorList");
+        }
+        if (items !== undefined) {
+            for (var i=0; i < items.length; i++) {
+                var thisId = items[i].getAttribute("id");
+                thisId = thisId.substring(12);
+                if (units.length > 0) {
+                    units += ",";
+                }
+                units += thisId;
+            }
+        }
+        var params = "";
+        params += "?timeNum=" + timeNum + "&timeType=" + timeType;
+        if (includeFaulty) {
+            params += "&faulty=1";
+        }
+        if (units.length > 0) {
+            params += "&units=" + units;
+        }
+        downloadData(latestDataUrl + params, processHistoricalData);
     }
 }
 
@@ -138,6 +203,7 @@ function loadDataDisplay(latestData) {
 
 function createTableRowFor(table, dataItem, display) {
     var t = document.createElement("tr");
+    t.setAttribute("id", "row" + table.tBodies[0].rows.length);
     for (var i=0; i < columns.length; i++) {
         var td = document.createElement("td");
         if (display && (columns[i] == "Latitude" || columns[i] == "Longitude")) {
@@ -164,7 +230,7 @@ function createTableHeaders(table, dataItem) {
     if (table.tHead && table.tHead.rows.length > 0) {
         table.tHead.remove(0);
     }
-    if (!table.tHead || !table.tHead[0]) {
+    if (!table.tHead) {
         t = document.createElement("tHead");
         table.appendChild(t);
     }
@@ -247,6 +313,7 @@ function processDataForMapping(latestData) {
             } else {
                 $(sel).addClass("active");
             }
+            updateDataTable();
         };
         listGroup.appendChild(btn);
 
