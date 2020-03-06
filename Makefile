@@ -12,8 +12,8 @@ directory:
 blueskies: directory blueskies.pl blueUtils.js skiesUtils.js blueskies-banner.jpg
 	@cp -r blueskies* Chart* blueUtils.js apiKey.pl bootstrap* markers skiesUtils.js deploy/
 
-ozskies: directory ozskies.pl ozUtils.js skiesUtils.js nswskies-banner.jpg
-	@cp -r ozUtils.js nswskies-banner.jpg Chart* ozskies.pl skiesUtils.js apiKey.pl bootstrap* markers deploy/
+ozskies: directory ozskies.pl ozUtils.js skiesUtils.js ozskies-banner.jpg apiKey.pl
+	@cp -r ozUtils.js ozskies-banner.jpg Chart* ozskies.pl skiesUtils.js apiKey.pl bootstrap* markers deploy/
 
 geoskies: directory geo*
 	@cp -r Chart* bootstrap* markers apiKey.pl skiesUtils.js geoData.pl geoUtils.js deploy/

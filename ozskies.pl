@@ -269,7 +269,7 @@ print<<EOF;
             <a class='dropdown-item' target='_blank' href='http://www.bennettscash.id.au'>bennettscash</a>
       </div></li></ul>
   </div></nav>
-  <div class='container'><img src='nswskies-banner.jpg' class='img-fluid mb-3' alt='Site Banner'/>
+  <div class='container'><img src='ozskies-banner.jpg' class='img-fluid mb-3' alt='Site Banner'/>
   <h1 class='text-center mt-sm-2'>Australian Environmental Data</h1>
   <div id='navMap' class='container' style='padding-top:75px;height:600px;'>
   <p class='h5 text-center mb-2'>Map<button type='button' class='btn btn-info mb-2 float-right' onClick='exportTableCSV(\"latestData\", \"ozSKIES-sensorData-latest.csv\")'>Download Latest Data as CSV</button></p>
