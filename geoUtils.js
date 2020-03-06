@@ -124,6 +124,7 @@ function updateUnitVisibility() {
         }
     }
     updateDataTable();
+    displayUnitWarningIfNeeded();
 }
 
 function loadLatestData() {
@@ -178,6 +179,126 @@ function processLatestData(latestData) {
 function processHistoricalData(latestData) {
     loadDataDisplay(latestData);
     // TODO: convert to averages then processDataForMapping
+    // If timeType is hours just create an average of all observations for each sensor
+    // Otherwise create an average for each day and then average daily averages
+    // Approach: Rely on data sorted by Unit and Time Desc, create daily averages
+    // If days use that, otherwise average them
+    var averages = [];
+    var curObj = {};
+    var curUnit = "";
+    var curDay;
+    var pmCount = 0;
+    var tmpCount = 0;
+    for (var i=0; i < latestData.length; i++) {
+        // Initialise if first unit
+        if (curUnit == "") {
+            curUnit = latestData[i]["UnitNumber"];
+            curDay = {"time": latestData[i]["time"].substring(0, 10), "pm1": 0, "pm25": 0, "pm10": 0, "temp": 0, "humidity": 0};
+            curObj["UnitNumber"] = curUnit;
+            curObj["time"] = [];
+        } else if (curUnit != latestData[i]["UnitNumber"]) {
+            // New unit - Push existing to the array and start afresh
+            curDay["pm1"] = curDay["pm1"] / pmCount;
+            curDay["pm25"] = curDay["pm25"] / pmCount;
+            curDay["pm10"] = curDay["pm10"] / pmCount;
+            if (tmpCount > 0) {
+                curDay["temp"] = curDay["temp"] / tmpCount;
+                curDay["humidity"] = curDay["humidity"] / tmpCount;
+            }
+            curObj["time"].push(curDay);
+            pmCount = 0;
+            tmpCount = 0;
+            averages.push(curObj);
+            curObj = {};
+            curObj["UnitNumber"] = latestData[i]["UnitNumber"];
+            curObj["time"] = [];
+            curUnit = latestData[i]["UnitNumber"];
+            curDay = {"time": latestData[i]["time"].substring(0, 10), "pm1": 0, "pm25": 0, "pm10": 0, "temp": 0, "humidity": 0};
+        } else if (curDay["time"] != latestData[i]["time"].substring(0, 10)) {
+            // Same unit but a new day - Calculate average and reset counter
+            curDay["pm1"] = curDay["pm1"] / pmCount;
+            curDay["pm25"] = curDay["pm25"] / pmCount;
+            curDay["pm10"] = curDay["pm10"] / pmCount;
+            if (tmpCount > 0) {
+                curDay["temp"] = curDay["temp"] / tmpCount;
+                curDay["humidity"] = curDay["humidity"] / tmpCount;
+            }
+            curObj["time"].push(curDay);
+            pmCount = 0;
+            tmpCount = 0;
+            curDay = {"time": latestData[i]["time"].substring(0, 10), "pm1": 0, "pm25": 0, "pm10": 0, "temp": 0, "humidity": 0};
+        }
+        // Add current values
+        curDay["pm1"] += latestData[i]["pm1"];
+        curDay["pm25"] += latestData[i]["pm25"];
+        curDay["pm10"] += latestData[i]["pm10"];
+        pmCount++;
+        if (latestData[i]["temp"] != null) {
+            curDay["temp"] += latestData[i]["temp"];
+            curDay["humidity"] += latestData[i]["humidity"];
+            tmpCount++;
+        }
+
+        if (!curObj["Latitude"]) {
+            curObj["Latitude"] = latestData[i]["Latitude"];
+            curObj["Longitude"] = latestData[i]["Longitude"];
+        }
+        if (!curObj["location"] && latestData[i]["location"] != null) {
+            curObj["location"] = latestData[i]["location"];
+            curObj["area"] = latestData[i]["area"];
+        }
+    }
+    // Add the final item
+    if (pmCount > 0) {
+        curDay["pm1"] = curDay["pm1"] / pmCount;
+        curDay["pm25"] = curDay["pm25"] / pmCount;
+        curDay["pm10"] = curDay["pm10"] / pmCount;
+    }
+    if (tmpCount > 0) {
+        curDay["temp"] = curDay["temp"] / tmpCount;
+        curDay["humidity"] = curDay["humidity"] / tmpCount;
+    }
+    curObj["time"].push(curDay);
+    averages.push(curObj);
+
+    // Create daily averages
+    for (var i=0; i < averages.length; i++) {
+        var pm1Avg = 0;
+        var pm25Avg = 0;
+        var pm10Avg = 0;
+        var tmpAvg = 0;
+        var humAvg = 0;
+        var pmCount = 0;
+        var tmpCount = 0;
+        for (var j=0; j < averages[i]["time"].length; j++) {
+            if (averages[i]["time"][j]["temp"] > 0) {
+                tmpAvg += averages[i]["time"][j]["temp"];
+                humAvg += averages[i]["time"][j]["humidity"];
+                tmpCount++;
+            }
+            pm1Avg += averages[i]["time"][j]["pm1"];
+            pm25Avg += averages[i]["time"][j]["pm25"];
+            pm10Avg += averages[i]["time"][j]["pm10"];
+            pmCount++;
+        }
+        pm1Avg = pm1Avg / pmCount;
+        pm25Avg = pm25Avg / pmCount;
+        pm10Avg = pm10Avg / pmCount;
+        if (tmpCount > 0) {
+            tmpAvg = tmpAvg / tmpCount;
+            humAvg = humAvg / tmpCount;
+        }
+        averages[i]["pm1"] = pm1Avg.toFixed(2);
+        averages[i]["pm25"] = pm25Avg.toFixed(2);
+        averages[i]["pm10"] = pm10Avg.toFixed(2);
+        averages[i]["temp"] = tmpAvg.toFixed(2);
+        averages[i]["humidity"] = humAvg.toFixed(2);
+        var newTime = averages[i]["time"][averages[i]["time"].length - 1]["time"] + " - " + averages[i]["time"][0]["time"];
+        averages[i]["time"] = newTime;
+        averages[i]["dataset"] = "Daily Average";
+    }
+    // averages should now be in a suitable format for  the mapping utils
+    processDataForMapping(averages);
 }
 
 function loadDataDisplay(latestData) {
@@ -246,13 +367,7 @@ function createTableHeaders(table, dataItem) {
 function processDataForMapping(latestData) {
     var listGroup = document.getElementById("mapSensorList");
     var latestTable = document.getElementById("latestData");
-    // Sort the JSON data
-    latestData = latestData.sort(function (a, b) {
-        if (a[unitId] == b[unitId]) {
-            return 0;
-        }
-        return ((a[unitId]<b[unitId])?-1:1);
-    });
+
     // Some units are present in both datasets
     // Identify those cases and find the latest obs
     // Supplement its data with the other (temp and hum or area and loc)
@@ -291,6 +406,11 @@ function processDataForMapping(latestData) {
     if (!latestTable.tBodies || !latestTable.tBodies[0]) {
         th = document.createElement("tbody");
         latestTable.appendChild(th);
+    }
+
+    // Remove existing list group items
+    while (listGroup.childElementCount > 0) {
+        listGroup.removeChild(listGroup.children[0]);
     }
 
     for (var i=0; i < latestData.length; i++) {
@@ -341,7 +461,14 @@ function buttonLayout(dataItem) {
             ret += dataItem["location"];
         }
     }
-    ret += "</strong></small><small><em>" + timeForDisplay(dataItem["time"]) + "</em></small></div>\n<small><div class='d-flex flex-row flex-wrap'>";
+    ret += "</strong></small><small><em>";
+    // For daily averages don't parse the time
+    if (dataItem["dataset"] == "Daily Average") {
+        ret += dataItem["time"];
+    } else {
+        ret += timeForDisplay(dataItem["time"]);
+    }
+    ret += "</em></small></div>\n<small><div class='d-flex flex-row flex-wrap'>";
     if (dataItem["temp"] !== undefined && dataItem["temp"] != null) {
         ret += "<div class='d-flex flex-nowrap mr-2'><div class='mr-1'><small><strong>Temperature:</strong></small></div><div class='mr-1'><small>";
         ret += dataItem["temp"] + "</small></div></div>\n";
@@ -406,7 +533,7 @@ function downloadData(url, callback) {
     request.onreadystatechange = function() {
         if (request.readyState === 4 && request.status === 200) {
             var content = JSON.parse(request.responseText);
-            // Sort the results on unitId and time
+            // Sort the results on unitId and time (newest to oldest)
             content.sort(function(a, b) {
                 if (a[unitId] == b[unitId]) {
                     if (timeForSort(a["time"]) == timeForSort(b["time"])) {
