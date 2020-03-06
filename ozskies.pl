@@ -245,7 +245,7 @@ print<<EOF;
   <link rel='stylesheet' href='bootstrap.min.css'>
   <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
   <script src='bootstrap.min.js'></script><script src='Chart.bundle.min.js'></script>
-  <script src='skiesUtils.js'></script><script src='nswUtils.js'></script>
+  <script src='skiesUtils.js'></script><script src='ozUtils.js'></script>
   <script src="https://unpkg.com/\@google/markerclustererplus\@4.0.1/dist/markerclustererplus.min.js"></script>
 </head><body onload='displayChartJs()' data-spy='scroll' data-target='#myNav' data-offset='70' style='position:relative; padding-top:75px;'>
   <nav id ='myNav' class='navbar navbar-light bg-light navbar-expand-md fixed-top'>
