@@ -22,76 +22,75 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropDown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Other Pages
-                    </a><div class="dropdown-menu" aria-labelledBy="navbarDropDown" id="navbarDropLinks" name="navbarDropLinks">
+                    </a><div class="dropdown-menu" aria-labelledby="navbarDropDown" id="navbarDropLinks" name="navbarDropLinks">
                         <a class="dropdown-item" href="blueskies.pl" target="_blank">blueSKIES</a>
                         <a class="dropdown-item" href="ozsjies.pl" target="_blank">ozSKIES</a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" target="_blank" href="http://www.bennettscash.id.au">bennettscash</a>
                 </div></li></ul>
         </div></nav>
-    <div class="container-fluid">
+        <div class="container-fluid">
         <div class="row" id="navMap">
             <table id="latestData" class="d-none"></table>
-                <div class="d-flex w-100 flex-column flex-md-row">
-                    <div class="d-flex flex-column w-100 h-100">
-                        <small><div class="d-flex flex-row w-100 flex-grow-1 justify-content-between px-1 align-items-center" style="background-color: #f8f9fa">
-                            <div class="form-check form-check-inline">
-                                <label class="form-check-label mr-1" for="hideFaulty">Hide&nbsp;faulty</label>
-                                <input class="form-check-input" type="checkbox" id="hideFaulty" value="1" checked/>
-                            </div>
-                            <div class="mr-1">Show:</div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="show" id="showLatest" value="latest" checked onchange="timeEnableDisable();"/>
-                                <label class="form-check-label" for="showLatest">Latest</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="show" id="limitTime" value="historical" onchange="timeEnableDisable();"/>
-                                <label class="form-check-label" for="limitTime">Historical</label>
-                            </div>
-                            <div><select class="custom-select custom-select-sm" id="timeNum" disabled onchange="updateTime();">
-                                <option selected value="1">1</option>
-                            </select></div>
-                            <div><select class="custom-select custom-select-sm mr-1" id="timeType" disabled onchange="updateMapTimeType();">
-                                <option selected value="hours">Hours</option>
-                                <option value="days">Days</option>
-                                <option value="weeks">Weeks</option>
-                                <option value="months">Months</option>
-                                <option value="years">Years</option>
-                            </select></div>
-                            <div class="mr-1">For:</div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="dataSel" id="selected" value="selected" onclick="changeSelectedData();"/>
-                                <label class="form-check-label" for="selected">Selected</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="dataSel" id="visible" value="visible" onclick="changeSelectedData();"/>
-                                <label class="form-check-label" for="visible">Visible</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="dataSel" id="all" value="all" checked onclick="changeSelectedData();"/>
-                                <label class="form-check-label" for="all">All</label>
-                            </div>
-                            <button type="button" class="btn btn-primary btn-sm" onclick="reloadData();">Apply</button>
-                        </div></small>
-                        <div id="timeWarn" class="alert alert-danger d-none mb-0" role="alert">
-                            <strong>Caution!</strong> Disabling the time filter may result in a very
-                            large amount of data being downloaded from the server. Loading the page
-                            with this setting may take some time.
+            <div class="d-flex w-100 flex-column flex-md-row">
+                <div class="d-flex flex-column w-100 h-100">
+                    <small><div class="d-flex flex-row w-100 flex-grow-1 justify-content-between px-1 align-items-center" style="background-color: #f8f9fa">
+                        <div class="form-check form-check-inline">
+                            <label class="form-check-label mr-1" for="hideFaulty">Hide&nbsp;faulty</label>
+                            <input class="form-check-input" type="checkbox" id="hideFaulty" value="1" checked/>
                         </div>
-                        <div class="w-100 h-100" id="map"></div>
+                        <div class="mr-1">Show:</div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="show" id="showLatest" value="latest" checked onchange="timeEnableDisable();"/>
+                            <label class="form-check-label" for="showLatest">Latest</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="show" id="limitTime" value="historical" onchange="timeEnableDisable();"/>
+                            <label class="form-check-label" for="limitTime">Historical</label>
+                        </div>
+                        <div><select class="custom-select custom-select-sm" id="timeNum" disabled onchange="updateTime();">
+                            <option selected value="1">1</option>
+                        </select></div>
+                        <div><select class="custom-select custom-select-sm mr-1" id="timeType" disabled onchange="updateMapTimeType();">
+                            <option selected value="hours">Hours</option>
+                            <option value="days">Days</option>
+                            <option value="weeks">Weeks</option>
+                            <option value="months">Months</option>
+                            <option value="years">Years</option>
+                        </select></div>
+                        <div class="mr-1">For:</div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="dataSel" id="selected" value="selected" onclick="changeSelectedData();"/>
+                            <label class="form-check-label" for="selected">Selected</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="dataSel" id="visible" value="visible" onclick="changeSelectedData();"/>
+                            <label class="form-check-label" for="visible">Visible</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="dataSel" id="all" value="all" checked onclick="changeSelectedData();"/>
+                            <label class="form-check-label" for="all">All</label>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="reloadData();">Apply</button>
+                    </div></small>
+                    <div id="timeWarn" class="alert alert-danger d-none mb-0" role="alert">
+                        <strong>Caution!</strong> Disabling the time filter may result in a very
+                        large amount of data being downloaded from the server. Loading the page
+                        with this setting may take some time.
                     </div>
-                    <div id="mapSensors" style="overflow:auto;">
-                        <div class="list-group flex-row flex-md-column" id="mapSensorList"></div>
-                    </div>
+                    <div class="w-100 h-100" id="map"></div>
+                </div>
+                <div id="mapSensors" style="overflow:auto;">
+                    <div class="list-group flex-row flex-md-column" id="mapSensorList"></div>
                 </div>
             </div>
         </div>
-        <div class="container" id="navData">
+        <div class="container-fluid" id="navData">
             <div class="table-responsive">
                 <table id="dataTable" class="table table-bordered table-striped"></table>
             </div>
         </div>
-        <div class="container" id="navChart">
+        <div class="container-fluid" id="navChart">
             <div class="row justify-content-center"><h4 class="text-center">Air Quality</h4></div>
             <div class="row mb-3"><canvas id="pmChart"></canvas></div>
             <div class="row justify-content-center"><h4 class="text-center">Temperature &amp; Humidity</h4></div>
