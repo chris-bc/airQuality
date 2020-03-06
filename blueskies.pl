@@ -260,7 +260,7 @@ $statement->finish;
 print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1'>
   <link rel='stylesheet' href='bootstrap.min.css'>
   <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
-  <script src='bootstrap.min.js'></script><script src='addRemove.js'></script>
+  <script src='bootstrap.min.js'></script><script src='blueUtils.js'></script>
   <script src='skiesUtils.js'></script><script src='Chart.bundle.min.js'></script>
   <script src='https://unpkg.com/\@google/markerclustererplus\@4.0.1/dist/markerclustererplus.min.js'></script>
   </head><body onload='initChartJs()' data-spy='scroll' data-target='#myNav' data-offset='70' style='position:relative; padding-top:75px;'>
