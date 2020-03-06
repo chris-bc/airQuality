@@ -159,7 +159,7 @@ function reloadData() {
             }
         }
         var params = "";
-        params += "?timeNum=" + timeNum + "&timeType=" + timeType;
+        params += "?historical=1&timeNum=" + timeNum + "&timeType=" + timeType;
         if (includeFaulty) {
             params += "&faulty=1";
         }
