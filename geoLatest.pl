@@ -56,7 +56,7 @@ my $blueTimeCol = "lastsensingdate";
 my $nswTimeCol = "SensingDate";
 my $blueSQLTimeLatest = "strftime('%d-%m-%Y %H:%M:%S', MAX($blueTimeCol), 'localtime') as time";
 my $nswSQLTimeLatest = "strftime('%d-%m-%Y %H:%M:%S', MAX($nswTimeCol), 'localtime') as time";
-my $blueSQLTimeHistoric = "strftime('%d-%m-%Y %H:%M:%S' $blueTimeCol, 'localtime') as time";
+my $blueSQLTimeHistoric = "strftime('%d-%m-%Y %H:%M:%S', $blueTimeCol, 'localtime') as time";
 my $nswSQLTimeHistoric = "strftime('%d-%m-%Y %H:%M:%S', $nswTimeCol, 'localtime') as time";
 
 my $blueSQL = $blueSQLStart;
@@ -81,6 +81,7 @@ if (length $units > 0) {
     if ($firstWhere == 1) {
         $blueSQL .= " WHERE ";
         $nswSQL .= " WHERE ";
+        $firstWhere = 0;
     } else {
         $blueSQL .= " AND ";
         $nswSQL .= " AND ";
@@ -92,6 +93,7 @@ if ($historical == 1) {
     if ($firstWhere == 1) {
         $blueSQL .= " WHERE ";
         $nswSQL .= " WHERE ";
+        $firstWhere = 0;
     } else {
         $blueSQL .= " AND ";
         $nswSQL .= " AND ";
