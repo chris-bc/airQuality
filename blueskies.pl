@@ -6,12 +6,8 @@ use strict;
 use warnings;
 use lib qw(..);
 use Data::Dumper;
-use vars qw($apiKey);
 
 print CGI::header();
-
-# Import apiKey
-do './apiKey.pl';
 
 # Initialise variables
 my $unsafeCharRegEx = "[ \"|\(|\)|\/\:]";
@@ -708,4 +704,4 @@ requests please <a href='mailto:chris\@bennettscash.id.au'>contact me</a>.</p>
 <p>For more information on the KOALAS project see <a href='http://bluemountains.sensors.net.au/' target='_blank'>http://bluemountains.sensors.net.au/</a></p>
 <p>blueSKIES is <a href='https://github.com/chris-bc/airQuality'>hosted on GitHub</a>. Feel free to develop it further and send me a pull request</p>
 <p><font size=-1>Built by <a href='mailto:chris\@bennettscash.id.au'>Chris Bennetts-Cash</a>, 2020. <a href='http://www.bennettscash.id.au' target='_blank'>http://www.bennettscash.id.au</a></font></p>
-</div></div><script async defer src='https://maps.googleapis.com/maps/api/js?key=$apiKey&libraries=visualization&callback=initMap'></script></body></html>";
+</div></div><script async defer src='https://maps.googleapis.com/maps/api/js?key=APIKEY&libraries=visualization&callback=initMap'></script></body></html>";

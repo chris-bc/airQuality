@@ -10,13 +10,15 @@ directory:
 	@mkdir -p deploy
 
 blueskies: directory blueskies.pl blueUtils.js skiesUtils.js blueskies-banner.jpg
-	@cp -r blueskies* Chart* blueUtils.js apiKey.pl bootstrap* markers skiesUtils.js deploy/
+	@cp -r blueskies-banner.jpg Chart* blueUtils.js bootstrap* markers skiesUtils.js deploy/
+	@./apiKey blueskies.pl > deploy/blueskies.pl
 
-ozskies: directory ozskies.pl ozUtils.js skiesUtils.js ozskies-banner.jpg apiKey.pl
-	@cp -r ozUtils.js ozskies-banner.jpg Chart* ozskies.pl skiesUtils.js apiKey.pl bootstrap* markers deploy/
+ozskies: directory ozskies.pl ozUtils.js skiesUtils.js ozskies-banner.jpg
+	@cp -r ozUtils.js ozskies-banner.jpg Chart* skiesUtils.js bootstrap* markers deploy/
+	@./apiKey ozskies.pl > deploy/ozskies.pl
 
 geoskies: directory geo*
-	@cp -r Chart* bootstrap* markers apiKey.pl skiesUtils.js geoData.pl geoUtils.js deploy/
+	@cp -r Chart* bootstrap* markers skiesUtils.js geoData.pl geoUtils.js deploy/
 	@./apiKey geoskies.html > deploy/geoskies.html
 
 all: blueskies ozskies geoskies

@@ -6,10 +6,6 @@ use strict;
 use warnings;
 use lib qw(..);
 use Data::Dumper;
-use vars qw($apiKey);
-
-# Import api key
-do './apiKey.pl';
 
 # Initialise variables
 my $dbFile = "nswskies.sqlite";
@@ -506,6 +502,6 @@ print<<EOF;
       Feel free to develop them further and send me a pull request.</p>
       <p><font size=-1>Built by <a href='mailto:chris\@bennettscash.id.au'>Chris
       Bennetts-Cash</a>, 2020. <a href='http://www.bennettscash.id.au' target='_blank'>http://www.bennettscash.id.au</a></font></p>
-</div></div></div><script async defer src='https://maps.googleapis.com/maps/api/js?key=$apiKey&libraries=visualization&callback=initMap'></script></body></html>
+</div></div></div><script async defer src='https://maps.googleapis.com/maps/api/js?key=APIKEY&libraries=visualization&callback=initMap'></script></body></html>
 
 EOF
