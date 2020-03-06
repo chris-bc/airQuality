@@ -69,8 +69,13 @@ function updateDataTable() {
 }
 
 function initMap() {
+    // If the map already exists maintain the current centre and zoom
     var centre = new google.maps.LatLng(-25.4904429, 147.3062684);
     var zoom = 4;
+    if (geoMap) {
+        centre = geoMap.center;
+        zoom = geoMap.zoom;
+    }
     var dataCols = {};
     if (document.getElementById("latestData").tBodies && document.getElementById("latestData").tBodies.length > 0 && document.getElementById("latestData").tBodies[0].rows.length > 0) {
         dataCols = {
