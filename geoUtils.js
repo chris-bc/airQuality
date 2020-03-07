@@ -16,6 +16,7 @@ $( document ).ready(function() {
     loadLatestData();
     // Populate the time number select box
     updateTime();
+    createExplanatoryList();
   });
 
 window.onresize = function(event) {
@@ -33,6 +34,35 @@ function setElementSize() {
     $("#navData").css("padding-top", $("#myNav").css("height"));
     $("#navChart").css("padding-top", $("#myNav").css("height"));
     $("#navAbout").css("padding-top", $("#myNav").css("height"));
+    $("#navHow").css("padding-top", $("#myNav").css("height"));
+}
+
+// Create listItems in #aqiColourList explaining AQI colours and PM thresholds
+function createExplanatoryList() {
+    var list = document.getElementById("aqiColourList");
+    for (var i=0; i < aqithresholds.length; i++) {
+        var li = document.createElement("li");
+        li.setAttribute("class", "list-group-item");
+        li.setAttribute("style", "background-color:" + aqiLvlColours[i] + ";");
+        var aqiText = "AQI: " + (Number(aqithresholds[i]) + Number((i==0)?0:1));
+        var pm1Text = "PM1: " + (Number(pm1thresholds[i]) + Number((i==0)?0:0.1));
+        var pm25Text = "PM2.5: " + (Number(pm25thresholds[i]) + Number((i==0)?0:0.1));
+        var pm10Text = "PM10: " + (Number(pm10thresholds[i]) + Number((i==0)?0:0.1));
+        if (i == aqithresholds.length - 1) {
+            aqiText += " +";
+            pm1Text += " +";
+            pm25Text += " +";
+            pm10Text += " +";
+        } else {
+            aqiText += " - " + aqithresholds[i+1];
+            pm1Text += " - " + pm1thresholds[i+1];
+            pm25Text += " - " + pm25thresholds[i+1];
+            pm10Text += " - " + pm10thresholds[i+1];
+        }
+        var text = aqiText + " (Equivalent to " + pm1Text + ", " + pm25Text + ", " + pm10Text + ")";
+        li.innerText = text;
+        list.appendChild(li);
+    }
 }
 
 // Called when selected or visible is clicked, when a unit is clicked and when map bounds change
@@ -341,6 +371,17 @@ function createTableRowFor(table, dataItem, display) {
             td.innerText = dataItem[columns[i]];
         }
         t.appendChild(td);
+    }
+    // Set the row colour based on PM values
+    if (display) {
+        var pm1 = t.cells[columns.indexOf("pm1")].innerText;
+        var pm25 = t.cells[columns.indexOf("pm25")].innerText;
+        var pm10 = t.cells[columns.indexOf("pm10")].innerText;
+        var pmColour = 0;
+        while (pm1 > pm1thresholds[pmColour+1]) {pmColour++;}
+        while (pm25 > pm25thresholds[pmColour+1]) {pmColour++;}
+        while (pm10 > pm10thresholds[pmColour+1]) {pmColour++;}
+        t.setAttribute("style", "background-color:"+aqiLvlColours[pmColour]+";");
     }
     table.tBodies[0].appendChild(t);
 }

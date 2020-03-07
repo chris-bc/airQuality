@@ -14,7 +14,9 @@ user-selectable chart options
 DONE -> CSV export
 
 geoSKIES
-=> Don't reset centre and zoom when refreshing map
+DONE => colourise rows
+=> charts
+DOSE => explain colours
 all js
 toolbar, map spanning full height 80% width for large screen or landscape tablet/phone, full width 70%? height for portrait tablet/phone
 use downloadUrL(somefile.pl) to retrieve data

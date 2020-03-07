@@ -16,6 +16,7 @@
             <a class="navbar-brand mr-sm-2" href="#">geoSKIES</a></div>
         <div class="collapse navbar-collapse" id="myNavBar">
             <ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="#navMap">Sensor Map</a></li>
+                <li class="nav-item"><a class="nav-link" href="#navHow">How This Works</a></li>
                 <li class="nav-item"><a class="nav-link" href="#navData">Sensor Data</a></li>
                 <li class="nav-item"><a class="nav-link" href="#navChart">Sensor Charts</a></li>
                 <li class="nav-item"><a class="nav-link" href="#navAbout">About</a></li>
@@ -85,6 +86,43 @@
                 </div>
             </div>
         </div>
+        <div class="container" id="navHow">
+            <div class="row justify-content-center"><h3 class="text-center">How This Works</h3></div>
+            <div class="row"><p>
+                By default this page retrieves the latest observations for air quality, humidity and temperature from its server
+                and displays these, both in the map and accompanying sensor list above and the table and charts of the data below.
+                If you choose to view historical data all observations in the specified time period are retrieved from the server and
+                displayed in the table and charts below. For display in the map and sensor listing above these observations are aggregated
+                into daily averages to obtain daily average air quality and environmental data. If the selected data spans multiple days
+                these are then further aggregated into average daily values for display. <strong>When viewing historical data, the data
+                displayed in the map and sensor listing above are average daily values.</strong></p></div>
+            <div class="row justify-content-center"><h5 class="text-center">Air Quality Colour Codes</h5></div>
+            <div class="row">
+                <p>Air Quality Index (AQI) values in the sensor listing, and rows in the data table, are coloured based on the AQI
+                using standard air quality colours. In determining the colour for rows in the data table the particulate matter (PM1,
+                PM2.5 or PM10) with the highest AQI is used to determine the colour. The colours used are as follows.</p></div>
+            <div class="row justify-content-center">
+                <ul class="list-group text-center" id="aqiColourList">
+                </ul>
+            </div>
+            <div class="row justify-content-center mt-2"><h5 class="text-center">Air Quality Index Calculation Notes</h5></div>
+            <div class="row">
+                <p>The notes above highlight two important distinctions to be aware of when comparing AQI values presented from various 
+                    sources, including this page. The first is that this page lacks sufficient data to calculate a standard overall 
+                    air quality index, which includes consideration of not just PM1, PM2.5 and PM10 but also ozone, sulfur dioxide, 
+                    nitogren dioxide, carbon monoxide and visibility. The second is that varying methods are used to combine these 
+                    air quality data into an overall index. The method used on this page is the most pragmatic given only a subset of 
+                    standard data is available for calculation. This is the method recommended by the New South Wales Department of 
+                    Environment, where individual AQI values are created for each pollutant - AQI<sub>PM1</sub>, AQI<sub>PM2.5</sub> 
+                    and AQI<sub>PM10</sub> (usually following the same process for other pollutants not available to this page). The 
+                    highest of these values is then used as the AQI. It is worth noting that other methods do exist, typically 
+                    involving different methods of weighted aggregation of individual pollutant AQI values.</p>
+                <p>For this reason, AQI values presented across different sources you use - including this page - may differ from 
+                    each other, even when considering the same location and time period. This lack of an agreed universal standard 
+                    means it is difficult to compare AQI values across different sources - If you need to collate data from multiple 
+                    sources you are much better off using pollutant data and aggregating it yourself.</p>
+            </div>
+        </div>
         <div class="container-fluid" id="navData">
             <div class="table-responsive">
                 <table id="dataTable" class="table table-bordered table-striped"></table>
@@ -97,18 +135,19 @@
             <div class="row mb-3"><canvas id="envChart"></canvas></div>        
         </div>
         <div class="container" id="navAbout">
-            <div class="row text-center"><h3>About</h3></div>
+            <div class="row justify-content-center"><h3 class="text-center">About</h3></div>
             <div class="row"><p>This page combines the data sources presented in blueSKIES and ozSKIES with a focus on
                 presenting data geospatially.
                 </p><p>From a technical perspective the development of these pages - blueSKIES, followed by ozSKIES, and finally 
                 geoSKIES - has included a transition from predominantly server-side functionality to an increased reliance on
                 client-side functionality. geoSKIES is being built entirely with HTML, JavaScript and CSS, with server components
                 used only as external modules to retrieve data from the underlying database. While this is largely an exercise in 
-                learning for me, I hope the resulting functionality will be of use. In the spirit of paying it forward - with these 
-                pages enabled by KOALA's exclusive use of client-side processing, this also makes the underlying data and APIs
-                available to other developers who would like to do more with the data.</p>
-                <p>blueSKIES, ozSKIES and geoSKIES are <a href="https://github.com/chris-bc/airQuality">hosted on GitHub</a>.
-                Feel free to develop them further and send me a pull request.</p>
+                learning for me, I hope the resulting functionality will be of use.</p>
+                <p>These pages were enabled by KOALA's exclusive use of client-side processing, inspiring an evening of investigation 
+                and identifying larger data sources. In the spirit of paying it forward, taking this approach with this page makes 
+                its underlying data and APIs available to other developers who would like to do more with the data.
+                To take it a step further blueSKIES, ozSKIES and geoSKIES are <a href="https://github.com/chris-bc/airQuality">hosted 
+                on GitHub</a>. Feel free to develop them further and send me a pull request.</p>
                 <p><font size="-1">Built by <a href="mailto:chris@bennettscash.id.au">Chris Bennetts-Cash</a>, 2020.
                 <a href="http://www.bennettscash.id.au" target="_blank">http://www.bennettscash.id.au</a></font></p>
             </div>
