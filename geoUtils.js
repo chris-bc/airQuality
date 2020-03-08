@@ -45,8 +45,6 @@ function setElementSize() {
     $("#navChart").css("padding-top", $("#myNav").css("height"));
     $("#navAbout").css("padding-top", $("#myNav").css("height"));
     $("#navHow").css("padding-top", $("#myNav").css("height"));
-    $("#loader").css("height", $(window).height());
-    $("#loader").css("padding-top", $("#myNav").css("height"));
 }
 
 // Create listItems in #aqiColourList explaining AQI colours and PM thresholds
@@ -182,7 +180,7 @@ function loadLatestData() {
 function reloadData() {
     // Show loading screen and hide content
     $("#loader").addClass("d-flex"); // flex class overrides d-none
-    $("#content").addClass("d-none");
+//    $("#content").addClass("d-none");
 
     if (document.getElementById("showLatest").checked) {
         loadLatestData();
@@ -613,7 +611,7 @@ function downloadData(url, callback) {
             });
             // Hide the loading pane
             $("#loader").removeClass("d-flex");
-            $("#content").removeClass("d-none");
+//            $("#content").removeClass("d-none");
             callback(content);
         }
     }

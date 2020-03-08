@@ -9,12 +9,43 @@
     <script src="https://unpkg.com/@google/markerclustererplus@4.0.1/dist/markerclustererplus.min.js"></script>
     <style>
         .loader {
-            border: 16px solid #f3f3f3;
+            border: 16px solid #aaa;
             border-top: 16px solid #555;
             border-radius: 50%;
             width: 120px;
             height: 120px;
+            -webkit-animation: spin 2s linear infinite;
+            -moz-animation: spin 2s linear infinite;
+            -ms-animation: spin 2s linear infinite;
+            -o-animation: spin 2s linear infinite;
             animation: spin 2s linear infinite;
+        }
+        .loading-overlay {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin: 0;
+            z-index: 10000;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        @-moz-keyframes spin {
+            0% { -moz-transform: rotate(0deg); }
+            100% { -moz-transform: rotate(360deg); }
+        }
+        @-ms-keyframes spin {
+            0% { -ms-transform: rotate(0deg); }
+            100% { -ms-transform: rotate(360deg); }
+        }
+        @-o-keyframes spin {
+            0% { -o-transform: rotate(0deg); }
+            100% { -o-transform: rotate(360deg); }
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -23,6 +54,10 @@
     </style>
 </head>
 <body data-spy="scroll" data-target="#myNav" data-offset="70" style="position:relative;">
+    <div class="row flex-row d-none align-content-center align-items-center justify-content-center loading-overlay" id="loader">
+        <div class="loader"></div><div style="width: 15%;"></div>
+        <h1 class="text-center" style="color: #aaa; letter-spacing: 0.12em;">Loading</h1>
+    </div>
     <nav id="myNav" class="navbar navbar-light bg-light navbar-expand-md fixed-top">
         <div class="navbar-header">
             <button type="button" class="navbar-toggler mr-sm-2" data-toggle="collapse" data-target="#myNavBar" aria-controls="myNavBar" aria-expanded="false" aria-label="Toggle Navigation">
@@ -44,9 +79,6 @@
                         <a class="dropdown-item" target="_blank" href="http://www.bennettscash.id.au">bennettscash</a>
                 </div></li></ul>
         </div></nav>
-        <div class="row flex-row w-100 d-none align-content-center align-items-center justify-content-center" id="loader">
-            <div class="loader"></div><div style="width: 20%;"></div><h1 class="text-center" style="color: #ddd;">Loading</h1>
-        </div>
         <div class="container-fluid" id="content">
         <div class="row" id="navMap">
             <table id="latestData" class="d-none"></table>
