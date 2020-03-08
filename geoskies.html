@@ -7,6 +7,20 @@
     <script src="bootstrap.min.js"></script><script src="Chart.bundle.min.js"></script>
     <script src="skiesUtils.js"></script><script src="geoUtils.js"></script>
     <script src="https://unpkg.com/@google/markerclustererplus@4.0.1/dist/markerclustererplus.min.js"></script>
+    <style>
+        .loader {
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #555;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body data-spy="scroll" data-target="#myNav" data-offset="70" style="position:relative;">
     <nav id="myNav" class="navbar navbar-light bg-light navbar-expand-md fixed-top">
@@ -30,7 +44,10 @@
                         <a class="dropdown-item" target="_blank" href="http://www.bennettscash.id.au">bennettscash</a>
                 </div></li></ul>
         </div></nav>
-        <div class="container-fluid">
+        <div class="row flex-row w-100 d-none align-content-center align-items-center justify-content-center" id="loader">
+            <div class="loader"></div><div style="width: 20%;"></div><h1 class="text-center" style="color: #ddd;">Loading</h1>
+        </div>
+        <div class="container-fluid" id="content">
         <div class="row" id="navMap">
             <table id="latestData" class="d-none"></table>
             <div class="d-flex w-100 flex-column flex-md-row">
