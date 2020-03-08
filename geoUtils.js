@@ -105,8 +105,8 @@ function updateDataTable() {
                 }
             }
         }
+        displayChartJs();
     }
-    displayChartJs();
 }
 
 function initMap() {

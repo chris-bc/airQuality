@@ -246,8 +246,7 @@ function findColumnIndices() {
 	var rows = table.tBodies[0].rows;
 	for (var i=0; i < rows.length; i++) {
 	  // Only include the row if it is shown
-	  var rowSel = "#" + rows[i].getAttribute("id");
-	  if (!($(rowSel).hasClass("d-none"))) {
+	  if (!($(rows[i]).hasClass("d-none"))) {
 		var unit = rows[i].cells[unitCol["index"]].innerText;
 		var temp = Number(rows[i].cells[tempCol["index"]].innerText);
 		var hum = Number(rows[i].cells[humCol["index"]].innerText);
