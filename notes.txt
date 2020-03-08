@@ -15,8 +15,10 @@ DONE -> CSV export
 
 geoSKIES
 DONE => colourise rows
-=> charts
-DOSE => explain colours
+DONE? => charts
+DONE => explain colours
+loading overlay on map after pushing button
+change zoom after viewing historical stalls?
 all js
 toolbar, map spanning full height 80% width for large screen or landscape tablet/phone, full width 70%? height for portrait tablet/phone
 use downloadUrL(somefile.pl) to retrieve data

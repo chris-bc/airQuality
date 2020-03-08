@@ -6,8 +6,22 @@ var pm1thresholds = [0, 12.0, 35.4, 55.4, 150.4, 250.4, 500.4];
 var pm10thresholds = [0, 54, 154, 254, 354, 424, 604];
 var aqithresholds = [0, 50, 100, 150, 200, 300, 500];
 
-var chart;
+// Initialise variables for column names - populated by findColumnIndices()
+// to draw chart
+var unitCol = { "col": "UnitNumber", "index": -1 };
+var tempCol = { "col": "TempDegC", "index": -1 };
+var humCol = { "col": "Humidity", "index": -1 };
+var pm1Col = { "col": "PM1", "index": -1 };
+var pm25Col = { "col": "PM2", "index": -1 };
+var pm10Col = { "col": "PM10", "index": -1 };
+var dateCol = { "col": "SensingDate", "index": -1 };
+var latCol = { "col": "Latitude", "index": -1 };
+var longCol = { "col": "Longitude", "index": -1 };
+var areaCol = { "col": "locationstring", "index": -1 };
+var locCol = { "col": "locationdescription", "index": -1 };
+
 var mapMarkers;
+var envChartJs, pmChartJs; // Manage chart redraws
 
 function timeEnableDisable() {
 	var c = document.getElementById("limitTime");
@@ -151,12 +165,10 @@ function timeForDisplay(time) {
 	return ret;
   }
 
+// If chart will be redrawn client is responsible for destroying it first with chart.destroy()
 // Display a line chart with the specified attributes
 function drawLineChart(canvas, data, leg, timeUnit) {
-	if (chart) {
-		chart.destroy();
-	}
-  	chart = new Chart(canvas, {
+  	return new Chart(canvas, {
 	    type: 'line',
     	data: data,
 	    options: {
@@ -179,12 +191,236 @@ function drawLineChart(canvas, data, leg, timeUnit) {
   	});
 }
 
+function findColumnIndices() {
+	var dataTable = document.getElementById("dataTable");
+	var headers = dataTable.tHead.rows[0].cells;
+	for (var i=0; i < headers.length; i++) {
+	  if (headers[i].textContent == unitCol["col"]) {
+		unitCol["index"] = i;
+	  } else if (headers[i].textContent == tempCol["col"]) {
+		tempCol["index"] = i;
+	  } else if (headers[i].textContent == humCol["col"]) {
+		humCol["index"] = i;
+	  } else if (headers[i].textContent == pm1Col["col"]) {
+		pm1Col["index"] = i;
+	  } else if (headers[i].textContent == pm25Col["col"]) {
+		pm25Col["index"] = i;
+	  } else if (headers[i].textContent == pm10Col["col"]) {
+		pm10Col["index"] = i;
+	  } else if (headers[i].textContent == dateCol["col"]) {
+		dateCol["index"] = i;
+	  } else if (headers[i].textContent == latCol["col"]) {
+		latCol["index"] = i;
+	  } else if (headers[i].textContent == longCol["col"]) {
+		longCol["index"] = i;
+	  } else if (headers[i].textContent == areaCol["col"]) {
+		areaCol["index"] = i;
+	  } else if (headers[i].textContent == locCol["col"]) {
+		locCol["index"] = i;
+	  }
+	}
+  }
+
+  function initChartDsGeneric(ds, unit, obsType) {
+	var pointRadius = 3;
+	var showLine = true;
+	ds["label"] = unit + " - " + obsType;
+	ds["pointRadius"] = pointRadius;
+	ds["showLine"] = showLine;
+	var col = rndColour();
+	ds["pointBackgroundColor"] = col;
+	ds["backgroundColor"] = col;
+  }
+  
+  function buildTableObjectsForChart() {
+	chartData = [];
+	if (unitCol["index"] == -1) {
+	  findColumnIndices();
+	}
+  
+	var table = document.getElementById("dataTable");
+	if (table.tBodies[0] === undefined) {
+	  // No rows
+	  return;
+	}
+	var rows = table.tBodies[0].rows;
+	for (var i=0; i < rows.length; i++) {
+	  // Only include the row if it is shown
+	  var rowSel = "#" + rows[i].getAttribute("id");
+	  if (!($(rowSel).hasClass("d-none"))) {
+		var unit = rows[i].cells[unitCol["index"]].innerText;
+		var temp = Number(rows[i].cells[tempCol["index"]].innerText);
+		var hum = Number(rows[i].cells[humCol["index"]].innerText);
+		var pm1 = Number(rows[i].cells[pm1Col["index"]].innerText);
+		var pm25 = Number(rows[i].cells[pm25Col["index"]].innerText);
+		var pm10 = Number(rows[i].cells[pm10Col["index"]].innerText);
+		var obsTime = rows[i].cells[dateCol["index"]].innerText;
+  
+		if (!(unit in chartData)) {
+		  chartData[unit] = [];
+		}
+		chartData[unit][obsTime] = [];
+		chartData[unit][obsTime]["temp"] = temp;
+		chartData[unit][obsTime]["hum"] = hum;
+		chartData[unit][obsTime]["pm1"] = pm1;
+		chartData[unit][obsTime]["pm25"] = pm25;
+		chartData[unit][obsTime]["pm10"] = pm10;
+	  }
+	}
+	return chartData;
+  }  
+
+  function displayChartJs() {
+	// If any row has fewer than 3 observations display a bar chart, otherwise line
+	var pmChart = document.getElementById("pmChart");
+	var envChart = document.getElementById("envChart");
+	var chartData = buildTableObjectsForChart();
+	
+	var numObs;
+	var minObs = 999;
+	for (var unitId in chartData) {
+	  numObs = 0;
+	  for (var time in chartData[unitId]) {
+		numObs++;
+	  }
+	  if (numObs < minObs) {
+		minObs = numObs;
+	  }
+	}
+  
+	if (minObs >= 3) {
+	  // Prepare line charts
+	  var pointRadius = 3;
+	  var showLine = true;
+	  var pmData = {};
+	  var envData = {};
+	  pmData.datasets = [];
+	  envData.datasets = [];
+	  var pm1ds;
+	  var pm25ds;
+	  var pm10ds;
+	  var tempDs;
+	  var humDs;
+	  for (var unitId in chartData) {
+		pm1ds = {};
+		pm25ds = {};
+		pm10ds = {};
+		tempDs = {};
+		humDs = {};
+		pm1ds.data = [];
+		pm25ds.data = [];
+		pm10ds.data = [];
+		tempDs.data = [];
+		humDs.data = [];
+  
+		initChartDsGeneric(pm1ds, unitId, "PM1");
+		initChartDsGeneric(pm25ds, unitId, "PM2.5");
+		initChartDsGeneric(pm10ds, unitId, "PM10");
+		initChartDsGeneric(tempDs, unitId, "Temp");
+		initChartDsGeneric(humDs, unitId, "Humidity");
+  
+		for (var time in chartData[unitId]) {
+		  pm1ds.data.push({x: time, y: chartData[unitId][time]["pm1"]});
+		  pm25ds.data.push({x: time, y: chartData[unitId][time]["pm25"]});
+		  pm10ds.data.push({x: time, y: chartData[unitId][time]["pm10"]});
+		  tempDs.data.push({x: time, y: chartData[unitId][time]["temp"]});
+		  humDs.data.push({x: time, y: chartData[unitId][time]["hum"]});
+		}
+  
+		pmData.datasets.push(pm1ds);
+		pmData.datasets.push(pm25ds);
+		pmData.datasets.push(pm10ds);
+		envData.datasets.push(tempDs);
+		envData.datasets.push(humDs);
+	  }
+  
+	  // If we're viewing hours or days display minutes, otherwise days
+	  var timeUnit = "day";
+	  if (document.getElementById("timeType").value == "hours" || document.getElementById("timeType").value == "days") {
+		timeUnit = "minute";
+	  }
+	  var leg = true;
+	  // Hide the legend if more than 10 units visible
+	  if (pmData.datasets.length > 10) {
+		leg = false;
+	  }
+  
+	  if (pmChartJs) {
+		pmChartJs.destroy();
+	  }
+	  if (envChartJs) {
+		envChartJs.destroy();
+	  }
+	  pmChartJs = drawLineChart(pmChart, pmData, leg, timeUnit);
+	  envChartJs = drawLineChart(envChart, envData, leg, timeUnit);
+	} else {
+	  // Prepare bar chart
+	  var pmContainer = [];
+	  var envContainer = [];
+	  var displayTypes = {"pm1": "PM 1", "pm25": "PM 2.5", "pm10": "PM 10", "temp": "Temp", "hum": "Humidity"};
+	  // Create a data item for each observation
+	  for (var unitId in chartData) {
+		for (var time in chartData[unitId]) {
+		  for (var type in displayTypes) {
+			var obs = {};
+			// Reformat time for sorting and display
+			var strTime = timeForDisplay(time);
+			var strTimeSort = timeForSort(time);
+			var labelPrefix = unitId + " - " + displayTypes[type];
+			obs["label"] = labelPrefix + " - " + strTime;
+			obs["sortLabel"] = labelPrefix + " - " + strTimeSort;
+			obs["bgCol"] = rndColour();
+			obs["data"] = chartData[unitId][time][type];
+			if (type == "temp" || type == "hum") {
+			  envContainer.push(obs);
+			} else {
+			  pmContainer.push(obs);
+			}
+		  }
+		}
+	  }
+	  // Sort the data containers
+	  pmContainer.sort(function (a, b) {
+		return a["sortLabel"] < b["sortLabel"];
+	  });
+	  envContainer.sort(function (a, b) {
+		return a["sortLabel"] < b["sortLabel"];
+	  });
+  
+	  // Unroll the containers into arrays
+	  var envData = [];
+	  var pmData = [];
+	  var envLabels = [];
+	  var pmLabels = [];
+	  var envCols = [];
+	  var pmCols = [];
+  
+	  for (var i in pmContainer) {
+		pmData.push(pmContainer[i]["data"]);
+		pmLabels.push(pmContainer[i]["label"]);
+		pmCols.push(pmContainer[i]["bgCol"]);
+	  }
+	  for (var i in envContainer) {
+		envData.push(envContainer[i]["data"]);
+		envLabels.push(envContainer[i]["label"]);
+		envCols.push(envContainer[i]["bgCol"]);
+	  }
+  
+	  if (pmChartJs) {
+		pmChartJs.destroy();
+	  }
+	  if (envChartJs) {
+		envChartJs.destroy();
+	  }
+	  pmChartJs = drawBarChart(pmChart, pmData, pmLabels, pmCols);
+	  envChartJs = drawBarChart(envChart, envData, envLabels, envCols);
+	}
+  }
+  
+// If chart will be redrawn client is responsible for destroying it first with chart.destroy()
 // Display a bar chart with the specified attributes
 function drawBarChart(canvas, data, labels, colours) {
-	if (chart) {
-		chart.destroy();
-	}
-	chart = new Chart(canvas, {
+	return new Chart(canvas, {
     	type: 'bar',
 	    data: {
     		labels: labels,

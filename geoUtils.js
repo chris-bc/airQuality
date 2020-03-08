@@ -7,6 +7,16 @@ var unitId = "UnitNumber";
 var aqiLvlColours = ["rgb(0,128,0)", "rgb(255,255,0)", "rgb(255,165,0)", "rgb(255,0,0)", "rgb(128,0,128)", "rgb(128,0,0)", "rgb(0,0,0)"];
 var UNITS_WARN = 20;
 
+// Overwrite column names defined in skiesUtils
+pm1Col = { "col": "pm1", "index": -1 };
+pm25Col = { "col": "pm25", "index": -1 };
+pm10Col = { "col": "pm10", "index": -1 };
+dateCol = { "col": "time", "index": -1 };
+tempCol = { "col": "temp", "index": -1 };
+humCol = { "col": "humidity", "index": -1 };
+areaCol = { "col": "area", "index": -1 };
+locCol = { "col": "location", "index": -1 };
+
 // DEBUG
 latestDataUrl = "http://127.0.0.1/geoData.pl";
 
@@ -96,6 +106,7 @@ function updateDataTable() {
             }
         }
     }
+    displayChartJs();
 }
 
 function initMap() {
@@ -355,6 +366,7 @@ function loadDataDisplay(latestData) {
     for (var i=0; i < latestData.length; i++) {
         createTableRowFor(table, latestData[i], true);
     }
+    displayChartJs();
 }
 
 function createTableRowFor(table, dataItem, display) {
@@ -365,7 +377,7 @@ function createTableRowFor(table, dataItem, display) {
         if (display && (columns[i] == "Latitude" || columns[i] == "Longitude")) {
             td.innerText = Number(dataItem[columns[i]]).toFixed(4);
         } else if (display && columns[i] == "time") {
-            td.innerText = timeForDisplay(dataItem[columns[i]]);
+            td.innerText = dataItem[columns[i]];
             td.setAttribute("style", "white-space:nowrap;");
         } else {
             td.innerText = dataItem[columns[i]];

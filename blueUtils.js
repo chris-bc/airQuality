@@ -1,16 +1,12 @@
-// Define some constants so we know column names
-var unitCol = { "col": "UnitNumber", "index": -1 };
-var areaCol = { "col": "locationstring", "index": -1 };
-var locCol = { "col": "locationdescription", "index": -1 };
-var pm1Col = { "col": "pm1", "index": -1 };
-var pm25Col = { "col": "pm25", "index": -1 };
-var pm10Col = { "col": "pm10", "index": -1 };
-var dateCol = { "col": "lastsensingdate", "index": -1 };
-var latCol = { "col": "Latitude", "index": -1 };
-var longCol = { "col": "Longitude", "index": -1 };
+// Overwrite column names defined in skiesUtils
+pm1Col = { "col": "pm1", "index": -1 };
+pm25Col = { "col": "pm25", "index": -1 };
+pm10Col = { "col": "pm10", "index": -1 };
+dateCol = { "col": "lastsensingdate", "index": -1 };
 
 var chartData = [];
 var bMeans = false;
+var chartJs;
 
 // Set the unit filters to 300px height
 $( document ).ready(function() {
@@ -18,33 +14,6 @@ $( document ).ready(function() {
 	$("#locationContainer").css("height", "300px");
 	$("#areaContainer").css("height", "300px");
 })
-
-function findColumnIndices() {
-	// Loop through table headers to identify column indices
-	var sTable = document.getElementById("dataTable");
-	var headers = sTable.tHead.rows[0].cells;
-	for (var i = 0; i < headers.length; i++) {
-		if (headers[i].textContent == pm1Col["col"]) {
-			pm1Col["index"] = i;
-		} else if (headers[i].textContent == pm25Col["col"]) {
-			pm25Col["index"] = i;
-		} else if (headers[i].textContent == pm10Col["col"]) {
-			pm10Col["index"] = i;
-		} else if (headers[i].textContent == areaCol["col"]) {
-			areaCol["index"] = i;
-		} else if (headers[i].textContent == locCol["col"]) {
-			locCol["index"] = i;
-		} else if (headers[i].textContent == unitCol["col"]) {
-			unitCol["index"] = i;
-		} else if (headers[i].textContent == dateCol["col"]) {
-			dateCol["index"] = i;
-		} else if (headers[i].textContent == latCol["col"]) {
-			latCol["index"] = i;
-		} else if (headers[i].textContent == longCol["col"]) {
-			longCol["index"] = i;
-		}
-	}
-}
 
 // Redraw the table dynamically after making changes to row filters
 function rebuildTable() {
@@ -772,7 +741,10 @@ function initChartJs() {
 			bgCols.push(dataContainer[i]["bgCol"]);
 		}
 
-		drawBarChart(c, barData, labels, bgCols);
+		if (chartJs) {
+			chartJs.destroy();
+		}
+		chartJs = drawBarChart(c, barData, labels, bgCols);
 	} else {
 
 		// If we're viewing hours or days of data display minutes, otherwise days
@@ -785,7 +757,10 @@ function initChartJs() {
 		if (lineData.datasets.length > 30) {
 			leg = false;
 		}
-		drawLineChart(c, lineData, leg, timeUnit);
+		if (chartJs) {
+			chartJs.destroy();
+		}
+		chartJs = drawLineChart(c, lineData, leg, timeUnit);
 	}
 }
 
