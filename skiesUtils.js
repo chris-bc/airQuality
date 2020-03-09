@@ -677,13 +677,16 @@ function exportTableCSV(tableId, filename) {
 	if (table.tBodies && table.tBodies[0]) {
 		var rows = table.tBodies[0].rows;
 		for (var i=0; i < rows.length; i++) {
-			for (var j=0; j < rows[i].cells.length; j++) {
-				if (j > 0) {
-					csvData += ",";
+			// Only include the row if it is visible
+			if (!($(rows[i]).hasClass("d-none"))) {
+				for (var j=0; j < rows[i].cells.length; j++) {
+					if (j > 0) {
+						csvData += ",";
+					}
+					csvData += "\"" + rows[i].cells[j].textContent + "\"";
 				}
-				csvData += "\"" + rows[i].cells[j].textContent + "\"";
+				csvData += "\n";
 			}
-			csvData += "\n";
 		}
 	}
 	if (!filename || filename.length == 0) {
@@ -716,7 +719,7 @@ function downloadCSV(content, filename) {
 }
 
 // Iterate over the specified list group ensuring that only the specified item is selected
-function listGroupSelectOnly(listGroupId, itemId) {
+function listGroupSelect(listGroupId, itemId, deactivateOthers) {
 	var lg = document.getElementById(listGroupId);
 	var childCount = lg.childElementCount;
 	for (var i=0; i < childCount; i++) {
@@ -728,7 +731,7 @@ function listGroupSelectOnly(listGroupId, itemId) {
 				$(thisSel).addClass("active");
 				lg.children[i].scrollIntoViewIfNeeded();
 			}
-		} else {
+		} else if (deactivateOthers) {
 			// Should not be selected
 			if ($(thisSel).hasClass("active")) {
 				$(thisSel).removeClass("active");

@@ -136,7 +136,7 @@ function initMap() {
             google.maps.event.clearInstanceListeners(mapMarkers[i]);
             mapMarkers[i].addListener('click', function() {
                 var unit = this["kUnit"];
-                listGroupSelectOnly("mapSensorList", "mapUnit-btn-" + unit);
+                listGroupSelectOnly("mapSensorList", "mapUnit-btn-" + unit, false);
             });
         }
 	}
