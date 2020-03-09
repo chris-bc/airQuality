@@ -97,14 +97,14 @@ function timeForDisplay(time) {
 	var ret = parseInt(time.substring(0, 2)) + " ";
 	ret += months[parseInt(time.substring(3, 5))] + ", ";
 	var h = parseInt(time.substring(11, 13));
-	var a = "AM";
+	var a = "am";
 	if (h >= 12) {
-	  a = "PM";
+	  a = "pm";
 	}
 	if (h > 12) {
 	  h -= 12;
 	}
-	ret += h + ":" + time.substring(14, 16) + " " + a;
+	ret += h + ":" + time.substring(14, 16) + a;
 	return ret;
   }
   

@@ -36,7 +36,7 @@ function setElementSize() {
     $("#mapSensors").css("max-height", $(window).height() - parseInt($("#myNav").css("height")) );
     // TODO: At a later point see if we get a continual resize event during resizing and make this programmatic
     // Otherwise improve presentation on small screens and reduce it
-    $("#mapSensors").css("min-height", "112px");
+    $("#mapSensors").css("min-height", "74.78px");
     $("#navMap").css("padding-top", $("#myNav").css("height"));
     $("#navData").css("padding-top", $("#myNav").css("height"));
     $("#navChart").css("padding-top", $("#myNav").css("height"));
@@ -477,7 +477,7 @@ function processDataForMapping(latestData) {
         var btn = document.createElement("a");
         btn.setAttribute("href", "#");
         btn.setAttribute("id", "mapUnit-btn-" + latestData[i][unitId]);
-        btn.setAttribute("class", "py-1 list-group-item-action list-group-item");
+        btn.setAttribute("class", "py-1 px-1 px-md-2 list-group-item-action list-group-item");
         btn.innerHTML = buttonLayout(latestData[i]);
         btn.onmouseenter = function() {
             animateMarker(this.getAttribute("id").substring(12));
@@ -505,9 +505,11 @@ function processDataForMapping(latestData) {
 
 // Define the contents of the sensor list items
 function buttonLayout(dataItem) {
-    var ret = "<div class='d-flex flex-column'><div class='d-flex w-100 justify-content-between'><small><strong>" + parseInt(dataItem[unitId].substring(3));
+    var ret = "<div class='d-flex flex-column h-100'><div class='d-flex w-100 justify-content-between'><small class='text-truncate'>";
+    // Hide several elements of name on small screens
+    ret += "<strong class='d-none d-md-inline-block'>#</strong><strong>" + parseInt(dataItem[unitId].substring(3));
     if ((dataItem["area"] && dataItem["area"].length > 0) || (dataItem["location"] && dataItem["location"].length > 0)) {
-        ret += " - ";
+        ret += "</strong><strong class='d-none d-md-inline'>:</strong><strong> ";
         var area = false;
         if (dataItem["area"] && dataItem["area"].length > 0) {
             area = true;
@@ -515,19 +517,20 @@ function buttonLayout(dataItem) {
         }
         if (dataItem["location"] && dataItem["location"].length > 0) {
             if (area) {
-                ret += " - ";
+                ret += "</strong><strong title='" + dataItem["location"] + "' class='d-none d-md-inline'> - ";
             }
             ret += dataItem["location"];
         }
     }
-    ret += "</strong></small><small><em>";
+    ret += "</strong></small><small class='text-nowrap ml-1'><em>";
     // For daily averages don't parse the time
     if (dataItem["dataset"] == "Daily Average") {
         ret += dataItem["time"];
     } else {
         ret += timeForDisplay(dataItem["time"]);
     }
-    ret += "</em></small></div>\n<small><div class='d-flex flex-row flex-wrap'>";
+    ret += "</em></small></div>\n<small class='mt-auto'><div class='d-flex flex-row flex-wrap'>\n";
+    
     if (dataItem["temp"] !== undefined && dataItem["temp"] != null) {
         ret += "<div class='d-flex flex-nowrap mr-2'><div class='mr-1'><small><strong>Temperature:</strong></small></div><div class='mr-1'><small>";
         ret += dataItem["temp"] + "</small></div></div>\n";
@@ -580,7 +583,7 @@ function buttonLayout(dataItem) {
 }
 
 function flexDivWithLabelAndValue(label, value) {
-    var ret = "<div class='d-flex flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>" + label +
+    var ret = "<div class='d-flex align-items-center flex-nowrap mr-2'><div class='d-flex flex-fill mr-1'><small><strong>" + label +
             "</strong></small></div><div class='d-flex flex-fill mr-1'><small>" + value + "</small></div></div>\n";
     return ret;
 }
