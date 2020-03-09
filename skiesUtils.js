@@ -258,16 +258,19 @@ function findColumnIndices() {
 		if (!(unit in chartData)) {
 		  chartData[unit] = [];
 		}
-		chartData[unit][obsTime] = [];
-		chartData[unit][obsTime]["temp"] = temp;
-		chartData[unit][obsTime]["hum"] = hum;
-		chartData[unit][obsTime]["pm1"] = pm1;
-		chartData[unit][obsTime]["pm25"] = pm25;
-		chartData[unit][obsTime]["pm10"] = pm10;
+		// Support multiple observations for a unit at the same time for geoSKIES
+		if (!(obsTime in chartData[unit])) {
+			chartData[unit][obsTime] = [];
+		}
+		chartData[unit][obsTime]["temp"] = (chartData[unit][obsTime]["temp"] === undefined?temp:Math.max(chartData[unit][obsTime]["temp"], temp));
+		chartData[unit][obsTime]["hum"] = (chartData[unit][obsTime]["hum"]===undefined?hum:Math.max(chartData[unit][obsTime]["hum"], hum));
+		chartData[unit][obsTime]["pm1"] = (chartData[unit][obsTime]["pm1"]===undefined?pm1:Math.max(chartData[unit][obsTime]["pm1"], pm1));
+		chartData[unit][obsTime]["pm25"] = (chartData[unit][obsTime]["pm25"]===undefined?pm25:Math.max(chartData[unit][obsTime]["pm25"], pm25));
+		chartData[unit][obsTime]["pm10"] = (chartData[unit][obsTime]["pm10"]===undefined?pm10:Math.max(chartData[unit][obsTime]["pm10"], pm10));
 	  }
 	}
 	return chartData;
-  }  
+  }
 
   function displayChartJs() {
 	// If any row has fewer than 3 observations display a bar chart, otherwise line
@@ -371,9 +374,11 @@ function findColumnIndices() {
 			obs["bgCol"] = rndColour();
 			obs["data"] = chartData[unitId][time][type];
 			if (type == "temp" || type == "hum") {
-			  envContainer.push(obs);
+				if (obs["data"] != 0) {
+					envContainer.push(obs);
+				}
 			} else {
-			  pmContainer.push(obs);
+				pmContainer.push(obs);
 			}
 		  }
 		}

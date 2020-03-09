@@ -260,6 +260,7 @@ print<<EOF;
           <a class='nav-link dropdown-toggle' href='#' id='navbarDropDown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
             Other Pages
           </a><div class='dropdown-menu' area-labelledBy='navbarDropDown' id='navbarDropLinks' name='navbarDropLinks'>
+            <a class='dropdown-item' href='geoskies.html' target='_blank'>geoSKIES</a>
             <a class='dropdown-item' href='blueskies.pl' target='_blank'>blueSKIES</a>
             <div class='dropdown-divider'></div>
             <a class='dropdown-item' target='_blank' href='http://www.bennettscash.id.au'>bennettscash</a>
@@ -268,7 +269,10 @@ print<<EOF;
   <div class='container'><img src='ozskies-banner.jpg' class='img-fluid mb-3' alt='Site Banner'/>
   <h1 class='text-center mt-sm-2'>Australian Environmental Data</h1>
   <div id='navMap' class='container' style='padding-top:75px;height:600px;'>
-  <p class='h5 text-center mb-2'>Map<button type='button' class='btn btn-info mb-2 float-right' onClick='exportTableCSV(\"latestData\", \"ozSKIES-sensorData-latest.csv\")'>Download Latest Data as CSV</button></p>
+  <div class='d-flex flex-row justify-content-between'><div style='width:33%;'></div>
+  <div class='h5 text-center mb-2' style='width:33%;'>Map</div>
+  <button type='button' class='btn btn-info mb-2 ml-auto' onClick='exportTableCSV(\"latestData\", \"ozSKIES-sensorData-latest.csv\")'>Download Latest Data as CSV</button>
+  </div>
     $latestTable
     <div id='map' class='container-fluid' style='height:100%;'>
     </div>

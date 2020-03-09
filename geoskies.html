@@ -66,8 +66,8 @@
         <div class="collapse navbar-collapse" id="myNavBar">
             <ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="#navMap">Sensor Map</a></li>
                 <li class="nav-item"><a class="nav-link" href="#navHow">How This Works</a></li>
-                <li class="nav-item"><a class="nav-link" href="#navData">Sensor Data</a></li>
                 <li class="nav-item"><a class="nav-link" href="#navChart">Sensor Charts</a></li>
+                <li class="nav-item"><a class="nav-link" href="#navData">Sensor Data</a></li>
                 <li class="nav-item"><a class="nav-link" href="#navAbout">About</a></li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropDown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -172,17 +172,19 @@
                     sources you are much better off using pollutant data and aggregating it yourself.</p>
             </div>
         </div>
-        <div class="container-fluid" id="navData">
-            <button type="button" class="btn btn-info mb-2 float-right" onclick="exportTableCSV('dataTable', 'geoSKIES-sensorData.csv')">Download Data as CSV</button>
-            <div class="table-responsive">
-                <table id="dataTable" class="table table-bordered table-striped"></table>
-            </div>
-        </div>
         <div class="container-fluid" id="navChart">
             <div class="row justify-content-center"><h4 class="text-center">Air Quality</h4></div>
             <div class="row mb-3"><canvas id="pmChart"></canvas></div>
             <div class="row justify-content-center"><h4 class="text-center">Temperature &amp; Humidity</h4></div>
             <div class="row mb-3"><canvas id="envChart"></canvas></div>        
+        </div>
+        <div class="container-fluid" id="navData">
+            <div class="d-flex flex-row justify-content-between"><div style="width:33%;"></div><div class="h4 text-center" style="width:33%;">Sensor Data</div>
+            <button type="button" class="btn btn-info mb-2 ml-auto" onclick="exportTableCSV('dataTable', 'geoSKIES-sensorData.csv')">Download Data as CSV</button>
+        </div>
+            <div class="table-responsive">
+                <table id="dataTable" class="table table-bordered table-striped"></table>
+            </div>
         </div>
         <div class="container" id="navAbout">
             <div class="row justify-content-center"><h3 class="text-center">About</h3></div>

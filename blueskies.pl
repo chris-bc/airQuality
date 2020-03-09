@@ -278,6 +278,7 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
       <a class='nav-link dropdown-toggle' href='#' id='navbarDropDown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
         Other Pages
       </a><div class='dropdown-menu' aria-labelledBy='navbarDropDown' id='navbarDropLinks' name='navbarDropLinks'>
+        <a class='dropdown-item' href='geoskies.html' target='_blank'>geoSKIES</a>
         <a class='dropdown-item' href='ozskies.pl' target='_blank'>ozSKIES</a>
         <div class='dropdown-divider'></div>
         <a class='dropdown-item' target='_blank' href='http://www.bennettscash.id.au'>bennettscash</a>
@@ -287,7 +288,10 @@ print "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-wi
 <img src='blueskies-banner.jpg' class='img-fluid' alt='Site Banner'/>
 <h1 class='text-center mt-sm-2'>Air Quality Data</h1>
 <div id='navMap' class='container' style='padding-top:75px;height:600px;'>
-<p class='h5 mb-2 text-center'>Map<button type='button' class='btn btn-info float-right mb-2' onClick='exportTableCSV(\"latestData\", \"blueSKIES-sensorData-latest.csv\")'>Download Latest Data as CSV</button></p>
+<div class='d-flex flex-row justify-content-center'><div style='width:33%;'></div>
+<div class='h5 mb-2 text-center' style='width:33%;'>Map</div>
+<button type='button' class='btn btn-info ml-auto mb-2' onClick='exportTableCSV(\"latestData\", \"blueSKIES-sensorData-latest.csv\")'>Download Latest Data as CSV</button>
+</div>
   $latestTable
   <div id='map' class='container-fluid' style='height:100%;'>
   </div>
