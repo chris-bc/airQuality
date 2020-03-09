@@ -24,6 +24,10 @@ $( document ).ready(function() {
     // Populate the time number select box
     updateTime();
     createExplanatoryList();
+
+    // Hide loading pane
+    $("#loader").removeClass("d-flex");
+
   });
 
 window.onresize = function(event) {
@@ -114,6 +118,7 @@ function initMap() {
         centre = geoMap.center;
         zoom = geoMap.zoom;
     }
+    
     var dataCols = {};
     if (document.getElementById("latestData").tBodies && document.getElementById("latestData").tBodies.length > 0 && document.getElementById("latestData").tBodies[0].rows.length > 0) {
         dataCols = {
@@ -177,7 +182,6 @@ function loadLatestData() {
 function reloadData() {
     // Show loading screen and hide content
     $("#loader").addClass("d-flex"); // flex class overrides d-none
-//    $("#content").addClass("d-none");
 
     if (document.getElementById("showLatest").checked) {
         loadLatestData();
@@ -611,7 +615,6 @@ function downloadData(url, callback) {
             });
             // Hide the loading pane
             $("#loader").removeClass("d-flex");
-//            $("#content").removeClass("d-none");
             callback(content);
         }
     }
