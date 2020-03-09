@@ -40,7 +40,7 @@ function setElementSize() {
     $("#mapSensors").css("max-height", $(window).height() - parseInt($("#myNav").css("height")) );
     // TODO: At a later point see if we get a continual resize event during resizing and make this programmatic
     // Otherwise improve presentation on small screens and reduce it
-    $("#mapSensors").css("min-height", "74.78px");
+    $("#mapSensors").css("min-height", $("#mapSensorList").css("height"));
     $("#navMap").css("padding-top", $("#myNav").css("height"));
     $("#navData").css("padding-top", $("#myNav").css("height"));
     $("#navChart").css("padding-top", $("#myNav").css("height"));
@@ -144,7 +144,9 @@ function initMap() {
                 listGroupSelectOnly("mapSensorList", "mapUnit-btn-" + unit, false);
             });
         }
-	}
+    }
+    // Update size of dynamic objects
+    setElementSize();
 }
 
 function changeSelectedData() {
