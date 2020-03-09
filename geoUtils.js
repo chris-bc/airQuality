@@ -1,7 +1,7 @@
 // Global var for map so we can manipulate it along the way
 var geoMap;
 var columns = ["dataset", "UnitNumber", "time", "area", "location", "pm1","pm25","pm10","temp","humidity","Latitude","Longitude"];
-var latestDataUrl = "http://bennettscash.no-ip.org/geoData.pl";
+var latestDataUrl = window.location.href.substring(0, window.location.href.lastIndexOf("/")) + "/geoData.pl";
 var unitId = "UnitNumber";
 // TODO: This is duplicated in skiesUtils.showMap(). This needs to be fixed
 var aqiLvlColours = ["rgb(0,128,0)", "rgb(255,255,0)", "rgb(255,165,0)", "rgb(255,0,0)", "rgb(128,0,128)", "rgb(128,0,0)", "rgb(0,0,0)"];
@@ -16,9 +16,6 @@ tempCol = { "col": "temp", "index": -1 };
 humCol = { "col": "humidity", "index": -1 };
 areaCol = { "col": "area", "index": -1 };
 locCol = { "col": "location", "index": -1 };
-
-// DEBUG
-latestDataUrl = "http://127.0.0.1/geoData.pl";
 
 // Set the map div and sensor listing to 100% - navbar size and load latest data
 $( document ).ready(function() {
