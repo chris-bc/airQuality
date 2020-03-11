@@ -113,6 +113,27 @@ function updateDataTable() {
     }
 }
 
+// Add or remove marker clustering from the map
+function clusterChange() {
+    if (!geoMap) {
+        return;
+    }
+    if (document.getElementById("clusterMarkers").checked) {
+        // Use the existing clusterer if there is one
+        if (geoMap["markerClusterer"]) {
+            geoMap["markerClusterer"].setMap(geoMap);
+        } else {
+            geoMap["markerClusterer"] = new MarkerClusterer(geoMap, geoMap["mapMarkers"], {
+	    		imagePath: "/markers/m",
+                maxZoom: 11,});
+        }
+    } else {
+        if (geoMap["markerClusterer"]) {
+            geoMap["markerClusterer"].setMap(null);
+        }
+    }
+}
+
 function initMap() {
     // If the map already exists maintain the current centre and zoom
     var centre = new google.maps.LatLng(-25.4904429, 147.3062684);
@@ -136,7 +157,7 @@ function initMap() {
             "hum": columns.indexOf("humidity"),
     		"lat": columns.indexOf("Latitude"),
             "long": columns.indexOf("Longitude")};
-        geoMap = showMap("latestData", dataCols, zoom, centre);
+        geoMap = showMap("latestData", dataCols, zoom, centre, document.getElementById("clusterMarkers").checked);
         geoMap.addListener('bounds_changed', updateUnitVisibility);
 
         // Replace marker click info window listener
@@ -144,7 +165,7 @@ function initMap() {
             google.maps.event.clearInstanceListeners(mapMarkers[i]);
             mapMarkers[i].addListener('click', function() {
                 var unit = this["kUnit"];
-                listGroupSelectOnly("mapSensorList", "mapUnit-btn-" + unit, false);
+                listGroupSelect("mapSensorList", "mapUnit-btn-" + unit, false);
             });
         }
     }

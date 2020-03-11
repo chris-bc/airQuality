@@ -520,7 +520,7 @@ function calculateSingleAqi(pmVal, pmThresholds, aqiThresholds) {
 	return aqi;
 }
 
-function showMap(table, columnIndices, zoom, centreLatLng) {
+function showMap(table, columnIndices, zoom, centreLatLng, showClusters = true) {
 	// Define colours for custom heatmap
 	var aqiColours = [];
 	aqiColours.push(['rgba(0,128,0,0)', 'rgba(0,128,0,0.7)']);
@@ -640,9 +640,12 @@ function showMap(table, columnIndices, zoom, centreLatLng) {
 			weight: 100, // Use a weight of 100 so we get full opacity. Damn gmaps
 		});
 	}
-	var markerClusterer = new MarkerClusterer(map, mapMarkers, {
-		imagePath: "/markers/m",
-		maxZoom: 11,});
+	if (showClusters) {
+		map["markerClusterer"] = new MarkerClusterer(map, mapMarkers, {
+			imagePath: "/markers/m",
+			maxZoom: 11,});
+	}
+	map["mapMarkers"] = mapMarkers;
 	
 	var hs=[];
 	for (var j=0; j < heatmaps.length; j++) {
