@@ -25,9 +25,7 @@ $( document ).ready(function() {
     updateTime();
     createExplanatoryList();
 
-    // Hide loading pane
-    $("#loader").removeClass("d-flex");
-
+    // Hide loading pane - Wait until initMap to hide loading pane (? or wait until dataloaded ?)
   });
 
 window.onresize = function(event) {
@@ -38,9 +36,14 @@ function setElementSize() {
 //  Looks like height includes space taken up by padding - Don't reduce max height for the map/sensor div by nav height
     $("#navMap").css("height", $(window).height());
     $("#mapSensors").css("max-height", $(window).height() - parseInt($("#myNav").css("height")) );
-    // TODO: At a later point see if we get a continual resize event during resizing and make this programmatic
-    // Otherwise improve presentation on small screens and reduce it
-    $("#mapSensors").css("min-height", $("#mapSensorList").css("height"));
+    // The following needs to be deferred until the loader has been removed
+    // To appropriately size the sensor pane in both desktop and small screens get a child listItem size
+    var lg = document.getElementById("mapSensorList");
+    if (lg && lg.childElementCount > 0) {
+        var li = lg.children[0];
+        // Set sensor pane min-height to listItem height
+        $("#mapSensors").css("min-height", $(li).css("height"));
+    }
     $("#navMap").css("padding-top", $("#myNav").css("height"));
     $("#navData").css("padding-top", $("#myNav").css("height"));
     $("#navChart").css("padding-top", $("#myNav").css("height"));
