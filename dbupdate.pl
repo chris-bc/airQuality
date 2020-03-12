@@ -18,6 +18,7 @@ use warnings;
 use lib qw(..);
 use JSON qw(  );
 use HTTP::Tiny;
+use Data::Dumper;
 
 my $source = 'https://kv54llbbz6.execute-api.ap-southeast-2.amazonaws.com/NMEA_TESTBED/?boards=1';
 my $dbFile = "koala.sqlite";
@@ -79,39 +80,134 @@ if ($newDB) {
 		showonmap INTEGER,
 		PRIMARY KEY(UnitNumber, lastsensingdate)
 	)";
-	$dbh->do($ddl);
-	# TODO: Check success
+	$dbh->do($ddl) or die "Unable to create table kSensor\n";
+
+	# New tables
+	$ddl = "CREATE TABLE kMeta (
+    	UnitNumber TEXT,
+    	ValidFrom TEXT,
+    	ValidTo TEXT,
+    	BoardDateCreated TEXT,
+	    BoardID INTEGER,
+    	BoardSerialNumber INTEGER,
+	    CoModuleDateCreated TEXT,
+    	CoModuleID INTEGER,
+	    CoModuleSerialNumber INTEGER,
+    	Latitude REAL,
+	    Longitude REAL,
+    	PmModuleDateCreated TEXT,
+	    PmModuleID INTEGER,
+    	PmModuleSerialNumber TEXT,
+	    isPublic INTEGER,
+    	locationdescription TEXT,
+	    locationstring TEXT,
+    	showonmap INTEGER,
+	    PRIMARY KEY(UnitNumber, ValidFrom))";
+	$dbh->do($ddl) or die "Unable to create table kMeta\n";
+
+	$ddl = "CREATE TABLE kObs (
+		UnitNumber TEXT,
+    	CoModuleCalibration REAL,
+    	PmModuleCalibration REAL,
+		lastbatteryvoltage REAL,
+    	lastdatecreated TEXT,
+    	lastsensingdate TEXT,
+    	pm1 INTEGER,
+    	pm10 INTEGER,
+    	pm25 INTEGER,
+     	PRIMARY KEY(UnitNumber, lastsensingdate))";
+	$dbh->do($ddl) or die "Unable to create table kObs\n";
+
+	$ddl = "CREATE VIEW kSensors as
+    SELECT BoardDateCreated, BoardID, BoardSerialNumber,
+    	CoModuleCalibration, CoModuleDateCreated, CoModuleID,
+        CoModuleSerialNumber, Latitude, Longitude,
+        PmModuleCalibration, PmModuleDateCreated, PmModuleID,
+        PmModuleSerialNumber, a.UnitNumber as UnitNumber, isPublic, lastbatteryvoltage,
+        lastdatecreated, lastsensingdate, locationdescription,
+        locationstring, pm1, pm10, pm25, showonmap FROM kMeta a, kObs b
+    WHERE a.UnitNumber = b.UnitNumber AND 
+		datetime(b.lastsensingdate) >= datetime(a.ValidFrom) AND
+		(datetime(b.lastsensingdate) < datetime(a.ValidTo) OR a.ValidTo is null)";
+	$dbh->do($ddl) or die "Unable to create view kSensors\n";
 }
 
 foreach my $rec ( @{$data} ) {
 	#print "key: $_ value: ".($rec->{$_}//"null")."\n" for keys $rec;
 	# Check whether the row exists in the DB
-	my $sql = "SELECT * FROM kSensor WHERE UnitNumber=? AND lastsensingdate=?";
+	my $sql = "SELECT * FROM kObs WHERE UnitNumber=? AND lastsensingdate=?";
 	my $statement = $dbh->prepare($sql);
 	$statement->execute($rec->{"UnitNumber"}, $rec->{"lastsensingdate"});
 	$statement->fetchrow_array();
-	if ($statement->rows == 0) {
-		# Insert new observation
-		# TODO: Be more clever to avoid SQL injection
-		$sql = "INSERT INTO kSensor (";
-		my $first=1;
-		for (@keys) {
-			$sql .= "," unless ($first == 1);
-			$first = 0;
-			$sql .= $_;
-		}
-		$sql .= ") VALUES (";
-		$first = 1;
-		for (@keys) {
-			$sql .= "," unless ($first == 1);
-			$first = 0;
-			$sql .= "'".($rec->{$_}//0)."'";
-		}
-		$sql .= ")";
-		$dbh->do($sql);
-		# TODO: Check success
-	} 
+	my $rows = $statement->rows;
 	$statement->finish;
+	if ($rows == 0) {
+		# This is a new observation
+		# TODO: Be more clever to avoid SQL injection
+		# Have slowly-moving items changed?
+		$sql = "SELECT * FROM kMeta WHERE UnitNumber=? AND ValidTo is null";
+		$statement = $dbh->prepare($sql);
+		$statement->execute($rec->{"UnitNumber"});
+		my $row = $statement->fetchrow_hashref();
+		$rows = $statement->rows;
+		$statement->finish;
+		my $insertMetadata = 0;
+		if ($rows > 0) {
+			# Compare current metadata against stored metadata
+			print "DEBUG: Unit ".$rec->{"UnitNumber"}.", isPublic " . ($rec->{"isPublic"}//"0") . ", row " . $row->{"isPublic"} . "\n";
+			unless ($row->{"BoardDateCreated"} eq ($rec->{"BoardDateCreated"}//0) &&
+					$row->{"BoardID"} eq ($rec->{"BoardID"}//0) &&
+					$row->{"BoardSerialNumber"} eq ($rec->{"BoardSerialNumber"}//0) &&
+					$row->{"CoModuleDateCreated"} eq ($rec->{"CoModuleDateCreated"}//0) &&
+					$row->{"CoModuleID"} eq ($rec->{"CoModuleID"}//0) &&
+					$row->{"CoModuleSerialNumber"} eq ($rec->{"CoModuleSerialNumber"}//0) &&
+					$row->{"Latitude"} eq ($rec->{"Latitude"}) &&
+					$row->{"Longitude"} eq ($rec->{"Longitude"}) &&
+					$row->{"PmModuleDateCreated"} eq ($rec->{"PmModuleDateCreated"}//0) &&
+					$row->{"PmModuleID"} eq ($rec->{"PmModuleID"}//0) &&
+					$row->{"PmModuleSerialNumber"} eq ($rec->{"PmModuleSerialNumber"}//0) &&
+					$row->{"isPublic"} eq ($rec->{"isPublic"}//0) &&
+					$row->{"locationdescription"} eq ($rec->{"locationdescription"}//0) &&
+					$row->{"locationstring"} eq ($rec->{"locationstring"}//0) &&
+					$row->{"showonmap"} eq ($rec->{"showonmap"}//0)) {
+				# There is a difference between latest metadata and current observation
+				print "change to metadata\n";
+				$sql = "UPDATE kMeta set ValidTo=datetime('" . $rec->{"lastsensingdate"} . "', '-1 second') WHERE UnitNumber=? AND ValidTo is null";
+				$statement = $dbh->prepare($sql);
+				$statement->execute($rec->{"UnitNumber"});
+				$statement->finish;
+				# Set flag to insert metadata later
+				$insertMetadata = 1;
+			}
+		} else {
+			# No metadata - This is a new unit
+			$insertMetadata = 1;
+		}
+		# Insert new metadata if needed
+		if ($insertMetadata == 1) {
+			$sql = "INSERT INTO kMeta(ValidFrom, UnitNumber, BoardDateCreated, BoardID, BoardSerialNumber,
+					CoModuleDateCreated, CoModuleID, CoModuleSerialNumber, Latitude, Longitude, PmModuleDateCreated,
+					PmModuleID, PmModuleSerialNumber, isPublic, locationdescription, locationstring, showonmap)
+					VALUES (datetime(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			$statement = $dbh->prepare($sql);
+			$statement->execute($rec->{"lastsensingdate"}, $rec->{"UnitNumber"}, $rec->{"BoardDateCreated"}//0, $rec->{"BoardID"}//0,
+								$rec->{"BoardSerialNumber"}//0, $rec->{"CoModuleDateCreated"}//0, $rec->{"CoModuleID"}//0,
+								$rec->{"CoModuleSerialNumber"}//0, $rec->{"Latitude"}, $rec->{"Longitude"},
+								$rec->{"PmModuleDateCreated"}//0, $rec->{"PmModuleID"}//0, $rec->{"PmModuleSerialNumber"}//0,
+								$rec->{"isPublic"}//0, $rec->{"locationdescription"}//0, $rec->{"locationstring"}//0,
+								$rec->{"showonmap"}//0);
+			$statement->finish;
+		}
+
+		# Insert new observation
+		$sql = "INSERT INTO kObs (UnitNumber, CoModuleCalibration, PmModuleCalibration, lastbatteryvoltage,
+				lastdatecreated, lastsensingdate, pm1, pm10, pm25) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		$statement = $dbh->prepare($sql);
+		$statement->execute($rec->{"UnitNumber"}, $rec->{"CoModuleCalibration"}//0, $rec->{"PmModuleCalibration"}//0,
+							$rec->{"lastbatteryvoltage"}//0, $rec->{"lastdatecreated"}, $rec->{"lastsensingdate"},
+							$rec->{"pm1"}, $rec->{"pm10"}, $rec->{"pm10"});
+		$statement->finish;
+	} 
 }
 $dbh->disconnect;
 
