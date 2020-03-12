@@ -20,6 +20,57 @@ my $debug = 0;
 die "Database does not exist: $db1, Terminating\n" unless (-e $db1);
 
 my $dbh = DBI->connect($dsn . $db1, \%attr) or die "Could not connect to database $db1\n";
+
+# New tables
+$sql = "CREATE TABLE IF NOT EXISTS kMeta (
+    	UnitNumber TEXT,
+    	ValidFrom TEXT,
+    	ValidTo TEXT,
+    	BoardDateCreated TEXT,
+	    BoardID INTEGER,
+    	BoardSerialNumber INTEGER,
+	    CoModuleDateCreated TEXT,
+    	CoModuleID INTEGER,
+	    CoModuleSerialNumber INTEGER,
+    	Latitude REAL,
+	    Longitude REAL,
+    	PmModuleDateCreated TEXT,
+	    PmModuleID INTEGER,
+    	PmModuleSerialNumber TEXT,
+	    isPublic INTEGER,
+    	locationdescription TEXT,
+	    locationstring TEXT,
+    	showonmap INTEGER,
+	    PRIMARY KEY(UnitNumber, ValidFrom))";
+$dbh->do($sql) or die "Unable to create table kMeta\n";
+
+$sql = "CREATE TABLE IF NOT EXISTS kObs (
+		UnitNumber TEXT,
+    	CoModuleCalibration REAL,
+    	PmModuleCalibration REAL,
+		lastbatteryvoltage REAL,
+    	lastdatecreated TEXT,
+    	lastsensingdate TEXT,
+    	pm1 INTEGER,
+    	pm10 INTEGER,
+    	pm25 INTEGER,
+     	PRIMARY KEY(UnitNumber, lastsensingdate))";
+$dbh->do($sql) or die "Unable to create table kObs\n";
+
+$dbh->do("drop view kSensors") or die "Unable to drop view kSensors\n";
+$sql = "CREATE VIEW kSensors as
+    SELECT BoardDateCreated, BoardID, BoardSerialNumber,
+    	CoModuleCalibration, CoModuleDateCreated, CoModuleID,
+        CoModuleSerialNumber, Latitude, Longitude,
+        PmModuleCalibration, PmModuleDateCreated, PmModuleID,
+        PmModuleSerialNumber, a.UnitNumber as UnitNumber, isPublic, lastbatteryvoltage,
+        lastdatecreated, lastsensingdate, locationdescription,
+        locationstring, pm1, pm10, pm25, showonmap FROM kMeta a, kObs b
+    WHERE a.UnitNumber = b.UnitNumber AND 
+		datetime(b.lastsensingdate) >= datetime(a.ValidFrom) AND
+		(datetime(b.lastsensingdate) < datetime(a.ValidTo) OR a.ValidTo is null)";
+$dbh->do($sql) or die "Unable to create view kSensors\n";
+
 my $sql = "SELECT * FROM kSensor ORDER BY lastsensingdate";
 my $statement = $dbh->prepare($sql);
 $statement->execute();
@@ -71,7 +122,7 @@ while (my $row = $statement->fetchrow_hashref) {
                 CoModuleDateCreated, CoModuleID, CoModuleSerialNumber, Latitude, Longitude,
                 PmModuleDateCreated, PmModuleID, PmModuleSerialNumber, isPublic, locationdescription,
                 locationstring, showonmap)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                VALUES (datetime(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt2 = $dbh->prepare($sql2);
         $stmt2->execute($row->{"lastsensingdate"}, $row->{"UnitNumber"}, $row->{"BoardDateCreated"},
                         $row->{"BoardID"}, $row->{"BoardSerialNumber"}, $row->{"CoModuleDateCreated"},

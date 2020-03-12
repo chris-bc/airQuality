@@ -154,7 +154,7 @@ foreach my $rec ( @{$data} ) {
 		my $insertMetadata = 0;
 		if ($rows > 0) {
 			# Compare current metadata against stored metadata
-			print "DEBUG: Unit ".$rec->{"UnitNumber"}.", isPublic " . ($rec->{"isPublic"}//"0") . ", row " . $row->{"isPublic"} . "\n";
+			print "DEBUG: Metadata found for Unit ".$rec->{"UnitNumber"}.", isPublic " . ($rec->{"isPublic"}//"0") . ", row " . $row->{"isPublic"} . "\n";
 			unless ($row->{"BoardDateCreated"} eq ($rec->{"BoardDateCreated"}//0) &&
 					$row->{"BoardID"} eq ($rec->{"BoardID"}//0) &&
 					$row->{"BoardSerialNumber"} eq ($rec->{"BoardSerialNumber"}//0) &&
@@ -181,6 +181,7 @@ foreach my $rec ( @{$data} ) {
 			}
 		} else {
 			# No metadata - This is a new unit
+			print "DEBUG: No metadata found - new unit " . $rec->{"UnitNumber"} . "\n";
 			$insertMetadata = 1;
 		}
 		# Insert new metadata if needed
@@ -200,6 +201,7 @@ foreach my $rec ( @{$data} ) {
 		}
 
 		# Insert new observation
+		print "DEBUG: New observation for unit " . $rec->{"UnitNumber"} . ", time " . $rec->{"lastsensingdate"} . "\n";
 		$sql = "INSERT INTO kObs (UnitNumber, CoModuleCalibration, PmModuleCalibration, lastbatteryvoltage,
 				lastdatecreated, lastsensingdate, pm1, pm10, pm25) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		$statement = $dbh->prepare($sql);
