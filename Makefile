@@ -23,5 +23,11 @@ geoskies: directory geo*
 
 all: blueskies ozskies geoskies
 
+deploy-koala-db-local: koala.sqlite
+	@sudo cp koala.sqlite /Library/WebServer/Documents/
+
+deploy-oz-db-local: nswskies.sqlite
+	@sudo cp nswskies.sqlite /Library/WebServer/Documents/
+
 clean:
 	@rm -rf deploy
