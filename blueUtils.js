@@ -2,7 +2,7 @@
 pm1Col = { "col": "pm1", "index": -1 };
 pm25Col = { "col": "pm25", "index": -1 };
 pm10Col = { "col": "pm10", "index": -1 };
-dateCol = { "col": "lastsensingdate", "index": -1 };
+dateCol = { "col": "lastdatecreated", "index": -1 };
 
 var chartData = [];
 var bMeans = false;

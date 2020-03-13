@@ -4,7 +4,7 @@
 # and stores new observations in an SQLite database.
 # This script should be scheduled to run regularly as sensors do not
 # send new observations on a predictable schedule.
-# New observations are identified by treating (UnitNumber, lastsensingdate)
+# New observations are identified by treating (UnitNumber, lastdatecreated)
 # as a aunique identifier. This appears to be an appropriate assumption.
 #
 # To schedule this job on any Unix-like system run the following:
@@ -78,7 +78,7 @@ if ($newDB) {
 		pm10 INTEGER,
 		pm25 INTEGER,
 		showonmap INTEGER,
-		PRIMARY KEY(UnitNumber, lastsensingdate)
+		PRIMARY KEY(UnitNumber, lastdatecreated)
 	)";
 	$dbh->do($ddl) or die "Unable to create table kSensor\n";
 
@@ -115,7 +115,7 @@ if ($newDB) {
     	pm1 INTEGER,
     	pm10 INTEGER,
     	pm25 INTEGER,
-     	PRIMARY KEY(UnitNumber, lastsensingdate))";
+     	PRIMARY KEY(UnitNumber, lastdatecreated))";
 	$dbh->do($ddl) or die "Unable to create table kObs\n";
 
 	$ddl = "CREATE VIEW kSensors as
@@ -127,17 +127,17 @@ if ($newDB) {
         lastdatecreated, lastsensingdate, locationdescription,
         locationstring, pm1, pm10, pm25, showonmap FROM kMeta a, kObs b
     WHERE a.UnitNumber = b.UnitNumber AND 
-		datetime(b.lastsensingdate) >= datetime(a.ValidFrom) AND
-		(datetime(b.lastsensingdate) < datetime(a.ValidTo) OR a.ValidTo is null)";
+		datetime(b.lastdatecreated) >= datetime(a.ValidFrom) AND
+		(datetime(b.lastdatecreated) < datetime(a.ValidTo) OR a.ValidTo is null)";
 	$dbh->do($ddl) or die "Unable to create view kSensors\n";
 }
 
 foreach my $rec ( @{$data} ) {
 	#print "key: $_ value: ".($rec->{$_}//"null")."\n" for keys $rec;
 	# Check whether the row exists in the DB
-	my $sql = "SELECT * FROM kObs WHERE UnitNumber=? AND lastsensingdate=?";
+	my $sql = "SELECT * FROM kObs WHERE UnitNumber=? AND lastdatecreated=?";
 	my $statement = $dbh->prepare($sql);
-	$statement->execute($rec->{"UnitNumber"}, $rec->{"lastsensingdate"});
+	$statement->execute($rec->{"UnitNumber"}, $rec->{"lastdatecreated"});
 	$statement->fetchrow_array();
 	my $rows = $statement->rows;
 	$statement->finish;
@@ -172,7 +172,7 @@ foreach my $rec ( @{$data} ) {
 					$row->{"showonmap"} eq ($rec->{"showonmap"}//0)) {
 				# There is a difference between latest metadata and current observation
 				print "change to metadata\n";
-				$sql = "UPDATE kMeta set ValidTo=datetime('" . $rec->{"lastsensingdate"} . "', '-1 second') WHERE UnitNumber=? AND ValidTo is null";
+				$sql = "UPDATE kMeta set ValidTo=datetime('" . $rec->{"lastdatecreated"} . "', '-1 second') WHERE UnitNumber=? AND ValidTo is null";
 				$statement = $dbh->prepare($sql);
 				$statement->execute($rec->{"UnitNumber"});
 				$statement->finish;
@@ -191,7 +191,7 @@ foreach my $rec ( @{$data} ) {
 					PmModuleID, PmModuleSerialNumber, isPublic, locationdescription, locationstring, showonmap)
 					VALUES (datetime(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			$statement = $dbh->prepare($sql);
-			$statement->execute($rec->{"lastsensingdate"}, $rec->{"UnitNumber"}, $rec->{"BoardDateCreated"}//0, $rec->{"BoardID"}//0,
+			$statement->execute($rec->{"lastdatecreated"}, $rec->{"UnitNumber"}, $rec->{"BoardDateCreated"}//0, $rec->{"BoardID"}//0,
 								$rec->{"BoardSerialNumber"}//0, $rec->{"CoModuleDateCreated"}//0, $rec->{"CoModuleID"}//0,
 								$rec->{"CoModuleSerialNumber"}//0, $rec->{"Latitude"}, $rec->{"Longitude"},
 								$rec->{"PmModuleDateCreated"}//0, $rec->{"PmModuleID"}//0, $rec->{"PmModuleSerialNumber"}//0,

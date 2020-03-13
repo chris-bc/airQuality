@@ -12,13 +12,13 @@ print CGI::header();
 # Initialise variables
 my $unsafeCharRegEx = "[ \"|\(|\)|\/\:]";
 my $dbFile = "koala.sqlite";
-my $dbTable = "kSensor";
+my $dbTable = "kSensors";
 my $dsn = "DBI:SQLite:$dbFile";
 my %attr = (PrintError=>0, RaiseError=>1, AutoCommit=>1, FetchHashKeyName=>'NAME_lc');
 my $areaCol = "locationstring";
 my $locCol = "locationdescription";
 my $unitCol = "UnitNumber";
-my $timeCol = "lastsensingdate";
+my $timeCol = "lastdatecreated";
 my $pm25col = "pm25";
 my $pm10col = "pm10";
 my $pm1col = "pm1";
@@ -37,8 +37,8 @@ my @faultyUnits = ("AQB0028", "AQB0036", "AQB0039", "AQB0091", "AQB0092", "AQB01
 $_ = "'$_'" for @faultyUnits;
 
 # Initialise parameters
-my $selectColumns = "UnitNumber,locationdescription,lastsensingdate,pm1,pm10,pm25,Longitude,Latitude";
-my $sortColumns = "UnitNumber,lastsensingdate DESC";
+my $selectColumns = "UnitNumber,locationdescription,lastdatecreated,pm1,pm10,pm25,Longitude,Latitude";
+my $sortColumns = "UnitNumber,lastdatecreated DESC";
 my $areas = "";
 my $locations = "";
 my $units = "";
@@ -602,7 +602,7 @@ print "</table></div><div id='chart' class='container-fluid mt-sm-3' style='padd
   only able to construct a chart based on the row and column filtes you have
   selected. This can cause some problems, but also allows you to further
   customise the chart.</p>
-  <p>If you choose not to display the time column (lastsensingdate) the chart
+  <p>If you choose not to display the time column (lastdatecreated) the chart
   will have nothing to plot on the X axis and will not display (NB: Yes, you're
   right, the bar chart could be drawn without time. I'll get on that soon). </p>
   <p>Similarly, if you don't show any of PM1, PM2.5 and PM10 the chart will have
