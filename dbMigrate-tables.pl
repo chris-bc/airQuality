@@ -8,13 +8,13 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-my $db1 = "koala.sqlite";
+my $db1 = "koalav2.sqlite";
 my $dsn = "DBI:SQLite:";
 my %attr = (PrintError=>0, RaiseError=>1);
 
 STDOUT->autoflush(1);
 
-die "Database does not exist: $db1, Terminating\n" unless (-e $db1);
+die "Database already exists: $db1, Terminating\n" if (-e $db1);
 
 my $dbh = DBI->connect($dsn . $db1, \%attr) or die "Could not connect to database $db1\n";
 

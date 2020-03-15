@@ -9,7 +9,8 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-my $db1 = "koala.sqlite";
+my $dbold = "koala.sqlite";
+my $dbnew = "koalav2.sqlite";
 my $dsn = "DBI:SQLite:";
 my %attr = (PrintError=>0, RaiseError=>1);
 my $sql2;
@@ -21,13 +22,14 @@ my $debug = 0;
 
 STDOUT->autoflush(1);
 
-die "Database does not exist: $db1, Terminating\n" unless (-e $db1);
+die "Database does not exist: $dbold, Terminating\n" unless (-e $dbold);
 
-my $dbh = DBI->connect($dsn . $db1, \%attr) or die "Could not connect to database $db1\n";
+my $dhold = DBI->connect($dsn . $dbold, \%attr) or die "Could not connect to database $dbold\n";
+my $dhnew = DBI->connect($dsn . $dbnew, \%attr) or die "Could not connect to database $dbnew\n";
 
 my $sql = "SELECT * FROM kSensor ORDER BY lastdatecreated";
 my $currentDay = "";
-my $statement = $dbh->prepare($sql);
+my $statement = $dhold->prepare($sql);
 $statement->execute();
 while (my $row = $statement->fetchrow_hashref) {
     if ($currentDay ne substr($row->{"lastdatecreated"}, 0, 10)) {
@@ -39,7 +41,7 @@ while (my $row = $statement->fetchrow_hashref) {
     $insertMeta = 0;
     # Check whether metadata is identical
     $sql2 = "SELECT * FROM kMeta WHERE UnitNumber=? AND ValidTo is null";
-    $stmt2 = $dbh->prepare($sql2);
+    $stmt2 = $dhnew->prepare($sql2);
     $stmt2->execute($row->{"UnitNumber"});
     $metaRow = $stmt2->fetchrow_hashref;
     $rowCount = $stmt2->rows;
@@ -74,7 +76,7 @@ while (my $row = $statement->fetchrow_hashref) {
             # Expire the latest metadata for this observation
             $sql2 = "UPDATE kMeta SET ValidTo = datetime('" . $row->{"lastdatecreated"} .
                     "', '-1 second') WHERE UnitNumber = ? AND ValidTo is null";
-            $stmt2 = $dbh->prepare($sql2);
+            $stmt2 = $dhnew->prepare($sql2);
             $stmt2->execute($row->{"UnitNumber"});
             $stmt2->finish;
         }
@@ -88,7 +90,7 @@ while (my $row = $statement->fetchrow_hashref) {
                 PmModuleDateCreated, PmModuleID, PmModuleSerialNumber, isPublic, locationdescription,
                 locationstring, showonmap)
                 VALUES (datetime(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt2 = $dbh->prepare($sql2);
+        $stmt2 = $dhnew->prepare($sql2);
         $stmt2->execute($row->{"lastdatecreated"}, $row->{"UnitNumber"}, $row->{"BoardDateCreated"},
                         $row->{"BoardID"}, $row->{"BoardSerialNumber"}, $row->{"CoModuleDateCreated"},
                         $row->{"CoModuleID"}, $row->{"CoModuleSerialNumber"}, $row->{"Latitude"}, $row->{"Longitude"},
@@ -100,11 +102,12 @@ while (my $row = $statement->fetchrow_hashref) {
     # Insert observation
     $sql2 = "INSERT INTO kObs (UnitNumber, CoModuleCalibration, PmModuleCalibration, lastbatteryvoltage,
             lastdatecreated, lastsensingdate, pm1, pm10, pm25) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    $stmt2 = $dbh->prepare($sql2);
+    $stmt2 = $dhnew->prepare($sql2);
     $stmt2->execute($row->{"UnitNumber"}, $row->{"CoModuleCalibration"}, $row->{"PmModuleCalibration"},
                     $row->{"lastbatteryvoltage"}, $row->{"lastdatecreated"}, $row->{"lastsensingdate"},
                     $row->{"pm1"}, $row->{"pm10"}, $row->{"pm25"});
     $stmt2->finish;
 }
-$dbh->disconnect;
+$dhold->disconnect;
+$dhnew->disconnect;
 print "\n\nMigration complete\n\n";

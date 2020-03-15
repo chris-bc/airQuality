@@ -1,10 +1,14 @@
-deploy-local: all
+copy-local:
 	@sudo cp -r deploy/* /Library/WebServer/Documents/
 
-deploy-remote: all
+copy-remote:
 	@scp -r deploy chris@bennettscash.no-ip.org:~
 	@ssh -t chris@bennettscash.no-ip.org sudo cp -r deploy/* /Library/WebServer/Documents/
 	@ssh chris@bennettscash.no-ip.org rm -rf deploy
+
+deploy-local: all copy-local
+
+deploy-remote: all copy-remote
 
 directory:
 	@mkdir -p deploy
@@ -21,13 +25,20 @@ geoskies: directory geo*
 	@cp -r Chart* bootstrap* markers skiesUtils.js geoData.pl geoUtils.js deploy/
 	@./apiKey geoskies.html > deploy/geoskies.html
 
-all: blueskies ozskies geoskies
+all: clean blueskies ozskies geoskies
 
 deploy-koala-db-local: koala.sqlite
 	@sudo cp koala.sqlite /Library/WebServer/Documents/
 
 deploy-oz-db-local: nswskies.sqlite
 	@sudo cp nswskies.sqlite /Library/WebServer/Documents/
+
+dbmigration: clean
+	@cp dbMigrate-tables.pl dbMigrate-data.pl deploy/
+
+dbmigration-local: dbmigration copy-local
+
+dbmigration-remote: dbmigration copy-remote
 
 clean:
 	@rm -rf deploy
