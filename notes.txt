@@ -1,10 +1,4 @@
 === Migrate to iMac and MySQL ===
-- Find existing crontab
-- Prepare commands to create crontab
-- Run update scripts, confirm working
-- Copy DB to iMac
-- Create crontab
-- Disable Mac Mini crontab
 - Turn on Mac Mini wifi, set fixed IP
 - Move ethernet to iMac, set fixed IP
 - Learn how to connect to MySQL from ClI
