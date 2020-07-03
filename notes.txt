@@ -1,3 +1,22 @@
+=== Migrate to iMac and MySQL ===
+- Find existing crontab
+- Prepare commands to create crontab
+- Run update scripts, confirm working
+- Copy DB to iMac
+- Create crontab
+- Disable Mac Mini crontab
+- Turn on Mac Mini wifi, set fixed IP
+- Move ethernet to iMac, set fixed IP
+- Learn how to connect to MySQL from ClI
+- Modify SQL scripts to create tables
+- Modify DBMigration script
+- Create DBMigration script for NSWSkies
+- Create polling scripts for MySQL
+- Gather a small amount of MySQL data from polling
+- Remediate web pages
+- Migrate data and switch over polling scripts
+
+
 blueSKIES features
 DONE -> Convert area, loc, unit select boxes to list groups
 DONE -> Including 'all' option - onClick=updatexxx(selectedVal) - can nicely handle moving from/to 'any'
