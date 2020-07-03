@@ -1,6 +1,4 @@
 === Migrate to iMac and MySQL ===
-- Turn on Mac Mini wifi, set fixed IP
-- Move ethernet to iMac, set fixed IP
 - Learn how to connect to MySQL from ClI
 - Modify SQL scripts to create tables
 - Modify DBMigration script
