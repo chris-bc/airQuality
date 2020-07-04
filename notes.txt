@@ -1,6 +1,9 @@
 === Migrate to iMac and MySQL ===
-- Learn how to connect to MySQL from ClI
-- Modify SQL scripts to create tables
+- Install perl from homebrew
+- Confirm perl and cpan updated to homebrew versions
+- Install via CPAN: DBI CGI DBD::mysql
+- Confirm blueskies.pl continues to work
+- Confirm a test mysql perl script works
 - Modify DBMigration script
 - Create DBMigration script for NSWSkies
 - Create polling scripts for MySQL
