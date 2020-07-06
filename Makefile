@@ -1,8 +1,10 @@
 copy-local:
 	@sudo cp -r deploy/* /Library/WebServer/Documents/
 
-copy-remote:
+copy-remote-nodeploy:
 	@scp -r deploy chris@bennettscash.no-ip.org:~
+
+copy-remote: copy-remote-nodeploy
 	@ssh -t chris@bennettscash.no-ip.org sudo cp -r deploy/* /Library/WebServer/Documents/
 	@ssh chris@bennettscash.no-ip.org rm -rf deploy
 
@@ -48,6 +50,11 @@ dbutils: clean directory
 dbutils-local: dbutils copy-local
 
 dbutils-remote: dbutils copy-remote
+
+mysql-migration: all
+	@cp dbMigrate-data.pl dbupdate-mysql.pl dbupdate-nsw-mysql.pl initMysql.sql my.pl notes.txt deploy/
+
+mysql-migration-remote: mysql-migration copy-remote-nodeploy
 
 clean:
 	@rm -rf deploy
