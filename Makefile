@@ -33,12 +33,21 @@ deploy-koala-db-local: koala.sqlite
 deploy-oz-db-local: nswskies.sqlite
 	@sudo cp nswskies.sqlite /Library/WebServer/Documents/
 
-dbmigration: clean
+dbmigration: clean directory
 	@cp dbMigrate-tables.pl dbMigrate-data.pl deploy/
 
 dbmigration-local: dbmigration copy-local
+	@cd /Library/WebServer/Documents && pwd && sudo ./dbMigrate-tables.pl && sudo ./dbMigrate-data.pl && sudo mv koala.sqlite koala.sqlite.bak && sudo mv koalav2.sqlite koala.sqlite
 
 dbmigration-remote: dbmigration copy-remote
+	@ssh -t chris@bennettscash.no-ip.org cd /Library/WebServer/Documents && sudo ./dbMigrate-tables.pl && sudo ./dbMigrate-data.pl && sudo mv koala.sqlite koala.sqlite.bak && sudo mv koalav2.sqlite koala.sqlite
+
+dbutils: clean directory
+	@cp dbupdate.pl deploy/
+
+dbutils-local: dbutils copy-local
+
+dbutils-remote: dbutils copy-remote
 
 clean:
 	@rm -rf deploy

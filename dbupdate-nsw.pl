@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/bin/perl
 
 # This script pulls the latest observations from KOALA-based sensors
 # and stores new observations in an SQLite database.
@@ -18,6 +18,7 @@ use warnings;
 use lib qw(..);
 use JSON qw(  );
 use HTTP::Tiny;
+use Data::Dumper;
 
 my $source = 'https://kv54llbbz6.execute-api.ap-southeast-2.amazonaws.com/NMEA_TESTBED';
 my $dbFile = "nswskies.sqlite";
@@ -32,7 +33,6 @@ my $dbh = DBI->connect($dsn, \%attr);
 # Get latest JSON
 my $url = HTTP::Tiny->new->get($source);
 #print "result\n$url->{'content'}\nend result\n";
-
 # Store JSON in a JSON data var
 my $json = JSON->new;
 my $data = $json->decode($url->{'content'});
@@ -83,8 +83,7 @@ foreach my $rec ( @{$data} ) {
 		$ins->execute($rec->{"UnitNumber"}, $rec->{"SensingDate"}, $rec->{"TempDegC"}, $rec->{"Humidity"}, $rec->{"Latitude"}, $rec->{"Longitude"}, $rec->{"PM1.0"}, $rec->{"PM10.0"}, $rec->{"PM2.5"});
 		$ins->finish;
 		# TODO: Check success
-	} 
+	}
 	$statement->finish;
 }
 $dbh->disconnect;
-

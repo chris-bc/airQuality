@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/bin/perl
 
 # This script pulls the latest observations from KOALA-based sensors
 # and stores new observations in an SQLite database.
@@ -24,11 +24,11 @@ my $source = 'https://kv54llbbz6.execute-api.ap-southeast-2.amazonaws.com/NMEA_T
 my $dbFile = "koala.sqlite";
 my $dsn = "DBI:SQLite:$dbFile";
 my %attr = (PrintError=>0, RaiseError=>1);
+my $debug = 0;
 # Do we need to create the DB tables?
 my $newDB = (not -e $dbFile);
 #Connect to DB
-my $dbh = DBI->connect($dsn, \%attr);
-#TODO Check opened successfully
+my $dbh = DBI->connect($dsn, \%attr) or die "Unable to connect to database $dbFile\n";
 
 # Get latest JSON
 my $url = HTTP::Tiny->new->get($source);
@@ -154,7 +154,8 @@ foreach my $rec ( @{$data} ) {
 		my $insertMetadata = 0;
 		if ($rows > 0) {
 			# Compare current metadata against stored metadata
-			print "DEBUG: Metadata found for Unit ".$rec->{"UnitNumber"}.", isPublic " . ($rec->{"isPublic"}//"0") . ", row " . $row->{"isPublic"} . "\n";
+			print "DEBUG: Metadata found for Unit ".$rec->{"UnitNumber"}.", isPublic " .
+					($rec->{"isPublic"}//"0") . ", row " . $row->{"isPublic"} . "\n" if ($debug == 1);
 			unless ($row->{"BoardDateCreated"} eq ($rec->{"BoardDateCreated"}//0) &&
 					$row->{"BoardID"} eq ($rec->{"BoardID"}//0) &&
 					$row->{"BoardSerialNumber"} eq ($rec->{"BoardSerialNumber"}//0) &&
@@ -171,7 +172,7 @@ foreach my $rec ( @{$data} ) {
 					$row->{"locationstring"} eq ($rec->{"locationstring"}//0) &&
 					$row->{"showonmap"} eq ($rec->{"showonmap"}//0)) {
 				# There is a difference between latest metadata and current observation
-				print "change to metadata\n";
+				print "change to metadata\n" if ($debug == 1);
 				$sql = "UPDATE kMeta set ValidTo=datetime('" . $rec->{"lastdatecreated"} . "', '-1 second') WHERE UnitNumber=? AND ValidTo is null";
 				$statement = $dbh->prepare($sql);
 				$statement->execute($rec->{"UnitNumber"});
@@ -181,7 +182,7 @@ foreach my $rec ( @{$data} ) {
 			}
 		} else {
 			# No metadata - This is a new unit
-			print "DEBUG: No metadata found - new unit " . $rec->{"UnitNumber"} . "\n";
+			print "DEBUG: No metadata found - new unit " . $rec->{"UnitNumber"} . "\n" if ($debug == 1);
 			$insertMetadata = 1;
 		}
 		# Insert new metadata if needed
@@ -201,7 +202,8 @@ foreach my $rec ( @{$data} ) {
 		}
 
 		# Insert new observation
-		print "DEBUG: New observation for unit " . $rec->{"UnitNumber"} . ", time " . $rec->{"lastsensingdate"} . "\n";
+		print "DEBUG: New observation for unit " . $rec->{"UnitNumber"} . ", time " .
+				$rec->{"lastsensingdate"} . "\n" if ($debug == 1);
 		$sql = "INSERT INTO kObs (UnitNumber, CoModuleCalibration, PmModuleCalibration, lastbatteryvoltage,
 				lastdatecreated, lastsensingdate, pm1, pm10, pm25) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		$statement = $dbh->prepare($sql);

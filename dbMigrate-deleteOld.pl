@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/bin/perl
 
 # Migrate DBs from old, wide to new, relational
 # Script 3 of 3 - Remove the old data
