@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/bin/perl
 
 use CGI;
 use DBI;
@@ -8,8 +8,6 @@ use lib qw(..);
 use Data::Dumper;
 use JSON qw(  );
 
-my $nswDb = "nswskies.sqlite";
-my $blueDb = "koala.sqlite";
 my $nswTable = "nswSensor";
 my $blueTable = "kSensors";
 my @faultyUnits = ("AQB0001", "AQB0002", "AQB0003", "AQB0004", "AQB0005", "AQB0006", "AQB0027", "AQB0028", "AQB0036", "AQB0038", "AQB0039", "AQB0050", "AQB0063", "AQB0078", "AQB0081", "AQB0083", "AQB0084", "AQB0085", "AQB0086", "AQB0087", "AQB0088", "AQB0091", "AQB0092", "AQB0100", "AQB0101", "AQB0102", "AQB0103", "AQB0104", "AQB0105", "AQB0106", "AQB0108", "AQB0109", "AQB0110", "AQB0112", "AQB0113", "AQB0114", "AQB0115", "AQB0116", "AQB0117", "AQB0118", "AQB0119", "AQB0120", "AQB0121", "AQB0122", "AQB0123", "AQB0126", "AQB0127", "AQB0128");
@@ -43,10 +41,8 @@ if (length $units > 0) {
     @unitsArr = split ',', $units;
     $_ = "'" . $_ . "'" for @unitsArr;
 }
-if ($timeType eq "weeks") {
-    $timeType = "days";
-    $timeNum = $timeNum * 7;
-}
+# Remove 's' from end of timeType
+chop($timeType);
 # TODO: Input validation
 
 # SQL fragments
@@ -54,22 +50,13 @@ my $blueSQLStart = "SELECT 'KOALA' as dataset, UnitNumber, locationstring as are
 my $nswSQLStart = "SELECT 'NSW' as dataset, UnitNumber, null as area, null as location, PM1 as pm1, PM2 as pm25, PM10 as pm10, TempDegC as temp, Humidity as humidity, Latitude, Longitude, ";
 my $blueTimeCol = "lastdatecreated";
 my $nswTimeCol = "SensingDate";
-my $blueSQLTimeLatest = "strftime('%d-%m-%Y %H:%M:%S', MAX($blueTimeCol), 'localtime') as time";
-my $nswSQLTimeLatest = "strftime('%d-%m-%Y %H:%M:%S', MAX($nswTimeCol), 'localtime') as time";
-my $blueSQLTimeHistoric = "strftime('%d-%m-%Y %H:%M:%S', $blueTimeCol, 'localtime') as time";
-my $nswSQLTimeHistoric = "strftime('%d-%m-%Y %H:%M:%S', $nswTimeCol, 'localtime') as time";
+my $blueSQLTime = "DATE_FORMAT(CONVERT_TZ($blueTimeCol, 'GMT', 'Australia/Sydney'), '%d-%m-%Y %H:%i:%S') as time";
+my $nswSQLTime = "DATE_FORMAT(CONVERT_TZ($nswTimeCol, 'GMT', 'Australia/Sydney'), '%d-%m-%Y %H:%i:%S') as time";
 
-my $blueSQL = $blueSQLStart;
-my $nswSQL = $nswSQLStart;
+my $blueSQL = $blueSQLStart . $blueSQLTime;
+my $nswSQL = $nswSQLStart . $nswSQLTime;
 my $firstWhere = 1;
 
-if ($historical == 1) {
-    $blueSQL .= $blueSQLTimeHistoric;
-    $nswSQL .= $nswSQLTimeHistoric;
-} else {
-    $blueSQL .= $blueSQLTimeLatest;
-    $nswSQL .= $nswSQLTimeLatest;
-}
 $blueSQL .= " FROM $blueTable";
 $nswSQL .= " FROM $nswTable";
 if ($showFaulty == 0) {
@@ -98,26 +85,27 @@ if ($historical == 1) {
         $blueSQL .= " AND ";
         $nswSQL .= " AND ";
     }
-    $blueSQL .= "datetime($blueTimeCol) >= datetime(\"now\", \"-$timeNum $timeType\")";
-    $nswSQL .= "datetime($nswTimeCol) >= datetime(\"now\", \"-$timeNum $timeType\")";
+    $blueSQL .= "CONVERT_TZ($blueTimeCol, 'GMT', 'Australia/Sydney') >= DATE_SUB(CURRENT_TIMESTAMP(), INTERVAL $timeNum $timeType)";
+    $nswSQL .= "CONVERT_TZ($nswTimeCol, 'GMT', 'Australia/Sydney') >= DATE_SUB(CURRENT_TIMESTAMP(), INTERVAL $timeNum $timeType)";
 } else {
-    $blueSQL .= " GROUP BY UnitNumber";
-    $nswSQL .= " GROUP BY UnitNumber";
+    if ($firstWhere == 1) {
+        $blueSQL .= " WHERE ";
+        $nswSQL .= " WHERE ";
+        $firstWhere = 0;
+    } else {
+        $blueSQL .= " AND ";
+        $nswSQL .= " AND ";
+    }
+    $blueSQL .= "(UnitNumber, $blueTimeCol) in (SELECT UnitNumber, MAX($blueTimeCol) FROM $blueTable GROUP BY UnitNumber)";
+    $nswSQL .= "(UnitNumber, $nswTimeCol) in (SELECT UnitNumber, MAX($nswTimeCol) FROM $nswTable GROUP BY UnitNumber)";
 }
-
-# Check DB files exist
-(-e $nswDb) or die "Cannot find DB: $nswDb\n";
-(-e $blueDb) or die "Cannot find DB: $blueDb\n";
 
 # Connect to DB
-my $blueDsn = "DBI:SQLite:$blueDb";
-my $nswDsn = "DBI:SQLite:$nswDb";
-my %attr = (PrintError=>0, RaiseError=>1, AutoCommit=>1);
+my $driver = "mysql";
+my $dsn = "DBI:$driver:database=sensors;host=127.0.0.1";
+my $dbh = DBI->connect($dsn, "root", "kitty234") or die "Unable to connect to database $dsn\n";
 
-my $nswDbh = DBI->connect($nswDsn, \%attr) or die "Unable to connect to database $nswDb, Terminating\n";
-my $blueDbh = DBI->connect($blueDsn, \%attr) or die "Unable to connect to database $blueDb, Terminating\n";
-
-my $statement = $nswDbh->prepare($nswSQL);
+my $statement = $dbh->prepare($nswSQL);
 $statement->execute();
 while (my @row = $statement->fetchrow_array()) {
     my %rec = ();
@@ -127,8 +115,7 @@ while (my @row = $statement->fetchrow_array()) {
     push(@recs, \%rec);
 }
 $statement->finish;
-$nswDbh->disconnect;
-$statement = $blueDbh->prepare($blueSQL);
+$statement = $dbh->prepare($blueSQL);
 $statement->execute();
 while (my @row = $statement->fetchrow_array()) {
     my %rec = ();
@@ -138,7 +125,7 @@ while (my @row = $statement->fetchrow_array()) {
     push(@recs, \%rec);
 }
 $statement->finish;
-$blueDbh->disconnect;
+$dbh->disconnect;
 
 my $json = JSON->new;
 my $data = $json->encode(\@recs);

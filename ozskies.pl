@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/bin/perl
 
 use CGI;
 use DBI;
@@ -8,10 +8,9 @@ use lib qw(..);
 use Data::Dumper;
 
 # Initialise variables
-my $dbFile = "nswskies.sqlite";
 my $dbTable = "nswSensor";
-my $dsn = "DBI:SQLite:$dbFile";
-my %attr = (PrintError=>0, RaiseError=>1, AutoCommit=>1);
+my $driver = "mysql";
+my $dsn = "DBI:$driver:database=sensors;host=127.0.0.1";
 my $unitCol = "UnitNumber";
 my $timeCol = "SensingDate";
 my $pm25col = "PM2";
@@ -121,10 +120,8 @@ my %sortColsHash = map {(split ' ', $_)[0] => ((scalar (split ' ', $_) > 1)?((sp
 exists($sortColsHash{$_}) or die "Invalid sort column: $_, terminating\n"
   for (keys %sortColsHash);
 
-# Does the DB exist?
-(-e $dbFile) or die "Cannot find database $dbFile, Terminating\n";
 # Connect to DB
-my $dbh = DBI->connect($dsn, \%attr) or die "Unable to connect to database $dbFile, Terminating\n";
+my $dbh = DBI->connect($dsn, "root", "kitty234") or die "Unable to connect to database $dsn\n";
 
 # Select all units and validate them
 my $sql = "SELECT DISTINCT $unitCol FROM $dbTable";
@@ -201,14 +198,10 @@ if ($limitTime == 1) {
   if (length $where > 0) {
     $where .= " AND ";
   }
-  my $sqlTimeType = $timeType;
+  # Remove s from end of time type for MySQL
+  my $sqlTimeType = substr($timeType,0, -1);
   my $sqlTimeNum = $timeNum;
-  # SQLite doesn't support weeks, turn weeks into days
-  if ($timeType eq "weeks") {
-    $sqlTimeType = "days";
-    $sqlTimeNum = $timeNum * 7;
-  }
-  $where .= "datetime($timeCol) >= datetime(\"now\", \"-$sqlTimeNum $sqlTimeType\")";
+  $where .= "CONVERT_TZ($timeCol, 'GMT', 'Australia/Sydney') >= DATE_SUB(CURRENT_TIMESTAMP(), INTERVAL $sqlTimeNum $sqlTimeType)";
 }
 
 # Reverse geocode on page or via an external mechanism?
@@ -223,7 +216,7 @@ if ($limitTime == 1) {
 my $latestTable = "<table id='latestData' class='d-none'>";
 # Include table headers for CSV export
 $latestTable .= "<thead><th>$unitCol</th><th>$timeCol</th><th>$tempCol</th><th>$humCol</th><th>$pm1col</th><th>$pm25col</th><th>$pm10col</th><th>$latCol</th><th>$longCol</th></thead>\n";
-$sql = "SELECT $unitCol, strftime('%d-%m-%Y %H:%M:%S',MAX($timeCol),'localtime'), $tempCol, $humCol, $pm1col, $pm25col, $pm10col, $latCol, $longCol FROM $dbTable GROUP BY $unitCol";
+$sql = "SELECT $unitCol, DATE_FORMAT(CONVERT_TZ($timeCol, 'GMT', 'Australia/Sydney'), '%d-%m-%Y %H:%i:%S'), $tempCol, $humCol, $pm1col, $pm25col, $pm10col, $latCol, $longCol FROM $dbTable WHERE ($unitCol, $timeCol) IN (SELECT $unitCol, MAX($timeCol) FROM $dbTable GROUP BY $unitCol)";
 $statement = $dbh->prepare($sql);
 $statement->execute();
 
@@ -407,7 +400,7 @@ print "</tr></thead>";
 my @dateCols;
 for (@allColumns) {
   if ((index($_, 'date') != -1) || (index($_, 'Date') != -1)) {
-    push (@dateCols, "strftime('%d-%m-%Y %H:%M:%S', $_, 'localtime')");
+    push (@dateCols, "DATE_FORMAT(CONVERT_TZ($_, 'GMT', 'Australia/Sydney'), '%d-%m-%Y %H:%i:%S')");
   } else {
     push (@dateCols, $_);
   }

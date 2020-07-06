@@ -1,9 +1,7 @@
-#!/usr/bin/perl
+#!/usr/local/bin/perl
 
 use CGI;
 use DBI;
-use strict;
-use warnings;
 use lib qw(..);
 use Data::Dumper;
 
@@ -11,10 +9,9 @@ print CGI::header();
 
 # Initialise variables
 my $unsafeCharRegEx = "[ \"|\(|\)|\/\:]";
-my $dbFile = "koala.sqlite";
 my $dbTable = "kSensors";
-my $dsn = "DBI:SQLite:$dbFile";
-my %attr = (PrintError=>0, RaiseError=>1, AutoCommit=>1, FetchHashKeyName=>'NAME_lc');
+my $driver = "mysql";
+my $dsn = "DBI:$driver:database=sensors;host=127.0.0.1";
 my $areaCol = "locationstring";
 my $locCol = "locationdescription";
 my $unitCol = "UnitNumber";
@@ -121,25 +118,22 @@ my %colsHash = map {$_ => 1} @columnsToShow;
 # Get a list of columns that are used for sorting
 my %sortColsHash = map {(split ' ', $_)[0] => 1} @sortColumns;
 
-# Does the DB exist?
-(-e $dbFile) or die "Cannot find database $dbFile, Terminating\n\n";
 # Connect
-my $dbh = DBI->connect($dsn, \%attr) or die "Unable to connect to database $dbFile, Terminating\n\n";
-
+my $dbh = DBI->connect($dsn, "root", "kitty234") or die "Unable to connect to database $dsn\n";
+#TODO
 # Get a list of DB columns to allow column validation
-my $sql = "PRAGMA table_info($dbTable)";
+my $sql = "describe $dbTable";
 my $statement = $dbh->prepare($sql);
 $statement->execute();
 while (my @data = $statement->fetchrow_array()) {
-	push(@keys, $data[1]);
+	push(@keys, $data[0]);
 }
 ($statement->rows > 0) or die "Unable to find any database columns\n\n";
 @keys = sort @keys;
 $statement->finish;
-
 # Get a hash of locaions and their units for column validation and later use
 # Updated SQL to account for units changing locations (or locations changing names) over time - retrieve only latest
-$sql = "SELECT $areaCol, $locCol, $unitCol FROM $dbTable WHERE $unitCol NOT IN (" . (join ',', @faultyUnits) . ") GROUP BY $unitCol HAVING $timeCol = MAX($timeCol)";
+$sql = "SELECT $areaCol, $locCol, $unitCol, $timeCol from $dbTable WHERE $unitCol NOT IN (" . (join ',', @faultyUnits) . ") AND ($unitCol, $timeCol) IN (SELECT $unitCol, MAX($timeCol) FROM $dbTable GROUP BY $unitCol)";
 $statement = $dbh->prepare($sql);
 $statement->execute();
 
@@ -156,7 +150,7 @@ while (my @row = $statement->fetchrow_array) {
   @arr = $unitsByLoc{$row[0]}{$row[1]};
   if ($arr[0]) {
     # Why arr[0] rather than arr? Who can say!
-    push(@arr[0], $row[2]);
+    push(@{@arr[0]}, $row[2]);
   } else {
     $unitsByLoc{$row[0]}{$row[1]}[0] = $row[2];
   }
@@ -167,11 +161,10 @@ $statement->finish;
 # allAreas is keys unitsByLoc
 @allLocs = sort keys %tmpLocs;
 @allUnits = sort keys %tmpUnits;
-
 # Validate location inputs
 if (length $areas > 0) {
   for (split ',', $areas) {
-    exists(%unitsByLoc->{$_}) or die "Invalid area '$_' specified\n";
+    (%{$unitsByLoc{$_}}) or die "Invalid area '$_' specified\n";
   }
 }
 if (length $locations > 0) {
@@ -197,7 +190,7 @@ if (length $units > 0) {
 if (length $areas > 0) {
   # Area(s) have been specified. Only relevant locations are visible
   for (split ',', $areas) {
-    push(@visibleLocs, keys %unitsByLoc->{$_});
+    push(@visibleLocs, keys %{$unitsByLoc{$_}});
   }
 } else {
   @visibleLocs = @allLocs;
@@ -212,8 +205,8 @@ if (length $locations > 0) {
     for my $a (keys %unitsByLoc) {
       if ((length $areas == 0) || exists($areaSpec{$a})) {
         # Either the area is visible or we're looking at all areas.
-        if (exists(%unitsByLoc->{$a}->{$_})) {
-          push(@visibleUnits, @{%unitsByLoc->{$a}->{$_}});
+        if (%{$unitsByLoc{$a}}{$_}) {
+          push(@visibleUnits, @{%{$unitsByLoc{$a}}{$_}});
         }
       }
     }
@@ -225,9 +218,9 @@ if (length $locations > 0) {
   for my $a (keys %unitsByLoc) {
     if ((length $areas == 0) || exists($areaSpec{$a})) {
       # Either the area is visible or we're looking at all areas.
-      for (keys %unitsByLoc->{$a}) {
+      for (keys %{$unitsByLoc{$a}}) {
         if (exists($hshLocs{"$_"})) {
-          push(@visibleUnits, @{%unitsByLoc->{$a}->{$_}});
+          push(@visibleUnits, @{%{$unitsByLoc{$a}}{$_}});
         }
       }
     }
@@ -235,12 +228,13 @@ if (length $locations > 0) {
 }
 
 # Validate columns in parameters are valid
-my %k = map {$_ => 1} @keys;
+
+%k = map {$_ => 1} @keys;
 exists($k{$_}) or die "Select column $_ is not valid" for @columnsToShow;
 exists($k{(split ' ', $_)[0]}) or die "Sort column ".(split ' ',$_)[0]." is not valid\n" for @sortColumns;
 
 # Pre-render HTML for a hidden table containing latest observations for each unit
-$sql = "SELECT $unitCol, $areaCol, $locCol, strftime('%d-%m-%Y %H:%M:%S', MAX($timeCol), 'localtime'), $pm1col, $pm25col, $pm10col, $latCol, $longCol FROM $dbTable WHERE $unitCol NOT IN (" . (join ',', @faultyUnits) . ") GROUP BY $unitCol";
+$sql = "SELECT $unitCol, $areaCol, $locCol, DATE_FORMAT(CONVERT_TZ($timeCol, 'GMT', 'Australia/Sydney'), '%d-%m-%Y %H:%i:%S'), $pm1col, $pm25col, $pm10col, $latCol, $longCol FROM $dbTable WHERE $unitCol NOT IN (" . (join ',', @faultyUnits) . ") AND ($unitCol, $timeCol) IN (SELECT $unitCol, MAX($timeCol) FROM $dbTable GROUP BY $unitCol)";
 $statement = $dbh->prepare($sql);
 $statement->execute();
 my $latestTable = "<table id='latestData' class='d-none'>\n";
@@ -351,7 +345,7 @@ for my $iLoc (sort @allLocs) {
   # DECISION => locArea attribute will need to support multiple values
   my $locArea = "";
   for (keys %unitsByLoc) {
-    my $thisVal = %unitsByLoc->{$_};
+    my $thisVal = %{$unitsByLoc{$_}};
     if (exists($thisVal->{$iLoc})) {
       # Handle multiple matching areas:
       $locArea .= "," if (length $locArea > 0);
@@ -382,12 +376,12 @@ print "<button type='button' id='unit-btn-all' onClick='toggleUnit(\"all\")' cla
 
 # Loop through the hash down to the units level
 for my $areaKey (keys %unitsByLoc) {
-  for my $locKey (keys %unitsByLoc->{$areaKey}) {
+  for my $locKey (keys %{$unitsByLoc{$areaKey}}) {
     my $safeArea = $areaKey;
     $safeArea =~ s/$unsafeCharRegEx//g;
     my $safeLoc = $locKey;
     $safeLoc =~ s/$unsafeCharRegEx//g;
-    for my $iUnit (@{%unitsByLoc->{$areaKey}->{$locKey}}) {
+    for my $iUnit (@{%{$unitsByLoc{$areaKey}}{$locKey}}) {
       my $thisUnit = "<button type='button' id='unit-btn-$iUnit' onClick='toggleUnit(\"$iUnit\")' kArea='$safeArea' kLoc='$safeLoc' class='py-1 list-group-item list-group-item-action";
       $thisUnit .= " active" if (exists($selectedUnits{$iUnit}));
       $thisUnit .= " d-none" unless (exists($visibleUnitsHash{$iUnit}));
@@ -517,14 +511,10 @@ if (length $areas > 0 || length $locations > 0 || length $units > 0 || $limitTim
     }
   }
   if ($limitTime == 1) {
-    my $sqlTimeType = $timeType;
+    # MySQL periods are HOUR DAY WEEK MONTH YEAR - Remove the plural
+    my $sqlTimeType = substr($timeType, 0, -1);
     my $sqlTimeNum = $timeNum;
-    # SQLite doesn't support weeks, turn weeks into days.
-    if ($timeType eq "weeks") {
-      $sqlTimeType = "days";
-      $sqlTimeNum = $timeNum * 7;
-    }
-    $where .= "datetime($timeCol) >= datetime(\"now\", \"-$sqlTimeNum $sqlTimeType\")";
+    $where .= "CONVERT_TZ($timeCol, 'GMT', 'Australia/Sydney') >= DATE_SUB(CURRENT_TIMESTAMP(), INTERVAL $sqlTimeNum $sqlTimeType)";
   }
 }
 # Ignore faulty units
@@ -541,7 +531,7 @@ $where .= "$unitCol not in (" . (join ',', @faultyUnits) . ")";
 my @dateCols = split ',', $selectColumns;
 for (@dateCols) {
   if ((index($_,'date') != -1) || (index($_,'Date') != -1)) {
-    $_ = "strftime('%d-%m-%Y %H:%M:%S', $_, 'localtime')";
+    $_ = "DATE_FORMAT(CONVERT_TZ($_, 'GMT', 'Australia/Sydney'), '%d-%m-%Y %H:%i:%S')";
   }
 }
 my $sqlSelectColumns = join ',', @dateCols;

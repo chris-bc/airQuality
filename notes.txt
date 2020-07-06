@@ -1,14 +1,16 @@
 === Migrate to iMac and MySQL ===
 - Install perl from homebrew
 - Confirm perl and cpan updated to homebrew versions
-- Install via CPAN: DBI CGI DBD::mysql
+- Install via CPAN: DBI CGI DBD::mysql DBD::SQLite JSON IO::Socket::SSL
 - Confirm blueskies.pl continues to work
+  - Remediation - can't use hash as reference - new:
+        %{$unitsByLoc{$_}}
 - Confirm a test mysql perl script works
-- Modify DBMigration script
-- Create DBMigration script for NSWSkies
 - Create polling scripts for MySQL
 - Gather a small amount of MySQL data from polling
 - Remediate web pages
+- Modify DBMigration script
+- Create DBMigration script for NSWSkies
 - Migrate data and switch over polling scripts
 
 
