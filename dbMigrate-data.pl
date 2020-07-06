@@ -1,47 +1,56 @@
-#!/usr/bin/perl
+#!/usr/local/bin/perl
 
-# Migrate DBs from old, wide to new, relational
-# Script 2 of 3 - dbMigrate-tables MUST be run prior to this.
+# Migrate DBs from SQLite to mySQL
 # Script assumes the existence of new data model - If kObs & kMeta are not present it will fail.
 
 use DBI;
 use strict;
 use warnings;
 use Data::Dumper;
+use Math::Round;
 
-my $dbold = "koala.sqlite";
-my $dbnew = "koalav2.sqlite";
-my $dsn = "DBI:SQLite:";
+my $sourceKoala = "koala.sqlite";
+my $sourceNSW = "nswskies.sqlite";
+my $sourceDsn = "DBI:SQLite:";
 my %attr = (PrintError=>0, RaiseError=>1);
+my $targetDsn = my $dsn = "DBI:mysql:database=sensors;host=127.0.0.1";
 my $sql2;
 my $stmt2;
 my $metaRow;
 my $rowCount;
+my $obsCount = 0;
 my $insertMeta;
 my $debug = 0;
+my $obsTotal;
 
 STDOUT->autoflush(1);
 
-die "Database does not exist: $dbold, Terminating\n" unless (-e $dbold);
+die "Database does not exist: $sourceKoala, Terminating\n" unless (-e $sourceKoala);
+die "Database does not exist: $sourceNSW, Terminating\n" unless (-e $sourceNSW);
 
-my $dhold = DBI->connect($dsn . $dbold, \%attr) or die "Could not connect to database $dbold\n";
-my $dhnew = DBI->connect($dsn . $dbnew, \%attr) or die "Could not connect to database $dbnew\n";
+my $sourceDbh = DBI->connect($sourceDsn . $sourceKoala, \%attr) or die "Could not connect to database $sourceKoala\n";
+my $targetDbh = DBI->connect($targetDsn, "root", "kitty234") or die "Unable to connect to database $targetDsn\n";
 
-my $sql = "SELECT * FROM kSensor ORDER BY lastdatecreated";
+# Find total row count
+my $sql = "SELECT COUNT(1) from kSensor";
+my $statement = $sourceDbh->prepare($sql);
+$statement->execute();
+while (my @row = $statement->fetchrow_array) {
+  $obsTotal = $row[0];
+}
+$statement->finish;
+
+$sql = "SELECT * FROM kSensor ORDER BY lastdatecreated";
 my $currentDay = "";
-my $statement = $dhold->prepare($sql);
+$statement = $sourceDbh->prepare($sql);
 $statement->execute();
 while (my $row = $statement->fetchrow_hashref) {
-    if ($currentDay ne substr($row->{"lastdatecreated"}, 0, 10)) {
-        $currentDay = substr($row->{"lastdatecreated"}, 0, 10);
-        print "\nMigrating date $currentDay";
-    } else {
-        print ".";
-    }
+    $obsCount++;
+    print "\r" . round(($obsCount * 100 / $obsTotal)) . "% ($obsCount / $obsTotal) : Migrating KOALA " . substr($row->{"lastdatecreated"}, 0, 10);
     $insertMeta = 0;
     # Check whether metadata is identical
     $sql2 = "SELECT * FROM kMeta WHERE UnitNumber=? AND ValidTo is null";
-    $stmt2 = $dhnew->prepare($sql2);
+    $stmt2 = $targetDbh->prepare($sql2);
     $stmt2->execute($row->{"UnitNumber"});
     $metaRow = $stmt2->fetchrow_hashref;
     $rowCount = $stmt2->rows;
@@ -74,9 +83,9 @@ while (my $row = $statement->fetchrow_hashref) {
                     $row->{"UnitNumber"} . ", time " . $row->{"lastsensingdate"} .
                     "\n" if $debug == 1;
             # Expire the latest metadata for this observation
-            $sql2 = "UPDATE kMeta SET ValidTo = datetime('" . $row->{"lastdatecreated"} .
-                    "', '-1 second') WHERE UnitNumber = ? AND ValidTo is null";
-            $stmt2 = $dhnew->prepare($sql2);
+            $sql2 = "UPDATE kMeta SET ValidTo = '" . $row->{"lastdatecreated"} .
+                    "' WHERE UnitNumber = ? AND ValidTo is null";
+            $stmt2 = $targetDbh->prepare($sql2);
             $stmt2->execute($row->{"UnitNumber"});
             $stmt2->finish;
         }
@@ -89,8 +98,8 @@ while (my $row = $statement->fetchrow_hashref) {
                 CoModuleDateCreated, CoModuleID, CoModuleSerialNumber, Latitude, Longitude,
                 PmModuleDateCreated, PmModuleID, PmModuleSerialNumber, isPublic, locationdescription,
                 locationstring, showonmap)
-                VALUES (datetime(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt2 = $dhnew->prepare($sql2);
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt2 = $targetDbh->prepare($sql2);
         $stmt2->execute($row->{"lastdatecreated"}, $row->{"UnitNumber"}, $row->{"BoardDateCreated"},
                         $row->{"BoardID"}, $row->{"BoardSerialNumber"}, $row->{"CoModuleDateCreated"},
                         $row->{"CoModuleID"}, $row->{"CoModuleSerialNumber"}, $row->{"Latitude"}, $row->{"Longitude"},
@@ -102,12 +111,40 @@ while (my $row = $statement->fetchrow_hashref) {
     # Insert observation
     $sql2 = "INSERT INTO kObs (UnitNumber, CoModuleCalibration, PmModuleCalibration, lastbatteryvoltage,
             lastdatecreated, lastsensingdate, pm1, pm10, pm25) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    $stmt2 = $dhnew->prepare($sql2);
+    $stmt2 = $targetDbh->prepare($sql2);
     $stmt2->execute($row->{"UnitNumber"}, $row->{"CoModuleCalibration"}, $row->{"PmModuleCalibration"},
                     $row->{"lastbatteryvoltage"}, $row->{"lastdatecreated"}, $row->{"lastsensingdate"},
                     $row->{"pm1"}, $row->{"pm10"}, $row->{"pm25"});
     $stmt2->finish;
 }
-$dhold->disconnect;
-$dhnew->disconnect;
+$sourceDbh->disconnect;
+
+print "\n\nMigration of $sourceKoala complete\n\n";
+
+$sourceDbh = DBI->connect($sourceDsn . $sourceNSW, \%attr) or die "Could not connect to database $sourceNSW\n";
+$sql = "SELECT COUNT(1) FROM nswSensor";
+$statement = $sourceDbh->prepare($sql);
+$statement->execute();
+while (my @row = $statement->fetchrow_array) {
+  $obsTotal = $row[0];
+}
+$statement->finish;
+
+$sql = "SELECT * FROM nswSensor ORDER BY SensingDate";
+$statement = $sourceDbh->prepare($sql);
+$statement->execute();
+$obsCount = 0;
+while (my $row = $statement->fetchrow_hashref) {
+    $obsCount++;
+    print("\r" . round(($obsCount * 100 / $obsTotal)) . "% ( $obsCount / $obsTotal ) : Migrating NSW " . substr($row->{"SensingDate"}, 0, 10));
+    $sql2 = "INSERT INTO nswSensor (UnitNumber, SensingDate, TempDegC, Humidity, " .
+      "Latitude, Longitude, PM1, PM10, PM2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt2 = $targetDbh->prepare($sql2);
+    $stmt2->execute($row->{"UnitNumber"}, $row->{"SensingDate"}, $row->{"TempDegC"},
+      $row->{"Humidity"}, $row->{"Latitude"}, $row->{"Longitude"}, $row->{"PM1"},
+      $row->{"PM10"}, $row->{"PM2"});
+    $stmt2->finish;
+}
+$sourceDbh->disconnect;
+$targetDbh->disconnect;
 print "\n\nMigration complete\n\n";

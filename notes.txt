@@ -1,7 +1,7 @@
 === Migrate to iMac and MySQL ===
 - Install perl from homebrew
 - Confirm perl and cpan updated to homebrew versions
-- Install via CPAN: DBI CGI DBD::mysql DBD::SQLite JSON IO::Socket::SSL
+- Install via CPAN: DBI CGI DBD::mysql DBD::SQLite JSON IO::Socket::SSL Math::Round
 - Confirm blueskies.pl continues to work
   - Remediation - can't use hash as reference - new:
         %{$unitsByLoc{$_}}
@@ -12,7 +12,6 @@
 - Modify DBMigration script
 - Create DBMigration script for NSWSkies
 - Migrate data and switch over polling scripts
-
 
 blueSKIES features
 DONE -> Convert area, loc, unit select boxes to list groups
