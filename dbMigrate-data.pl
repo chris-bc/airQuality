@@ -49,73 +49,28 @@ while (my $row = $statement->fetchrow_hashref) {
     print "\r" . round(($obsCount * 100 / $obsTotal)) . "% ($obsCount / $obsTotal) : Migrating KOALA " . substr($row->{"lastdatecreated"}, 0, 10);
     $insertMeta = 0;
     # Check whether metadata is identical
-    $sql2 = "SELECT * FROM kMeta WHERE UnitNumber=? AND ValidTo is null";
+    $sql2 = "SELECT * FROM kSensor WHERE UnitNumber=? AND lastdatecreated=?";
     $stmt2 = $targetDbh->prepare($sql2);
-    $stmt2->execute($row->{"UnitNumber"});
+    $stmt2->execute($row->{"UnitNumber"}, $row->{"lastdatecreated"});
     $metaRow = $stmt2->fetchrow_hashref;
     $rowCount = $stmt2->rows;
     $stmt2->finish;
     if ($rowCount == 0) {
-        # No current metadata for this unit)
-        print "DEBUG: No metadata for unit " . $row->{"UnitNumber"} . "\n" if $debug == 1;
-        $insertMeta = 1;
-    } else {
-        print "DEBUG: Metadata found for unit " . $row->{"UnitNumber"} . ", time " .
-                $row->{"lastsensingdate"} . ", comparing...\n" if $debug == 1;
-        # Does the existing metadata match this row?
-        unless ($row->{"BoardDateCreated"} eq $metaRow->{"BoardDateCreated"} &&
-				$row->{"BoardID"} eq $metaRow->{"BoardID"} &&
-				$row->{"BoardSerialNumber"} eq $metaRow->{"BoardSerialNumber"} &&
-				$row->{"CoModuleDateCreated"} eq $metaRow->{"CoModuleDateCreated"} &&
-				$row->{"CoModuleID"} eq $metaRow->{"CoModuleID"} &&
-				$row->{"CoModuleSerialNumber"} eq $metaRow->{"CoModuleSerialNumber"} &&
-				$row->{"Latitude"} eq $metaRow->{"Latitude"} &&
-				$row->{"Longitude"} eq $metaRow->{"Longitude"} &&
-				$row->{"PmModuleDateCreated"} eq $metaRow->{"PmModuleDateCreated"} &&
-				$row->{"PmModuleID"} eq $metaRow->{"PmModuleID"} &&
-				$row->{"PmModuleSerialNumber"} eq $metaRow->{"PmModuleSerialNumber"} &&
-				$row->{"isPublic"} eq $metaRow->{"isPublic"} &&
-				$row->{"locationdescription"} eq $metaRow->{"locationdescription"} &&
-				$row->{"locationstring"} eq $metaRow->{"locationstring"} &&
-				$row->{"showonmap"} eq $metaRow->{"showonmap"}) {
-            $insertMeta = 1;
-            print "DEBUG: Latest metadata DOES NOT MATCH current for unit " .
-                    $row->{"UnitNumber"} . ", time " . $row->{"lastsensingdate"} .
-                    "\n" if $debug == 1;
-            # Expire the latest metadata for this observation
-            $sql2 = "UPDATE kMeta SET ValidTo = '" . $row->{"lastdatecreated"} .
-                    "' WHERE UnitNumber = ? AND ValidTo is null";
-            $stmt2 = $targetDbh->prepare($sql2);
-            $stmt2->execute($row->{"UnitNumber"});
-            $stmt2->finish;
-        }
+      # No current observation for this unit
+      $sql2 = "INSERT INTO kSensor (BoardDateCreated, BoardID, BoardSerialNumber, CoModuleCalibration,
+        CoModuleDateCreated, CoModuleID, CoModuleSerialNumber, Latitude, Longitude, PmModuleCalibration,
+        PmModuleDateCreated, PmModuleID, PmModuleSerialNumber, UnitNumber, isPublic, lastbatteryvoltage,
+        lastdatecreated, lastsensingdate, locationdescription, locationstring, pm1, pm10, pm25, showonmap)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      $stmt2 = $targetDbh->prepare($sql2);
+      $stmt2->execute($row->{"BoardDateCreated"}//0, $row->{"BoardID"}//0, $row->{"BoardSerialNumber"}//0,
+        $row->{"CoModuleCalibration"}//0, $row->{"CoModuleDateCreated"}//0, $row->{"CoModuleID"}//0, $row->{"CoModuleSerialNumber"}//0,
+        $row->{"Latitude"}, $row->{"Longitude"}, $row->{"PmModuleCalibration"}//0, $row->{"PmModuleDateCreated"}//0,
+        $row->{"PmModuleID"}//0, $row->{"PmModuleSerialNumber"}//0, $row->{"UnitNumber"}, $row->{"isPublic"}//0,
+        $row->{"lastbatteryvoltage"}//0, $row->{"lastdatecreated"}, $row->{"lastsensingdate"}, $row->{"locationdescription"}//0,
+        $row->{"locationstring"}//0, $row->{"pm1"}, $row->{"pm10"}, $row->{"pm25"}, $row->{"showonmap"}//0);
+      $stmt2->finish;
     }
-    if ($insertMeta == 1) {
-        # Insert a new metadata row
-        print "DEBUG: Writing new metadata for unit " . $row->{"UnitNumber"} . ", time " .
-                $row->{"lastsensingdate"} . "\n" if $debug == 1;
-        $sql2 = "INSERT INTO kMeta (ValidFrom, UnitNumber, BoardDateCreated, BoardID, BoardSerialNumber,
-                CoModuleDateCreated, CoModuleID, CoModuleSerialNumber, Latitude, Longitude,
-                PmModuleDateCreated, PmModuleID, PmModuleSerialNumber, isPublic, locationdescription,
-                locationstring, showonmap)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt2 = $targetDbh->prepare($sql2);
-        $stmt2->execute($row->{"lastdatecreated"}, $row->{"UnitNumber"}, $row->{"BoardDateCreated"},
-                        $row->{"BoardID"}, $row->{"BoardSerialNumber"}, $row->{"CoModuleDateCreated"},
-                        $row->{"CoModuleID"}, $row->{"CoModuleSerialNumber"}, $row->{"Latitude"}, $row->{"Longitude"},
-                        $row->{"PmModuleDateCreated"}, $row->{"PmModuleID"}, $row->{"PmModuleSerialNumber"},
-                        $row->{"isPublic"}, $row->{"locationdescription"}, $row->{"locationstring"}, $row->{"showonmap"});
-        $stmt2->finish;
-    }
-
-    # Insert observation
-    $sql2 = "INSERT INTO kObs (UnitNumber, CoModuleCalibration, PmModuleCalibration, lastbatteryvoltage,
-            lastdatecreated, lastsensingdate, pm1, pm10, pm25) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    $stmt2 = $targetDbh->prepare($sql2);
-    $stmt2->execute($row->{"UnitNumber"}, $row->{"CoModuleCalibration"}, $row->{"PmModuleCalibration"},
-                    $row->{"lastbatteryvoltage"}, $row->{"lastdatecreated"}, $row->{"lastsensingdate"},
-                    $row->{"pm1"}, $row->{"pm10"}, $row->{"pm25"});
-    $stmt2->finish;
 }
 $sourceDbh->disconnect;
 

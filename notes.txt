@@ -1,7 +1,7 @@
 === Migrate to iMac and MySQL ===
-- Install perl from homebrew
+- Install perl openssl mysql-connector-c from homebrew
 - Confirm perl and cpan updated to homebrew versions
-- Install via CPAN: DBI CGI DBD::mysql DBD::SQLite JSON IO::Socket::SSL Math::Round
+- Install via CPAN: DBI CGI DBD::mysql DBD::SQLite JSON IO::Socket::SSL Math::Round Net::SSLeay URI CPAN::DistnameInfo
 - Confirm blueskies.pl continues to work
   - Remediation - can't use hash as reference - new:
         %{$unitsByLoc{$_}}

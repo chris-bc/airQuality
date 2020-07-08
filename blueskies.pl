@@ -9,7 +9,7 @@ print CGI::header();
 
 # Initialise variables
 my $unsafeCharRegEx = "[ \"|\(|\)|\/\:]";
-my $dbTable = "kSensors";
+my $dbTable = "kSensor";
 my $driver = "mysql";
 my $dsn = "DBI:$driver:database=sensors;host=127.0.0.1";
 my $areaCol = "locationstring";
@@ -120,7 +120,7 @@ my %sortColsHash = map {(split ' ', $_)[0] => 1} @sortColumns;
 
 # Connect
 my $dbh = DBI->connect($dsn, "root", "kitty234") or die "Unable to connect to database $dsn\n";
-#TODO
+
 # Get a list of DB columns to allow column validation
 my $sql = "describe $dbTable";
 my $statement = $dbh->prepare($sql);

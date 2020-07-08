@@ -9,7 +9,7 @@ use Data::Dumper;
 use JSON qw(  );
 
 my $nswTable = "nswSensor";
-my $blueTable = "kSensors";
+my $blueTable = "kSensor";
 my @faultyUnits = ("AQB0001", "AQB0002", "AQB0003", "AQB0004", "AQB0005", "AQB0006", "AQB0027", "AQB0028", "AQB0036", "AQB0038", "AQB0039", "AQB0050", "AQB0063", "AQB0078", "AQB0081", "AQB0083", "AQB0084", "AQB0085", "AQB0086", "AQB0087", "AQB0088", "AQB0091", "AQB0092", "AQB0100", "AQB0101", "AQB0102", "AQB0103", "AQB0104", "AQB0105", "AQB0106", "AQB0108", "AQB0109", "AQB0110", "AQB0112", "AQB0113", "AQB0114", "AQB0115", "AQB0116", "AQB0117", "AQB0118", "AQB0119", "AQB0120", "AQB0121", "AQB0122", "AQB0123", "AQB0126", "AQB0127", "AQB0128");
 $_ = "'$_'" for @faultyUnits;
 my @cols = ("dataset", "UnitNumber", "area", "location", "pm1", "pm25", "pm10", "temp", "humidity", "Latitude", "Longitude", "time");
